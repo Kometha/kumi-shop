@@ -1,29 +1,36 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
-import { TooltipModule } from 'primeng/tooltip';
-import { CardModule } from 'primeng/card';
-import { MessageService } from 'primeng/api';
+import { DrawerModule } from 'primeng/drawer';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ButtonModule, ToastModule, TooltipModule, CardModule],
-  providers: [MessageService],
+  imports: [CommonModule, RouterOutlet, ButtonModule, DrawerModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'Kumi Shop';
+  sidebarVisible = false;
+  selectedMenu: string = 'dashboard';
 
-  constructor(private messageService: MessageService) {}
+  selectMenu(menu: string) {
+    this.selectedMenu = menu;
+    // Opcionalmente cerrar el drawer en dispositivos móviles
+    if (window.innerWidth < 768) {
+      this.sidebarVisible = false;
+    }
+  }
 
-  showMessage(message: string) {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Éxito',
-      detail: message
-    });
+  getSelectedTitle(): string {
+    const titles: { [key: string]: string } = {
+      'dashboard': 'Dashboard',
+      'inventario': 'Gestión de Inventario',
+      'clientes': 'Gestión de Clientes',
+      'configuracion': 'Configuración'
+    };
+    return titles[this.selectedMenu] || 'Dashboard';
   }
 }
