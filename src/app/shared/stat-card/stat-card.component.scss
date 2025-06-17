@@ -1,0 +1,121 @@
+.stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: all 0.2s ease;
+  height: 100%;
+
+  &:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+  }
+}
+
+.stat-card-icon {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+
+  i {
+    font-size: 1.5rem;
+  }
+
+  // Variantes de color para el icono
+  &.icon-primary {
+    background-color: #eff6ff;
+    color: #3b82f6;
+  }
+
+  &.icon-success {
+    background-color: #f0fdf4;
+    color: #22c55e;
+  }
+
+  &.icon-warning {
+    background-color: #fffbeb;
+    color: #f59e0b;
+  }
+
+  &.icon-danger {
+    background-color: #fef2f2;
+    color: #ef4444;
+  }
+
+  &.icon-info {
+    background-color: #f0f9ff;
+    color: #0ea5e9;
+  }
+}
+
+.stat-card-content {
+  padding-right: 4rem; // Espacio para el icono
+}
+
+.stat-card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: -0.01em;
+}
+
+.stat-card-value {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+
+  .prefix, .suffix {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-right: 0.125rem;
+  }
+
+  .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+}
+
+.stat-card-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.trend-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+
+  i {
+    font-size: 0.75rem;
+  }
+
+  &.positive {
+    color: #22c55e;
+  }
+
+  &.negative {
+    color: #ef4444;
+  }
+}
+
+.trend-label {
+  color: #6b7280;
+  font-weight: 400;
+}
