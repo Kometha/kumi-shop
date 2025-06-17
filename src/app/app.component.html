@@ -23,34 +23,84 @@
       <p class="text-lg text-gray-600 mb-6">
         Este proyecto está configurado con Angular, Tailwind CSS y PrimeNG.
       </p>
-      
+
       <!-- PrimeNG Button Examples -->
       <div class="flex flex-wrap gap-4 mb-6">
-        <p-button 
-          label="Botón Principal" 
-          icon="pi pi-check" 
+        <p-button
+          label="Botón Principal"
+          icon="pi pi-check"
           (onClick)="showMessage('¡Botón principal clickeado!')"
         ></p-button>
-        
-        <p-button 
-          label="Botón Secundario" 
-          icon="pi pi-times" 
+
+        <p-button
+          label="Botón Secundario"
+          icon="pi pi-times"
           severity="secondary"
           (onClick)="showMessage('¡Botón secundario clickeado!')"
         ></p-button>
-        
-        <p-button 
-          label="Éxito" 
-          icon="pi pi-check-circle" 
+
+        <p-button
+          label="Éxito"
+          icon="pi pi-check-circle"
           severity="success"
           (onClick)="showMessage('¡Operación exitosa!')"
         ></p-button>
-        
-        <p-button 
-          label="Advertencia" 
-          icon="pi pi-exclamation-triangle" 
+
+        <p-button
+          label="Advertencia"
+          icon="pi pi-exclamation-triangle"
           severity="warn"
           (onClick)="showMessage('¡Advertencia!')"
+        ></p-button>
+
+        <p-button
+          label="Peligro"
+          icon="pi pi-ban"
+          severity="danger"
+          (onClick)="showMessage('¡Acción peligrosa!')"
+        ></p-button>
+      </div>
+
+      <!-- Más ejemplos de botones -->
+      <div class="flex flex-wrap gap-4 mb-6">
+        <p-button
+          label="Outlined"
+          icon="pi pi-heart"
+          [outlined]="true"
+          (onClick)="showMessage('¡Botón outlined!')"
+        ></p-button>
+
+        <p-button
+          label="Rounded"
+          icon="pi pi-star"
+          [rounded]="true"
+          severity="info"
+          (onClick)="showMessage('¡Botón rounded!')"
+        ></p-button>
+
+        <p-button
+          label="Text"
+          icon="pi pi-cog"
+          [text]="true"
+          (onClick)="showMessage('¡Botón de texto!')"
+        ></p-button>
+
+        <p-button
+          label="Raised"
+          icon="pi pi-upload"
+          [raised]="true"
+          severity="help"
+          (onClick)="showMessage('¡Botón raised!')"
+        ></p-button>
+
+        <p-button
+          [icon]="'pi pi-bookmark'"
+          [rounded]="true"
+          [text]="true"
+          [raised]="true"
+          severity="secondary"
+          pTooltip="Solo ícono"
+          (onClick)="showMessage('¡Botón solo ícono!')"
         ></p-button>
       </div>
 
@@ -111,6 +161,19 @@
       </p>
     </div>
   </main>
+
+  <!-- Ejemplo de Card de PrimeNG -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+    <p-card header="Configuración de Estilos" subheader="PrimeNG 18 con Angular Standalone">
+      <p class="mb-4">
+        Los estilos de PrimeNG ahora funcionan correctamente con el nuevo sistema de temas basado en tokens CSS.
+      </p>
+      <div class="flex gap-2">
+        <p-button label="Ver más" icon="pi pi-arrow-right" severity="info"></p-button>
+        <p-button label="Documentación" icon="pi pi-external-link" [outlined]="true"></p-button>
+      </div>
+    </p-card>
+  </div>
 </div>
 
 <router-outlet />
