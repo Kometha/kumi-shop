@@ -3,11 +3,12 @@ import { RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { CommonModule } from '@angular/common';
+import { StatCardComponent } from './shared/stat-card/stat-card.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, ButtonModule, DrawerModule],
+  imports: [CommonModule, RouterOutlet, ButtonModule, DrawerModule, StatCardComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
