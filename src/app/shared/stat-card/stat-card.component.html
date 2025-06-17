@@ -1,0 +1,28 @@
+<div class="stat-card">
+  <!-- Icono superior derecho -->
+  <div class="stat-card-icon" [class]="'icon-' + iconColor">
+    <i [class]="icon"></i>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="stat-card-content">
+    <!-- Título -->
+    <h3 class="stat-card-title">{{ title }}</h3>
+
+    <!-- Valor principal -->
+    <div class="stat-card-value">
+      <span class="prefix" *ngIf="prefix">{{ prefix }}</span>
+      <span class="value">{{ value }}</span>
+      <span class="suffix" *ngIf="suffix">{{ suffix }}</span>
+    </div>
+
+    <!-- Tendencia -->
+    <div class="stat-card-trend" *ngIf="trend">
+      <span class="trend-indicator" [class.positive]="trend.isPositive" [class.negative]="!trend.isPositive">
+        <i [class]="trend.isPositive ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+        {{ trend.isPositive ? '+' : '' }}{{ trend.value }}%
+      </span>
+      <span class="trend-label">{{ trend.label }}</span>
+    </div>
+  </div>
+</div>
