@@ -1,6 +1,19 @@
-# Kumi Shop - Proyecto Angular
+# Kumi Shop
 
-Este es un proyecto Angular configurado con las últimas tecnologías para desarrollo web moderno.
+Este proyecto fue generado con [Angular CLI](https://github.com/angular/angular-cli) versión 19.2.15.
+
+## Stack Tecnológico
+
+- **Angular 19** - Framework principal
+- **PrimeNG 19** - Biblioteca de componentes UI
+- **Tailwind CSS** - Framework CSS utilitario
+- **TypeScript 5.6** - Lenguaje de programación
+
+## Servidor de desarrollo
+
+Ejecuta `npm run dev` para un servidor de desarrollo. Navega a `http://localhost:4200/`. La aplicación se recargará automáticamente si cambias cualquiera de los archivos fuente.
+
+## Generación de código
 
 ## 🚀 Tecnologías Utilizadas
 
