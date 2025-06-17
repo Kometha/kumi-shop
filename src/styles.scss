@@ -37,6 +37,132 @@ body {
   --surface-900: #0f172a;
 }
 
+/* Estilos modernos para el Drawer */
+.modern-sidebar {
+  .p-drawer {
+    background-color: #ffffff !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    border: none;
+  }
+
+  .p-drawer-header {
+    background-color: #ffffff !important;
+    border: none;
+    padding: 1.5rem;
+
+    .p-drawer-header-content {
+      width: 100%;
+    }
+  }
+
+  .p-drawer-close-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #6b7280 !important;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #f3f4f6;
+      color: #374151 !important;
+    }
+  }
+
+  .p-drawer-content {
+    background-color: #ffffff !important;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Contenedor del sidebar */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Items del menú */
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: #4b5563;
+  font-weight: 500;
+  font-size: 0.95rem;
+  position: relative;
+
+  &:hover:not(.active) {
+    background-color: #f9fafb;
+    color: #1f2937;
+
+    .menu-icon {
+      color: #1f2937;
+    }
+  }
+
+  &.active {
+    background-color: #3b82f6;
+    color: #ffffff;
+
+    .menu-icon {
+      color: #ffffff;
+    }
+  }
+}
+
+/* Iconos del menú */
+.menu-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+/* Labels del menú */
+.menu-label {
+  flex: 1;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Separador del menú */
+.menu-separator {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 0.75rem 0;
+}
+
+/* Arreglo para el botón del menú hamburguesa */
+.p-button.p-button-text.p-button-plain {
+  border-radius: 8px;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+
+  .p-button-icon {
+    color: #6b7280;
+    font-size: 1.25rem;
+  }
+}
+
 /* Personalización del Toast/MessageService */
 .p-toast .p-toast-detail {
   color: #000000 !important;

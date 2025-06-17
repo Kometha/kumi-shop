@@ -1,182 +1,101 @@
 <div class="min-h-screen bg-gray-50">
   <!-- Header -->
-  <header class="bg-white shadow-sm border-b">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <header class="bg-white shadow-sm border-b fixed w-full top-0 z-40">
+    <div class="px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <div class="flex items-center">
-          <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-bars"
+            class="p-button-text p-button-plain p-0"
+            style="width: 40px; height: 40px;"
+            (click)="sidebarVisible = true"
+          ></button>
+          <h1 class="text-2xl font-bold text-gray-900 ml-2">{{ title }}</h1>
         </div>
         <div class="flex items-center space-x-4">
-          <i class="pi pi-search text-gray-500"></i>
-          <i class="pi pi-bell text-gray-500"></i>
-          <i class="pi pi-user text-gray-500"></i>
+          <i class="pi pi-search text-gray-500 cursor-pointer hover:text-gray-700"></i>
+          <i class="pi pi-bell text-gray-500 cursor-pointer hover:text-gray-700"></i>
+          <i class="pi pi-user text-gray-500 cursor-pointer hover:text-gray-700"></i>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <!-- Welcome Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-8">
-      <h2 class="text-3xl font-bold text-gray-900 mb-4">¡Bienvenido a Kumi Shop!</h2>
-      <p class="text-lg text-gray-600 mb-6">
-        Este proyecto está configurado con Angular 19, Tailwind CSS, PrimeNG 19 y la fuente Inter.
-      </p>
-
-      <!-- PrimeNG Button Examples -->
-      <div class="flex flex-wrap gap-4 mb-6">
-        <p-button
-          label="Botón Principal"
-          icon="pi pi-check"
-          (onClick)="showMessage('¡Botón principal clickeado!')"
-        ></p-button>
-
-        <p-button
-          label="Botón Secundario"
-          icon="pi pi-times"
-          severity="secondary"
-          (onClick)="showMessage('¡Botón secundario clickeado!')"
-        ></p-button>
-
-        <p-button
-          label="Éxito"
-          icon="pi pi-check-circle"
-          severity="success"
-          (onClick)="showMessage('¡Operación exitosa!')"
-        ></p-button>
-
-        <p-button
-          label="Advertencia"
-          icon="pi pi-exclamation-triangle"
-          severity="warn"
-          (onClick)="showMessage('¡Advertencia!')"
-        ></p-button>
-
-        <p-button
-          label="Peligro"
-          icon="pi pi-ban"
-          severity="danger"
-          (onClick)="showMessage('¡Acción peligrosa!')"
-        ></p-button>
+  <!-- Drawer Sidebar -->
+  <p-drawer
+    [(visible)]="sidebarVisible"
+    [modal]="false"
+    [style]="{'width':'300px'}"
+    styleClass="modern-sidebar">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full">
+        <span class="text-xl font-semibold text-gray-800">Menú</span>
       </div>
+    </ng-template>
 
-      <!-- Más ejemplos de botones -->
-      <div class="flex flex-wrap gap-4 mb-6">
-        <p-button
-          label="Outlined"
-          icon="pi pi-heart"
-          [outlined]="true"
-          (onClick)="showMessage('¡Botón outlined!')"
-        ></p-button>
+    <div class="sidebar-content">
+      <!-- Dashboard -->
+      <a
+        class="menu-item"
+        [class.active]="selectedMenu === 'dashboard'"
+        (click)="selectMenu('dashboard')"
+      >
+        <i class="pi pi-home menu-icon"></i>
+        <span class="menu-label">Dashboard</span>
+      </a>
 
-        <p-button
-          label="Rounded"
-          icon="pi pi-star"
-          [rounded]="true"
-          severity="info"
-          (onClick)="showMessage('¡Botón rounded!')"
-        ></p-button>
+      <!-- Inventario -->
+      <a
+        class="menu-item"
+        [class.active]="selectedMenu === 'inventario'"
+        (click)="selectMenu('inventario')"
+      >
+        <i class="pi pi-box menu-icon"></i>
+        <span class="menu-label">Inventario</span>
+      </a>
 
-        <p-button
-          label="Text"
-          icon="pi pi-cog"
-          [text]="true"
-          (onClick)="showMessage('¡Botón de texto!')"
-        ></p-button>
+      <!-- Clientes -->
+      <a
+        class="menu-item"
+        [class.active]="selectedMenu === 'clientes'"
+        (click)="selectMenu('clientes')"
+      >
+        <i class="pi pi-users menu-icon"></i>
+        <span class="menu-label">Clientes</span>
+      </a>
 
-        <p-button
-          label="Raised"
-          icon="pi pi-upload"
-          [raised]="true"
-          severity="help"
-          (onClick)="showMessage('¡Botón raised!')"
-        ></p-button>
+      <!-- Separador -->
+      <div class="menu-separator"></div>
 
-        <p-button
-          [icon]="'pi pi-bookmark'"
-          [rounded]="true"
-          [text]="true"
-          [raised]="true"
-          severity="secondary"
-          pTooltip="Solo ícono"
-          (onClick)="showMessage('¡Botón solo ícono!')"
-        ></p-button>
-      </div>
-
-      <!-- Toast for messages -->
-      <p-toast></p-toast>
+      <!-- Configuración (opcional) -->
+      <a
+        class="menu-item"
+        [class.active]="selectedMenu === 'configuracion'"
+        (click)="selectMenu('configuracion')"
+      >
+        <i class="pi pi-cog menu-icon"></i>
+        <span class="menu-label">Configuración</span>
+      </a>
     </div>
+  </p-drawer>
 
-    <!-- Features Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Tailwind Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center mb-4">
-          <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-            <i class="pi pi-palette text-white"></i>
-          </div>
-          <h3 class="ml-3 text-lg font-medium text-gray-900">Tailwind CSS</h3>
-        </div>
+  <!-- Main Content Area -->
+  <main class="pt-16">
+    <div class="p-6">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">
+        {{ getSelectedTitle() }}
+      </h2>
+
+      <!-- Contenido dinámico según la selección -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <p class="text-gray-600">
-          Framework CSS utilitario para diseño rápido y responsive.
+          Contenido de {{ getSelectedTitle() }}
         </p>
       </div>
-
-      <!-- PrimeNG Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center mb-4">
-          <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-            <i class="pi pi-objects-column text-white"></i>
-          </div>
-          <h3 class="ml-3 text-lg font-medium text-gray-900">PrimeNG</h3>
-        </div>
-        <p class="text-gray-600">
-          Biblioteca de componentes UI rica y completa para Angular.
-        </p>
-      </div>
-
-      <!-- SCSS Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center mb-4">
-          <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-            <i class="pi pi-code text-white"></i>
-          </div>
-          <h3 class="ml-3 text-lg font-medium text-gray-900">SCSS</h3>
-        </div>
-        <p class="text-gray-600">
-          Preprocesador CSS con sintaxis avanzada y características potentes.
-        </p>
-      </div>
-    </div>
-
-    <!-- Command Section -->
-    <div class="bg-gray-900 rounded-lg p-6">
-      <h3 class="text-lg font-medium text-white mb-4">Comando de desarrollo</h3>
-      <div class="bg-black rounded p-3">
-        <code class="text-green-400 font-mono">npm run dev</code>
-      </div>
-      <p class="text-gray-300 mt-2 text-sm">
-        Ejecuta el servidor de desarrollo con hot reload y abre automáticamente el navegador.
-      </p>
-      <p class="text-gray-400 mt-4 text-sm font-mono">
-        Usando fuente monoespaciada para código
-      </p>
     </div>
   </main>
-
-  <!-- Ejemplo de Card de PrimeNG -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-    <p-card header="Configuración de Estilos" subheader="PrimeNG 18 con Angular Standalone">
-      <p class="mb-4">
-        Los estilos de PrimeNG ahora funcionan correctamente con el nuevo sistema de temas basado en tokens CSS.
-      </p>
-      <div class="flex gap-2">
-        <p-button label="Ver más" icon="pi pi-arrow-right" severity="info"></p-button>
-        <p-button label="Documentación" icon="pi pi-external-link" [outlined]="true"></p-button>
-      </div>
-    </p-card>
-  </div>
 </div>
 
 <router-outlet />
