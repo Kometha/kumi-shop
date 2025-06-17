@@ -1,0 +1,54 @@
+// Estilos específicos para el componente principal
+
+// Asegurar que los botones del sidebar tengan el estilo correcto
+:host ::ng-deep {
+  .sidebar-menu-item.p-button {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+  }
+
+  // Overrides para el drawer en modo claro
+  .sidebar-light {
+    .p-drawer-mask {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Ajustes finos para el drawer moderno
+  .modern-sidebar {
+    .p-drawer {
+      // Animación suave al abrir/cerrar
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .p-drawer-mask {
+      background-color: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(2px);
+    }
+  }
+
+  // Mejoras en el header del drawer
+  .p-drawer-header {
+    .p-drawer-header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
+
+  // Asegurar que los items del menú se vean correctamente
+  .menu-item {
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+}
