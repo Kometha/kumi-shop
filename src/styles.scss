@@ -1,5 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Fuente Geist desde CDN */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 /* Tailwind CSS */
 @tailwind base;
 @tailwind components;
@@ -7,6 +10,15 @@
 
 /* PrimeIcons */
 @import "primeicons/primeicons.css";
+
+/* Aplicar Inter (similar a Geist) como fuente principal */
+:root {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
 
 /* Variables CSS para PrimeNG */
 :root {
@@ -23,4 +35,17 @@
   --surface-700: #334155;
   --surface-800: #1e293b;
   --surface-900: #0f172a;
+}
+
+/* Personalización del Toast/MessageService */
+.p-toast .p-toast-detail {
+  color: #000000 !important;
+}
+
+/* Para asegurar que funcione en todos los tipos de mensaje */
+.p-toast-message-success .p-toast-detail,
+.p-toast-message-info .p-toast-detail,
+.p-toast-message-warn .p-toast-detail,
+.p-toast-message-error .p-toast-detail {
+  color: #000000 !important;
 }
