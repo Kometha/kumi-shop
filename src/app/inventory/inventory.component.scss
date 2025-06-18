@@ -1,0 +1,120 @@
+.inventory-container {
+  padding: 0;
+}
+
+.table-container {
+  overflow: hidden;
+  background-color: #ffffff;
+
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-header {
+        background: transparent;
+        border: none;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .p-datatable-tbody > tr {
+        background: #ffffff;
+
+        &:hover {
+          background: #f9fafb;
+        }
+
+        > td {
+          padding: 1rem;
+          border: none;
+          border-bottom: 1px solid #f3f4f6;
+          color: #1f2937;
+        }
+      }
+
+      .p-paginator {
+        background: #f9fafb;
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        padding: 0.75rem 1rem;
+        color: #6b7280;
+
+        .p-paginator-current {
+          color: #6b7280;
+        }
+      }
+    }
+
+    // Asegurar que el input de búsqueda sea light
+    input.p-inputtext {
+      background-color: #ffffff;
+      border-color: #e5e7eb;
+      color: #1f2937;
+
+      &:hover {
+        border-color: #d1d5db;
+      }
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+      }
+    }
+
+    // Botones en modo light
+    .p-button {
+      &.p-button-outlined {
+        background-color: transparent;
+        color: #3b82f6;
+        border-color: #3b82f6;
+
+        &:hover {
+          background-color: rgba(59, 130, 246, 0.1);
+        }
+      }
+    }
+  }
+}
+
+.product-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+// Ajustes para los tags de estado
+::ng-deep {
+  .p-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+  }
+}
+
+// Ajustes para el input de búsqueda
+::ng-deep {
+  .p-input-icon-left > input {
+    padding-left: 2.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  .p-input-icon-left > .pi {
+    left: 0.75rem;
+    color: #6b7280;
+  }
+}
