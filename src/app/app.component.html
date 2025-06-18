@@ -95,59 +95,91 @@
       </h2>
 
       <!-- Contenido dinámico según la selección -->
-      <div *ngIf="selectedMenu === 'dashboard'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <!-- Tarjeta de Ventas Totales -->
-        <app-stat-card
-          title="Ventas Totales"
-          value="45,231.89"
-          prefix="$"
-          icon="pi pi-dollar"
-          iconColor="primary"
-          [trend]="{
-            value: 20.1,
-            isPositive: true,
-            label: 'comparado con el mes anterior'
-          }"
-        ></app-stat-card>
+      <div *ngIf="selectedMenu === 'dashboard'">
+        <!-- Cards de estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <!-- Tarjeta de Ventas Totales -->
+          <app-stat-card
+            title="Ventas Totales"
+            value="45,231.89"
+            prefix="$"
+            icon="pi pi-dollar"
+            iconColor="primary"
+            [trend]="{
+              value: 20.1,
+              isPositive: true,
+              label: 'comparado con el mes anterior'
+            }"
+          ></app-stat-card>
 
-        <!-- Tarjeta de Productos en Stock -->
-        <app-stat-card
-          title="Productos en Stock"
-          value="1,324"
-          icon="pi pi-box"
-          iconColor="info"
-          [trend]="{
-            value: 4.5,
-            isPositive: false,
-            label: 'comparado con el mes anterior'
-          }"
-        ></app-stat-card>
+          <!-- Tarjeta de Productos en Stock -->
+          <app-stat-card
+            title="Productos en Stock"
+            value="1,324"
+            icon="pi pi-box"
+            iconColor="info"
+            [trend]="{
+              value: 4.5,
+              isPositive: false,
+              label: 'comparado con el mes anterior'
+            }"
+          ></app-stat-card>
 
-        <!-- Tarjeta de Clientes Nuevos -->
-        <app-stat-card
-          title="Clientes Nuevos"
-          value="89"
-          icon="pi pi-users"
-          iconColor="success"
-          [trend]="{
-            value: 12.5,
-            isPositive: true,
-            label: 'este mes'
-          }"
-        ></app-stat-card>
+          <!-- Tarjeta de Clientes Nuevos -->
+          <app-stat-card
+            title="Clientes Nuevos"
+            value="89"
+            icon="pi pi-users"
+            iconColor="success"
+            [trend]="{
+              value: 12.5,
+              isPositive: true,
+              label: 'este mes'
+            }"
+          ></app-stat-card>
 
-        <!-- Tarjeta de Pedidos Pendientes -->
-        <app-stat-card
-          title="Pedidos Pendientes"
-          value="23"
-          icon="pi pi-shopping-cart"
-          iconColor="warning"
-          [trend]="{
-            value: 8.2,
-            isPositive: false,
-            label: 'desde ayer'
-          }"
-        ></app-stat-card>
+          <!-- Tarjeta de Pedidos Pendientes -->
+          <app-stat-card
+            title="Pedidos Pendientes"
+            value="23"
+            icon="pi pi-shopping-cart"
+            iconColor="warning"
+            [trend]="{
+              value: 8.2,
+              isPositive: false,
+              label: 'desde ayer'
+            }"
+          ></app-stat-card>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- Gráfico de Ventas Mensuales -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200/50 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Ventas Mensuales</h3>
+                <p class="text-sm text-gray-600">Comparativa de ventas e ingresos del último período</p>
+              </div>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+              <canvas #salesChart></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico de Estado del Inventario -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200/50 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Estado del Inventario</h3>
+                <p class="text-sm text-gray-600">Distribución de productos por categoría</p>
+              </div>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+              <canvas #inventoryChart></canvas>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Contenido para inventario -->
