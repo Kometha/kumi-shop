@@ -150,7 +150,13 @@
         ></app-stat-card>
       </div>
 
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200/50 p-6">
+      <!-- Contenido para inventario -->
+      <div *ngIf="selectedMenu === 'inventario'">
+        <app-inventory></app-inventory>
+      </div>
+
+      <!-- Contenido genérico para otras secciones -->
+      <div *ngIf="selectedMenu !== 'dashboard' && selectedMenu !== 'inventario'" class="bg-white rounded-lg shadow-sm border border-gray-200/50 p-6">
         <p class="text-gray-600">
           Contenido de {{ getSelectedTitle() }}
         </p>
