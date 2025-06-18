@@ -1,10 +1,25 @@
 .inventory-container {
-  padding: 0;
+  padding: 0 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 0.5rem;
+  }
+}
+
+.search-filters-container {
+  margin-bottom: 1.5rem;
 }
 
 .table-container {
   overflow: hidden;
   background-color: #ffffff;
+  margin: 0 auto;
 
   ::ng-deep {
     .p-datatable {
