@@ -6,6 +6,9 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
+import { AddProductModalComponent } from '../add-product-modal/add-product-modal.component';
+import { ExportDialogComponent } from '../export-dialog/export-dialog.component';
 
 interface Product {
   id: number;
@@ -30,7 +33,10 @@ interface Product {
     ButtonModule,
     InputTextModule,
     TooltipModule,
-    FormsModule
+    FormsModule,
+    DialogModule,
+    AddProductModalComponent,
+    ExportDialogComponent
   ],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss'
@@ -40,6 +46,8 @@ export class InventoryComponent implements OnInit {
   filteredProducts: Product[] = [];
   searchValue: string = '';
   activeFilter: 'todos' | 'stock-bajo' | 'sin-movimiento' | 'ofertas' = 'todos';
+  displayAddProductModal: boolean = false;
+  displayExportDialog: boolean = false;
 
   ngOnInit() {
     this.products = [
@@ -204,5 +212,29 @@ export class InventoryComponent implements OnInit {
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(value);
+  }
+
+  showAddProductModal(): void {
+    this.displayAddProductModal = true;
+    // Bloquear scroll del body cuando el modal se abre
+    document.body.style.overflow = 'hidden';
+  }
+
+  hideAddProductModal(): void {
+    this.displayAddProductModal = false;
+    // Restaurar scroll del body cuando el modal se cierra
+    document.body.style.overflow = 'auto';
+  }
+
+  showExportDialog(): void {
+    this.displayExportDialog = true;
+    // Bloquear scroll del body cuando el modal se abre
+    document.body.style.overflow = 'hidden';
+  }
+
+  hideExportDialog(): void {
+    this.displayExportDialog = false;
+    // Restaurar scroll del body cuando el modal se cierra
+    document.body.style.overflow = 'auto';
   }
 }
