@@ -1,0 +1,176 @@
+<div class="inventory-container">
+  <!-- Search and Filters Bar -->
+  <div class="search-filters-container mb-6">
+    <div class="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <!-- Search Input -->
+      <div class="flex-1 relative">
+        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchValue"
+          (ngModelChange)="applyFilters()"
+          placeholder="Buscar productos..."
+          class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="flex items-center gap-2">
+        <button
+          (click)="activeFilter = 'todos'; applyFilters()"
+          [class.active]="activeFilter === 'todos'"
+          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
+          [ngClass]="{
+            'bg-gray-900 text-white': activeFilter === 'todos',
+            'bg-gray-100 text-gray-700 hover:bg-gray-200': activeFilter !== 'todos'
+          }">
+          Todos
+        </button>
+        <button
+          (click)="activeFilter = 'stock-bajo'; applyFilters()"
+          [class.active]="activeFilter === 'stock-bajo'"
+          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
+          [ngClass]="{
+            'bg-gray-900 text-white': activeFilter === 'stock-bajo',
+            'bg-gray-100 text-gray-700 hover:bg-gray-200': activeFilter !== 'stock-bajo'
+          }">
+          Stock Bajo
+        </button>
+        <button
+          (click)="activeFilter = 'sin-movimiento'; applyFilters()"
+          [class.active]="activeFilter === 'sin-movimiento'"
+          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
+          [ngClass]="{
+            'bg-gray-900 text-white': activeFilter === 'sin-movimiento',
+            'bg-gray-100 text-gray-700 hover:bg-gray-200': activeFilter !== 'sin-movimiento'
+          }">
+          Sin Movimiento
+        </button>
+        <button
+          (click)="activeFilter = 'ofertas'; applyFilters()"
+          [class.active]="activeFilter === 'ofertas'"
+          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
+          [ngClass]="{
+            'bg-gray-900 text-white': activeFilter === 'ofertas',
+            'bg-gray-100 text-gray-700 hover:bg-gray-200': activeFilter !== 'ofertas'
+          }">
+          Ofertas
+        </button>
+      </div>
+
+      <!-- Filter Icon -->
+      <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+        <i class="pi pi-filter text-gray-600"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="flex justify-between items-center mb-4">
+    <p class="text-gray-600">
+      Mostrando <span class="font-semibold">{{ getFilteredProductsCount() }}</span> productos
+    </p>
+    <div class="flex gap-2">
+      <button pButton label="Exportar" icon="pi pi-download" class="p-button-outlined"></button>
+      <button pButton label="Nuevo Producto" icon="pi pi-plus"></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container bg-white rounded-lg shadow-sm border border-gray-200">
+    <p-table
+      [value]="filteredProducts"
+      [paginator]="true"
+      [rows]="10"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['producto', 'codigo', 'categoria']"
+      styleClass="p-datatable-gridlines">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">Imagen</th>
+          <th>Producto</th>
+          <th>Código</th>
+          <th>Categoría</th>
+          <th style="width: 80px" class="text-center">Stock</th>
+          <th style="width: 120px" class="text-right">Costo</th>
+          <th style="width: 120px" class="text-right">Precio</th>
+          <th style="width: 80px" class="text-center">Margen</th>
+          <th style="width: 120px" class="text-center">Estado</th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-product>
+        <tr>
+          <!-- Imagen -->
+          <td>
+            <div
+              class="product-image"
+              [style.backgroundColor]="product.imagen">
+            </div>
+          </td>
+
+          <!-- Producto -->
+          <td class="font-medium">{{ product.producto }}</td>
+
+          <!-- Código -->
+          <td class="text-gray-600">{{ product.codigo }}</td>
+
+          <!-- Categoría -->
+          <td>{{ product.categoria }}</td>
+
+          <!-- Stock -->
+          <td class="text-center font-semibold">{{ product.stock }}</td>
+
+          <!-- Costo -->
+          <td class="text-right font-mono">{{ formatCurrency(product.costo) }}</td>
+
+          <!-- Precio -->
+          <td class="text-right font-mono font-semibold">{{ formatCurrency(product.precio) }}</td>
+
+          <!-- Margen -->
+          <td class="text-center">{{ product.margen }}%</td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="getEstadoLabel(product.estado)"
+              [severity]="getEstadoSeverity(product.estado)"
+              [rounded]="true">
+            </p-tag>
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text p-button-sm mr-2"
+              pTooltip="Editar">
+            </button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger p-button-sm"
+              pTooltip="Eliminar">
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center py-8">
+            <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+            <p class="text-gray-500">No se encontraron productos</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
