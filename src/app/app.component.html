@@ -155,30 +155,19 @@
         <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <!-- Gráfico de Ventas Mensuales -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200/50 p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Ventas Mensuales</h3>
-                <p class="text-sm text-gray-600">Comparativa de ventas e ingresos del último período</p>
-              </div>
-            </div>
-            <div class="chart-container" style="height: 300px;">
-              <canvas #salesChart></canvas>
-            </div>
-          </div>
+          <app-sales-chart></app-sales-chart>
 
           <!-- Gráfico de Estado del Inventario -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200/50 p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">Estado del Inventario</h3>
-                <p class="text-sm text-gray-600">Distribución de productos por categoría</p>
-              </div>
-            </div>
-            <div class="chart-container" style="height: 300px;">
-              <canvas #inventoryChart></canvas>
-            </div>
-          </div>
+          <app-inventory-chart></app-inventory-chart>
+        </div>
+
+        <!-- Sección de Ventas Recientes y Alertas de Inventario -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- Ventas Recientes -->
+          <app-recent-sales></app-recent-sales>
+
+          <!-- Alertas de Inventario -->
+          <app-inventory-alerts></app-inventory-alerts>
         </div>
       </div>
 
