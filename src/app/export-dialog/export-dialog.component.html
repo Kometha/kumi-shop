@@ -1,0 +1,73 @@
+<div class="export-dialog">
+  <div class="dialog-header mb-6">
+    <div class="flex items-center gap-3">
+      <div class="icon-container bg-blue-600 text-white rounded-lg p-2.5">
+        <i class="pi pi-download text-lg"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900">Exportar Inventario</h3>
+        <p class="text-sm text-gray-600 mt-0.5">Selecciona el formato de exportación que prefieras</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="export-options grid grid-cols-2 gap-4 mb-6">
+    <!-- Opción PDF -->
+    <div
+      class="export-option"
+      [class.selected]="selectedFormat === 'pdf'"
+      (click)="selectFormat('pdf')">
+      <div class="option-icon">
+        <i class="pi pi-file-pdf text-2xl text-red-600"></i>
+      </div>
+      <h4 class="option-title">PDF</h4>
+      <p class="option-description">
+        Exporta el inventario completo con imágenes en formato PDF
+      </p>
+      <ul class="option-features">
+        <li>• Incluye imágenes de productos</li>
+        <li>• Formato profesional</li>
+        <li>• Listo para imprimir</li>
+      </ul>
+    </div>
+
+    <!-- Opción Excel -->
+    <div
+      class="export-option"
+      [class.selected]="selectedFormat === 'excel'"
+      (click)="selectFormat('excel')">
+      <div class="option-icon">
+        <i class="pi pi-file-excel text-2xl text-green-600"></i>
+      </div>
+      <h4 class="option-title">Excel</h4>
+      <p class="option-description">
+        Exporta los datos del inventario en una hoja de cálculo
+      </p>
+      <ul class="option-features">
+        <li>• Datos editables</li>
+        <li>• Compatible con Excel</li>
+        <li>• Análisis de datos</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="dialog-footer flex justify-end gap-3 pt-4 border-t border-gray-200">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="onCancel()">
+    </button>
+    <button
+      pButton
+      type="button"
+      [label]="getExportButtonLabel()"
+      [disabled]="!selectedFormat"
+      [loading]="isExporting"
+      class="p-button-primary"
+      (click)="onExport()">
+    </button>
+  </div>
+</div>
