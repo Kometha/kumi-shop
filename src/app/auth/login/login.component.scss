@@ -1,0 +1,214 @@
+// Estilos para el componente de login
+.login-container {
+  font-family: 'Inter', sans-serif;
+}
+
+.login-card {
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  @media (max-width: 768px) {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+// Estilos para los campos de formulario
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    color: #374151;
+    font-weight: 500;
+  }
+}
+
+// Personalizaciones para PrimeNG
+:host ::ng-deep {
+
+  // Input text styles
+  .p-inputtext {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #d1d5db;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  // Password field styles
+  .p-password {
+    .p-inputtext {
+      width: 100%;
+    }
+
+    .p-password-panel {
+      display: none; // Ocultar feedback en login
+    }
+
+    .p-password-input {
+      padding-left: 2.5rem !important;
+    }
+  }
+
+  // Checkbox styles
+  .p-checkbox {
+    .p-checkbox-box {
+      border: 2px solid #e5e7eb;
+      border-radius: 4px;
+      width: 1.125rem;
+      height: 1.125rem;
+      background: #ffffff;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #3b82f6;
+      }
+
+      &.p-highlight {
+        background: #3b82f6;
+        border-color: #3b82f6;
+
+        .p-checkbox-icon {
+          color: #ffffff;
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+
+  // Button styles
+  .p-button {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+
+    &.p-button-lg {
+      padding: 0.875rem 1.5rem;
+      font-size: 0.875rem;
+    }
+
+    &:not(.p-button-outlined) {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-color: transparent;
+
+      &:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    &.p-button-outlined {
+      border: 2px solid #e5e7eb;
+      color: #6b7280;
+      background: transparent;
+
+      &:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #374151;
+        transform: translateY(-1px);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+  }
+
+  // Message styles
+  .p-message {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem;
+
+    &.p-message-error {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+
+    .p-message-icon {
+      font-size: 1.125rem;
+    }
+  }
+}
+
+// Icon styles dentro de inputs
+.relative {
+  .pi {
+    pointer-events: none;
+    z-index: 5;
+  }
+}
+
+// Animaciones
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// Pulse animation for avatar
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.login-card {
+  .bg-gradient-to-br {
+    animation: pulse 2s infinite;
+  }
+}
+
+// Estilos para links
+a {
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #1d4ed8 !important;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .login-card {
+    .space-y-6 > * {
+      margin-bottom: 1rem;
+    }
+  }
+}
