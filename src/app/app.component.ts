@@ -1,58 +1,46 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { DrawerModule } from 'primeng/drawer';
 import { CommonModule } from '@angular/common';
-import { StatCardComponent } from './shared/stat-card/stat-card.component';
-import { InventoryComponent } from './inventory/inventory.component';
-import { RecentSalesComponent } from './dashboard/recent-sales/recent-sales.component';
-import { InventoryAlertsComponent } from './dashboard/inventory-alerts/inventory-alerts.component';
-import { SalesChartComponent } from './dashboard/sales-chart/sales-chart.component';
-import { InventoryChartComponent } from './dashboard/inventory-chart/inventory-chart.component';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
-    ButtonModule,
-    DrawerModule,
-    StatCardComponent,
-    InventoryComponent,
-    RecentSalesComponent,
-    InventoryAlertsComponent,
-    SalesChartComponent,
-    InventoryChartComponent
+    RouterOutlet
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Kumi Shop';
-  sidebarVisible = false;
-  selectedMenu: string = 'dashboard';
 
-  constructor() {
-    // Constructor limpio
+  constructor(public authService: AuthService) {}
+
+  ngOnInit() {
+    // Detectar y resolver conflictos de NavigatorLock al inicio
+    this.resolveInitialConflicts();
+
+    // Escuchar errores de ventana para capturar NavigatorLock errors
+    window.addEventListener('error', (event) => {
+      if (event.error?.message?.includes('NavigatorLockAcquireTimeoutError')) {
+        console.warn('NavigatorLock error detected, attempting to resolve...');
+        this.authService.resolveNavigatorLockConflict();
+      }
+    });
   }
 
-  selectMenu(menu: string) {
-    this.selectedMenu = menu;
-
-    // Opcionalmente cerrar el drawer en dispositivos móviles
-    if (window.innerWidth < 768) {
-      this.sidebarVisible = false;
-    }
-  }
-
-  getSelectedTitle(): string {
-    const titles: { [key: string]: string } = {
-      'dashboard': 'Dashboard',
-      'inventario': 'Gestión de Inventario',
-      'clientes': 'Gestión de Clientes',
-      'configuracion': 'Configuración'
-    };
-    return titles[this.selectedMenu] || 'Dashboard';
+  /**
+   * Resolver conflictos iniciales de NavigatorLock
+   */
+  private resolveInitialConflicts() {
+    // Verificar en el siguiente tick para asegurar que DOM esté listo
+    setTimeout(() => {
+      if (this.authService.hasNavigatorLockConflict()) {
+        console.log('Initial NavigatorLock conflict detected, resolving...');
+        this.authService.resolveNavigatorLockConflict();
+      }
+    }, 100);
   }
 }
