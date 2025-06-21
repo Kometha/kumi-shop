@@ -48,6 +48,37 @@
       border-color: #ef4444;
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
+
+    // Estilos específicos para email input con iconos
+    &.border-green-500 {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+  }
+
+  // Estilos para iconos dentro de inputs
+  .form-group {
+    .relative {
+      i {
+        transition: all 0.2s ease;
+
+        &.pi-at {
+          color: #9ca3af;
+          font-size: 0.875rem;
+        }
+
+        &.pi-check-circle {
+          color: #10b981;
+          font-size: 1rem;
+          animation: scaleIn 0.3s ease-out;
+        }
+
+        &.pi-exclamation-triangle {
+          color: #ef4444;
+          font-size: 0.75rem;
+        }
+      }
+    }
   }
 
   // Password field styles
@@ -188,6 +219,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
