@@ -63,7 +63,6 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.valid) {
       const credentials: LoginCredentials = this.loginForm.value;
 
-      console.log('🔑 Intentando login con:', credentials.email);
 
       this.authService.login(credentials).subscribe({
         next: (response) => {
