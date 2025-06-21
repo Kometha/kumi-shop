@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from './services/auth.service';
+import { TraditionalAuthService } from './services/traditional-auth.service';
 
 @Component({
   selector: 'app-root',
@@ -16,31 +16,18 @@ import { AuthService } from './services/auth.service';
 export class AppComponent implements OnInit {
   title = 'Kumi Shop';
 
-  constructor(public authService: AuthService) {}
+  constructor(public authService: TraditionalAuthService) {}
 
   ngOnInit() {
-    // Detectar y resolver conflictos de NavigatorLock al inicio
-    this.resolveInitialConflicts();
+    console.log('🚀 Kumi Shop con autenticación tradicional iniciado');
 
-    // Escuchar errores de ventana para capturar NavigatorLock errors
-    window.addEventListener('error', (event) => {
-      if (event.error?.message?.includes('NavigatorLockAcquireTimeoutError')) {
-        console.warn('NavigatorLock error detected, attempting to resolve...');
-        this.authService.resolveNavigatorLockConflict();
+    // Verificar si hay un usuario autenticado al inicio
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        console.log('✅ Usuario autenticado:', user.email);
+      } else {
+        console.log('❌ No hay usuario autenticado');
       }
     });
-  }
-
-  /**
-   * Resolver conflictos iniciales de NavigatorLock
-   */
-  private resolveInitialConflicts() {
-    // Verificar en el siguiente tick para asegurar que DOM esté listo
-    setTimeout(() => {
-      if (this.authService.hasNavigatorLockConflict()) {
-        console.log('Initial NavigatorLock conflict detected, resolving...');
-        this.authService.resolveNavigatorLockConflict();
-      }
-    }, 100);
   }
 }
