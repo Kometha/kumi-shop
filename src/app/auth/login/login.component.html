@@ -1,29 +1,29 @@
-<div class="login-container min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+<div
+  class="login-container min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4"
+>
   <div class="login-card bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
     <!-- Header -->
     <div class="text-center mb-8">
-      <div class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4">
+      <div
+        class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4"
+      >
         <i class="pi pi-user text-white text-2xl"></i>
       </div>
       <h1 class="text-3xl font-bold text-gray-900 mb-2">Bienvenido</h1>
       <p class="text-gray-600">Inicia sesión en Kumi Shop</p>
     </div>
 
-    <!-- Error Message -->
-    <div *ngIf="errorMessage" class="mb-6">
-      <p-message severity="error" [text]="errorMessage" [closable]="false"></p-message>
-    </div>
-
     <!-- Formulario -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
-
       <!-- Email -->
       <div class="form-group">
         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
           Correo Electrónico
         </label>
         <div class="relative">
-          <i class="pi pi-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <i
+            class="pi pi-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          ></i>
           <input
             id="email"
             type="email"
@@ -36,32 +36,39 @@
         </div>
         <small
           *ngIf="isFieldInvalid('email')"
-          class="text-red-500 text-xs mt-1 block">
-          {{ getFieldError('email') }}
+          class="text-red-500 text-xs mt-1 block"
+        >
+          {{ getFieldError("email") }}
         </small>
       </div>
 
       <!-- Password -->
       <div class="form-group">
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          for="password"
+          class="block text-sm font-medium text-gray-700 mb-2"
+        >
           Contraseña
         </label>
         <div class="relative">
-          <i class="pi pi-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"></i>
+          <i
+            class="pi pi-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+          ></i>
           <p-password
             formControlName="password"
             placeholder="Tu contraseña"
             [toggleMask]="true"
             [feedback]="false"
-            [style]="{'width':'100%'}"
-            [inputStyle]="{'width':'100%', 'padding-left':'2.5rem'}"
+            [style]="{ width: '100%' }"
+            [inputStyle]="{ width: '100%', 'padding-left': '2.5rem' }"
             [class.ng-invalid]="isFieldInvalid('password')"
           ></p-password>
         </div>
         <small
           *ngIf="isFieldInvalid('password')"
-          class="text-red-500 text-xs mt-1 block">
-          {{ getFieldError('password') }}
+          class="text-red-500 text-xs mt-1 block"
+        >
+          {{ getFieldError("password") }}
         </small>
       </div>
 
@@ -70,10 +77,12 @@
         <div class="flex items-center">
           <p-checkbox
             formControlName="rememberMe"
-            [binary]="true"
             inputId="rememberMe"
           ></p-checkbox>
-          <label for="rememberMe" class="ml-2 text-sm text-gray-600 cursor-pointer">
+          <label
+            for="rememberMe"
+            class="ml-2 text-sm text-gray-600 cursor-pointer"
+          >
             Recordarme
           </label>
         </div>
@@ -81,7 +90,6 @@
         <button
           type="button"
           class="text-sm text-blue-600 hover:text-blue-800 underline"
-          (click)="forgotPassword()"
         >
           ¿Olvidaste tu contraseña?
         </button>
@@ -123,7 +131,9 @@
     <!-- Footer -->
     <div class="text-center text-sm text-gray-600 mt-8">
       Al iniciar sesión, aceptas nuestros
-      <a href="#" class="text-blue-600 hover:text-blue-800 underline">Términos de Servicio</a>
+      <a href="#" class="text-blue-600 hover:text-blue-800 underline"
+        >Términos de Servicio</a
+      >
     </div>
   </div>
 </div>
