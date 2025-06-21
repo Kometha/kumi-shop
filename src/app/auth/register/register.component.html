@@ -70,13 +70,13 @@
         <!-- Fecha de nacimiento -->
         <div class="form-group">
           <label
-            for="fecha_nacimiento"
+            for="fechaNacimiento"
             class="block text-sm font-medium text-gray-700 mb-2"
           >
             Fecha de Nacimiento *
           </label>
           <p-calendar
-            formControlName="fecha_nacimiento"
+            formControlName="fechaNacimiento"
             [showIcon]="true"
             placeholder="Selecciona tu fecha de nacimiento"
             dateFormat="dd/mm/yy"
@@ -84,13 +84,13 @@
             [monthNavigator]="true"
             yearRange="1920:2010"
             [style]="{ width: '100%' }"
-            [class.ng-invalid]="isFieldInvalid('fecha_nacimiento')"
+            [class.ng-invalid]="isFieldInvalid('fechaNacimiento')"
           ></p-calendar>
           <small
-            *ngIf="isFieldInvalid('fecha_nacimiento')"
+            *ngIf="isFieldInvalid('fechaNacimiento')"
             class="text-red-500 text-xs mt-1 block"
           >
-            {{ getFieldError("fecha_nacimiento") }}
+            {{ getFieldError("fechaNacimiento") }}
           </small>
         </div>
 
@@ -128,48 +128,65 @@
             for="email"
             class="block text-sm font-medium text-gray-700 mb-2"
           >
+            <i class="pi pi-envelope text-blue-600 mr-1"></i>
             Correo Electrónico *
           </label>
-          <input
-            id="email"
-            type="email"
-            pInputText
-            formControlName="email"
-            placeholder="ejemplo@correo.com"
-            class="w-full"
-            [class.ng-invalid]="isFieldInvalid('email')"
-          />
+          <div class="relative">
+            <input
+              id="email"
+              type="email"
+              pInputText
+              formControlName="email"
+              placeholder="tu.email@ejemplo.com"
+              class="w-full pl-10"
+              [class.ng-invalid]="isFieldInvalid('email')"
+              [class.border-green-500]="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
+            />
+            <i class="pi pi-at absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <i
+              *ngIf="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
+              class="pi pi-check-circle absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500"
+            ></i>
+          </div>
           <small
             *ngIf="isFieldInvalid('email')"
-            class="text-red-500 text-xs mt-1 block"
+            class="text-red-500 text-xs mt-1 block flex items-center"
           >
+            <i class="pi pi-exclamation-triangle mr-1"></i>
             {{ getFieldError("email") }}
+          </small>
+          <small
+            *ngIf="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
+            class="text-green-600 text-xs mt-1 block flex items-center"
+          >
+            <i class="pi pi-check mr-1"></i>
+            Email válido
           </small>
         </div>
 
         <!-- Número Celular -->
         <div class="form-group">
           <label
-            for="numero_celular"
+            for="numeroCelular"
             class="block text-sm font-medium text-gray-700 mb-2"
           >
             Número Celular *
           </label>
           <input
-            id="numero_celular"
+            id="numeroCelular"
             type="tel"
             pInputText
-            formControlName="numero_celular"
-            placeholder="1234567890"
-            maxlength="10"
+            formControlName="numeroCelular"
+            placeholder="95619511"
+            maxlength="8"
             class="w-full"
-            [class.ng-invalid]="isFieldInvalid('numero_celular')"
+            [class.ng-invalid]="isFieldInvalid('numeroCelular')"
           />
           <small
-            *ngIf="isFieldInvalid('numero_celular')"
+            *ngIf="isFieldInvalid('numeroCelular')"
             class="text-red-500 text-xs mt-1 block"
           >
-            {{ getFieldError("numero_celular") }}
+            {{ getFieldError("numeroCelular") }}
           </small>
         </div>
       </div>
