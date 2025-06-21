@@ -9,7 +9,7 @@ import { RecentSalesComponent } from './recent-sales/recent-sales.component';
 import { InventoryAlertsComponent } from './inventory-alerts/inventory-alerts.component';
 import { SalesChartComponent } from './sales-chart/sales-chart.component';
 import { InventoryChartComponent } from './inventory-chart/inventory-chart.component';
-import { AuthService } from '../services/auth.service';
+import { TraditionalAuthService } from '../services/traditional-auth.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -36,19 +36,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private authService: AuthService,
+    private authService: TraditionalAuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
-    // Verificar si hay conflictos de NavigatorLock al inicializar
-    this.checkNavigatorLockConflicts();
-
+    ngOnInit() {
     // Suscribirse a cambios de autenticación para manejar estados
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
+      .subscribe((user: any) => {
         if (!user) {
           // Si no hay usuario, redirigir al login
           this.router.navigate(['/login']);
@@ -61,7 +58,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Escuchar el estado de loading para asegurar que la UI se actualice correctamente
     this.authService.loading$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(loading => {
+      .subscribe((loading: boolean) => {
         if (!loading) {
           // Forzar detección de cambios cuando termine de cargar
           setTimeout(() => {
@@ -76,15 +73,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Verificar y resolver conflictos de NavigatorLock
-   */
-  private checkNavigatorLockConflicts() {
-    if (this.authService.hasNavigatorLockConflict()) {
-      console.log('Detectado conflicto de NavigatorLock, resolviendo...');
-      this.authService.resolveNavigatorLockConflict();
-    }
-  }
+
 
   get currentUser$() {
     return this.authService.currentUser$;
@@ -135,59 +124,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return titles[this.selectedMenu] || 'Dashboard';
   }
 
-  /**
-   * Función de emergencia para resolver problemas del sidebar
-   */
-  emergencyResetSidebar() {
-    console.log('Emergency sidebar reset triggered');
 
-    // Forzar el estado del sidebar
-    this.sidebarVisible = false;
-    this.cdr.detectChanges();
 
-    setTimeout(() => {
-      this.sidebarVisible = true;
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-        this.sidebarVisible = false;
-        this.cdr.detectChanges();
-      }, 100);
-    }, 100);
-  }
-
-  /**
-   * Resolver todos los problemas persistentes
-   */
-  resolveAllIssues() {
-    console.log('Resolving all persistent issues...');
-
-    // 1. Resolver conflictos de NavigatorLock
-    this.authService.resolveNavigatorLockConflict();
-
-    // 2. Resetear sidebar
-    this.emergencyResetSidebar();
-
-    // 3. Forzar detección de cambios
-    this.cdr.detectChanges();
-
-    // 4. Si es necesario, deep clean
-    setTimeout(() => {
-      if (this.authService.hasNavigatorLockConflict()) {
-        console.log('Issues persist, performing deep clean...');
-        this.authService.deepCleanAndReset();
-
-        // Recomendar refresh después de deep clean
-        setTimeout(() => {
-          if (confirm('Para resolver completamente los problemas, es recomendable recargar la página. ¿Deseas hacerlo ahora?')) {
-            window.location.reload();
-          }
-        }, 1000);
-      }
-    }, 2000);
-  }
-
-  logout() {
+    logout() {
     console.log('Logout clicked');
 
     // Cerrar sidebar antes del logout
@@ -195,13 +134,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     this.authService.logout().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success) {
           console.log('Logout successful, redirecting...');
           this.router.navigate(['/login']);
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cerrar sesión:', error);
         // Forzar logout incluso si hay error
         this.router.navigate(['/login']);
