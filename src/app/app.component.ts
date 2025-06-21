@@ -19,8 +19,6 @@ export class AppComponent implements OnInit {
   constructor(public authService: TraditionalAuthService) {}
 
   ngOnInit() {
-    console.log('🚀 Kumi Shop con autenticación tradicional iniciado');
-
     // Verificar si hay un usuario autenticado al inicio
     this.authService.currentUser$.subscribe(user => {
       if (user) {
