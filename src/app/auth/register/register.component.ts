@@ -53,18 +53,18 @@ export class RegisterComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     }
 
-    this.registerForm = this.fb.group({
+        this.registerForm = this.fb.group({
       // Campos básicos requeridos
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
 
-      // Campos del perfil (opcionales)
-      nombres: ['', [Validators.required]],
-      apellidos: ['', [Validators.required]],
-      fechaNacimiento: [''],
-      genero: [''],
-      numeroCelular: ['']
+      // Campos del perfil (requeridos)
+      nombres: ['', [Validators.required, Validators.minLength(2)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2)]],
+      fechaNacimiento: ['', [Validators.required]],
+      genero: ['', [Validators.required]],
+      numeroCelular: ['', [Validators.required, Validators.pattern(/^[0-9]{8}$/)]]
     }, {
       validators: this.passwordMatchValidator
     });
@@ -108,7 +108,7 @@ export class RegisterComponent implements OnInit {
 
       console.log('📝 Intentando registro con:', credentials.email);
 
-      this.authService.register(credentials).subscribe({
+            this.authService.register(credentials).subscribe({
         next: (response) => {
           if (response.success) {
             console.log('✅ Registro exitoso');
@@ -116,18 +116,42 @@ export class RegisterComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Registro exitoso',
-              detail: response.message || 'Usuario registrado correctamente'
+              detail: 'Usuario registrado correctamente. Iniciando sesión...'
             });
 
-            // Redirigir al login después de un breve delay
+            // Después del registro exitoso, hacer login automático
             setTimeout(() => {
-              this.router.navigate(['/login'], {
-                queryParams: {
-                  message: 'registered',
-                  email: credentials.email
+              console.log('🔄 Iniciando sesión automática después del registro...');
+
+              this.authService.login({
+                email: credentials.email,
+                password: credentials.password
+              }).subscribe({
+                next: (loginResponse) => {
+                  if (loginResponse.success) {
+                    console.log('✅ Login automático exitoso, redirigiendo al dashboard');
+                    this.router.navigate(['/dashboard']);
+                  } else {
+                    console.log('❌ Error en login automático, redirigiendo a login manual');
+                    this.router.navigate(['/login'], {
+                      queryParams: {
+                        message: 'registered',
+                        email: credentials.email
+                      }
+                    });
+                  }
+                },
+                error: (loginError) => {
+                  console.error('💥 Error en login automático:', loginError);
+                  this.router.navigate(['/login'], {
+                    queryParams: {
+                      message: 'registered',
+                      email: credentials.email
+                    }
+                  });
                 }
               });
-            }, 2000);
+            }, 1000);
 
           } else {
             console.error('❌ Error en registro:', response.error);
@@ -174,6 +198,8 @@ export class RegisterComponent implements OnInit {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
+
+
   getFieldError(fieldName: string): string {
     const field = this.registerForm.get(fieldName);
 
@@ -185,7 +211,14 @@ export class RegisterComponent implements OnInit {
         return 'Email inválido';
       }
       if (field.errors['minlength']) {
-        return `${this.getFieldLabel(fieldName)} debe tener al menos ${field.errors['minlength'].requiredLength} caracteres`;
+        const requiredLength = field.errors['minlength'].requiredLength;
+        return `${this.getFieldLabel(fieldName)} debe tener al menos ${requiredLength} caracteres`;
+      }
+      if (field.errors['pattern']) {
+        if (fieldName === 'numeroCelular') {
+          return 'El número celular debe tener exactamente 8 dígitos';
+        }
+        return 'Formato inválido';
       }
       if (field.errors['passwordMismatch']) {
         return 'Las contraseñas no coinciden';
