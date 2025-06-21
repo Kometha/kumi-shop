@@ -54,15 +54,17 @@ export class TraditionalAuthService {
   private supabase: SupabaseClient;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private loadingSubject = new BehaviorSubject<boolean>(false);
+  private initializedSubject = new BehaviorSubject<boolean>(false);
   private tokenKey = 'kumi_auth_token';
 
   // Observables públicos
   public currentUser$ = this.currentUserSubject.asObservable();
   public loading$ = this.loadingSubject.asObservable();
+  public initialized$ = this.initializedSubject.asObservable();
   public isAuthenticated$ = this.currentUser$.pipe(map(user => !!user));
 
   constructor() {
-    console.log('Traditional Auth Service initialized');
+    console.log('🚀 [AUTH] Traditional Auth Service initialized');
     // Solo usar Supabase como cliente de base de datos
     this.supabase = createClient(
       environment.supabase.url,
@@ -75,8 +77,24 @@ export class TraditionalAuthService {
       }
     );
 
-    // Verificar token almacenado al inicializar
-    this.checkStoredToken();
+    // Verificar token almacenado al inicializar de forma síncrona
+    this.initializeAuth();
+  }
+
+  /**
+   * Inicializar autenticación de forma controlada
+   */
+  private async initializeAuth(): Promise<void> {
+    console.log('🔄 [AUTH] Iniciando verificación de sesión...');
+
+    try {
+      await this.checkStoredToken();
+    } catch (error) {
+      console.error('❌ [AUTH] Error en inicialización:', error);
+    } finally {
+      this.initializedSubject.next(true);
+      console.log('✅ [AUTH] Inicialización completada');
+    }
   }
 
   /**
@@ -84,24 +102,40 @@ export class TraditionalAuthService {
    */
   private async checkStoredToken(): Promise<void> {
     this.loadingSubject.next(true);
+    console.log('🔍 [AUTH] Verificando token almacenado...');
 
     try {
       const token = this.getStoredToken();
-      if (token && this.isTokenValid(token)) {
-        const user = await this.getUserFromToken(token);
-        if (user) {
-          this.currentUserSubject.next(user);
+      console.log('🔍 [AUTH] Token encontrado:', !!token);
+
+      if (token) {
+        console.log('🔍 [AUTH] Verificando validez del token...');
+
+        if (this.isTokenValid(token)) {
+          console.log('✅ [AUTH] Token válido, obteniendo usuario...');
+
+          const user = await this.getUserFromToken(token);
+          if (user) {
+            console.log('✅ [AUTH] Usuario restaurado desde token:', user.email);
+            this.currentUserSubject.next(user);
+          } else {
+            console.log('❌ [AUTH] Usuario no encontrado en BD, limpiando token');
+            this.clearToken();
+          }
         } else {
+          console.log('❌ [AUTH] Token expirado o inválido, limpiando');
           this.clearToken();
         }
       } else {
+        console.log('ℹ️ [AUTH] No hay token almacenado');
         this.clearToken();
       }
     } catch (error) {
-      console.error('Error checking stored token:', error);
+      console.error('❌ [AUTH] Error checking stored token:', error);
       this.clearToken();
     } finally {
       this.loadingSubject.next(false);
+      console.log('🏁 [AUTH] Verificación de token completada');
     }
   }
 
@@ -161,7 +195,6 @@ export class TraditionalAuthService {
    */
   private async performLogin(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      console.log('🔍 [LOGIN] Buscando usuario:', credentials.email.toLowerCase());
 
       // 1. Buscar usuario por email
       const { data: userData, error: userError } = await this.supabase
@@ -527,5 +560,26 @@ export class TraditionalAuthService {
 
   getToken(): string | null {
     return this.getStoredToken();
+  }
+
+  isInitialized(): boolean {
+    return this.initializedSubject.value;
+  }
+
+  /**
+   * Método de debug para verificar el estado completo
+   */
+  getAuthState(): {
+    isAuthenticated: boolean;
+    isInitialized: boolean;
+    hasToken: boolean;
+    currentUser: User | null;
+  } {
+    return {
+      isAuthenticated: this.isAuthenticated(),
+      isInitialized: this.isInitialized(),
+      hasToken: !!this.getStoredToken(),
+      currentUser: this.getCurrentUser()
+    };
   }
 }
