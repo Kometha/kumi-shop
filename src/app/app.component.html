@@ -1,10 +1,12 @@
 <!-- Loading spinner mientras se verifica la sesión -->
-<div *ngIf="(authService.loading$ | async)" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-  <div class="text-center">
-    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
-    <p class="text-gray-600 font-medium">Verificando sesión...</p>
+@if (authService.loading$ | async) {
+  <div class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+      <p class="text-gray-600 font-medium">Verificando sesión...</p>
+    </div>
   </div>
-</div>
+}
 
 <!-- Router outlet - contenido principal -->
 <router-outlet />

@@ -32,12 +32,13 @@
             class="w-full"
             [class.ng-invalid]="isFieldInvalid('nombres')"
           />
-          <small
-            *ngIf="isFieldInvalid('nombres')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("nombres") }}
-          </small>
+          @if (isFieldInvalid('nombres')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("nombres") }}
+            </small>
+          }
         </div>
 
         <!-- Apellidos -->
@@ -56,12 +57,13 @@
             class="w-full"
             [class.ng-invalid]="isFieldInvalid('apellidos')"
           />
-          <small
-            *ngIf="isFieldInvalid('apellidos')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("apellidos") }}
-          </small>
+          @if (isFieldInvalid('apellidos')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("apellidos") }}
+            </small>
+          }
         </div>
       </div>
 
@@ -86,12 +88,13 @@
             [style]="{ width: '100%' }"
             [class.ng-invalid]="isFieldInvalid('fechaNacimiento')"
           ></p-calendar>
-          <small
-            *ngIf="isFieldInvalid('fechaNacimiento')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("fechaNacimiento") }}
-          </small>
+          @if (isFieldInvalid('fechaNacimiento')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("fechaNacimiento") }}
+            </small>
+          }
         </div>
 
         <!-- Género -->
@@ -111,12 +114,13 @@
             [style]="{ width: '100%' }"
             [class.ng-invalid]="isFieldInvalid('genero')"
           ></p-select>
-          <small
-            *ngIf="isFieldInvalid('genero')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("genero") }}
-          </small>
+          @if (isFieldInvalid('genero')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("genero") }}
+            </small>
+          }
         </div>
       </div>
 
@@ -143,25 +147,28 @@
               [class.border-green-500]="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
             />
             <i class="pi pi-at absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <i
-              *ngIf="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
-              class="pi pi-check-circle absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500"
-            ></i>
+            @if (registerForm.get('email')?.valid && registerForm.get('email')?.touched) {
+              <i
+                class="pi pi-check-circle absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500"
+              ></i>
+            }
           </div>
-          <small
-            *ngIf="isFieldInvalid('email')"
-            class="text-red-500 text-xs mt-1 block flex items-center"
-          >
-            <i class="pi pi-exclamation-triangle mr-1"></i>
-            {{ getFieldError("email") }}
-          </small>
-          <small
-            *ngIf="registerForm.get('email')?.valid && registerForm.get('email')?.touched"
-            class="text-green-600 text-xs mt-1 block flex items-center"
-          >
-            <i class="pi pi-check mr-1"></i>
-            Email válido
-          </small>
+          @if (isFieldInvalid('email')) {
+            <small
+              class="text-red-500 text-xs mt-1 block flex items-center"
+            >
+              <i class="pi pi-exclamation-triangle mr-1"></i>
+              {{ getFieldError("email") }}
+            </small>
+          }
+          @if (registerForm.get('email')?.valid && registerForm.get('email')?.touched) {
+            <small
+              class="text-green-600 text-xs mt-1 block flex items-center"
+            >
+              <i class="pi pi-check mr-1"></i>
+              Email válido
+            </small>
+          }
         </div>
 
         <!-- Número Celular -->
@@ -182,12 +189,13 @@
             class="w-full"
             [class.ng-invalid]="isFieldInvalid('numeroCelular')"
           />
-          <small
-            *ngIf="isFieldInvalid('numeroCelular')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("numeroCelular") }}
-          </small>
+          @if (isFieldInvalid('numeroCelular')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("numeroCelular") }}
+            </small>
+          }
         </div>
       </div>
 
@@ -214,12 +222,13 @@
             [inputStyle]="{ width: '100%' }"
             [class.ng-invalid]="isFieldInvalid('password')"
           ></p-password>
-          <small
-            *ngIf="isFieldInvalid('password')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("password") }}
-          </small>
+          @if (isFieldInvalid('password')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("password") }}
+            </small>
+          }
         </div>
 
         <!-- Confirmar Contraseña -->
@@ -239,12 +248,13 @@
             [inputStyle]="{ width: '100%' }"
             [class.ng-invalid]="isFieldInvalid('confirmPassword')"
           ></p-password>
-          <small
-            *ngIf="isFieldInvalid('confirmPassword')"
-            class="text-red-500 text-xs mt-1 block"
-          >
-            {{ getFieldError("confirmPassword") }}
-          </small>
+          @if (isFieldInvalid('confirmPassword')) {
+            <small
+              class="text-red-500 text-xs mt-1 block"
+            >
+              {{ getFieldError("confirmPassword") }}
+            </small>
+          }
         </div>
       </div>
 

@@ -11,18 +11,24 @@
 
     <!-- Valor principal -->
     <div class="stat-card-value">
-      <span class="prefix" *ngIf="prefix">{{ prefix }}</span>
+      @if (prefix) {
+        <span class="prefix">{{ prefix }}</span>
+      }
       <span class="value">{{ value }}</span>
-      <span class="suffix" *ngIf="suffix">{{ suffix }}</span>
+      @if (suffix) {
+        <span class="suffix">{{ suffix }}</span>
+      }
     </div>
 
     <!-- Tendencia -->
-    <div class="stat-card-trend" *ngIf="trend">
-      <span class="trend-indicator" [class.positive]="trend.isPositive" [class.negative]="!trend.isPositive">
-        <i [class]="trend.isPositive ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
-        {{ trend.isPositive ? '+' : '' }}{{ trend.value }}%
-      </span>
-      <span class="trend-label">{{ trend.label }}</span>
-    </div>
+    @if (trend) {
+      <div class="stat-card-trend">
+        <div class="trend-indicator" [class]="trend.isPositive ? 'positive' : 'negative'">
+          <i class="pi" [class]="trend.isPositive ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
+          <span>{{ trend.value }}%</span>
+        </div>
+        <p class="trend-description">{{ trend.label }}</p>
+      </div>
+    }
   </div>
 </div>
