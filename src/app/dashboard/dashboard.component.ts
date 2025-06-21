@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { StatCardComponent } from '../shared/stat-card/stat-card.component';
 import { InventoryComponent } from '../inventory/inventory.component';
 import { RecentSalesComponent } from './recent-sales/recent-sales.component';
@@ -19,6 +21,7 @@ import { Subject, takeUntil } from 'rxjs';
     CommonModule,
     ButtonModule,
     DrawerModule,
+    ToastModule,
     StatCardComponent,
     InventoryComponent,
     RecentSalesComponent,
@@ -26,6 +29,7 @@ import { Subject, takeUntil } from 'rxjs';
     SalesChartComponent,
     InventoryChartComponent
   ],
+  providers: [MessageService],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -38,7 +42,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: TraditionalAuthService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private messageService: MessageService
   ) {}
 
     ngOnInit() {
@@ -127,7 +132,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 
     logout() {
-    console.log('Logout clicked');
+    // Mostrar mensaje de información
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cerrando sesión...',
+      detail: 'Cerrando sesión...'
+    });
 
     // Cerrar sidebar antes del logout
     this.sidebarVisible = false;
