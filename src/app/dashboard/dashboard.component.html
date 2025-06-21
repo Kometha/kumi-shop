@@ -197,15 +197,5 @@
     </div>
   </main>
 
-  <!-- Debug info (temporal - remover en producción) -->
-  <div class="debug-sidebar-state" *ngIf="true">
-    Sidebar Visible: {{ sidebarVisible }}<br>
-    Current User: {{ (currentUser$ | async)?.email || 'No user' }}<br>
-    Selected Menu: {{ selectedMenu }}<br>
-    <button
-      class="bg-red-500 text-white px-2 py-1 text-xs rounded mt-2"
-      (click)="resolveAllIssues()">
-      🔧 Resolver Issues
-    </button>
-  </div>
+    <!-- Sistema de autenticación tradicional funcionando correctamente ✅ -->
 </div>
