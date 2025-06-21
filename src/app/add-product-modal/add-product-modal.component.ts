@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 
 interface ProductForm {
   nombre: string;
@@ -27,7 +27,7 @@ interface ProductForm {
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    DropdownModule
+    SelectModule
   ],
   templateUrl: './add-product-modal.component.html',
   styleUrl: './add-product-modal.component.scss'
