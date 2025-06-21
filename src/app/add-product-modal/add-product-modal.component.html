@@ -75,7 +75,7 @@
 
       <div class="form-group">
         <label class="form-label">Categoría *</label>
-        <p-dropdown
+        <p-select
           appendTo="body"
           [options]="categorias"
           [(ngModel)]="product.categoria"
@@ -83,7 +83,7 @@
           optionLabel="label"
           optionValue="value"
           [style]="{'width':'100%'}">
-        </p-dropdown>
+        </p-select>
       </div>
 
       <div class="form-group">
@@ -160,14 +160,14 @@
 
     <div class="form-group">
       <label class="form-label">Estado Inicial</label>
-      <p-dropdown
+      <p-select
         appendTo="body"
         [options]="estados"
         [(ngModel)]="product.estado"
         optionLabel="label"
         optionValue="value"
         [style]="{'width':'100%'}">
-      </p-dropdown>
+      </p-select>
     </div>
   </div>
 
