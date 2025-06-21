@@ -2,28 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-
-// PrimeNG imports
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
-import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
-import { MessageModule } from 'primeng/message';
-import { MessagesModule } from 'primeng/messages';
-
-import { AuthService, RegisterCredentials } from '../../services/auth.service';
-
-interface RegisterForm {
-  nombres: string;
-  apellidos: string;
-  fecha_nacimiento: Date;
-  genero: string;
-  email: string;
-  numero_celular: string;
-  password: string;
-  confirmPassword: string;
-}
+import { SelectModule } from 'primeng/select';
+import { CardModule } from 'primeng/card';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { TraditionalAuthService, RegisterCredentials } from '../../services/traditional-auth.service';
 
 @Component({
   selector: 'app-register',
@@ -34,74 +21,70 @@ interface RegisterForm {
     ButtonModule,
     InputTextModule,
     PasswordModule,
-    DropdownModule,
     CalendarModule,
-    MessageModule,
-    MessagesModule
+    SelectModule,
+    CardModule,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
 export class RegisterComponent implements OnInit {
-  registerForm!: FormGroup;
+  registerForm: FormGroup;
   loading = false;
-  errorMessage = '';
-  successMessage = '';
 
-  // Opciones para el dropdown de género
+  // Opciones para dropdowns
   generoOptions = [
     { label: 'Masculino', value: 'masculino' },
     { label: 'Femenino', value: 'femenino' },
-    { label: 'Otro', value: 'otro' }
+    { label: 'Otro', value: 'otro' },
+    { label: 'Prefiero no decir', value: 'no_decir' }
   ];
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
-  ) {}
+    private authService: TraditionalAuthService,
+    private router: Router,
+    private messageService: MessageService
+  ) {
+    // Si ya está autenticado, redirigir al dashboard
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/dashboard']);
+    }
 
-  ngOnInit() {
-    this.initializeForm();
-  }
-
-  private initializeForm() {
     this.registerForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2)]],
-      fecha_nacimiento: ['', [Validators.required]],
-      genero: ['', [Validators.required]],
+      // Campos básicos requeridos
       email: ['', [Validators.required, Validators.email]],
-      numero_celular: ['', [
-        Validators.required,
-        Validators.pattern(/^[0-9]{10}$/) // 10 dígitos
-      ]],
-      password: ['', [
-        Validators.required,
-        Validators.minLength(6),
-        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/) // Al menos 1 minúscula, 1 mayúscula, 1 número
-      ]],
-      confirmPassword: ['', [Validators.required]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
+
+      // Campos del perfil (opcionales)
+      nombres: ['', [Validators.required]],
+      apellidos: ['', [Validators.required]],
+      fechaNacimiento: [''],
+      genero: [''],
+      numeroCelular: ['']
     }, {
       validators: this.passwordMatchValidator
     });
   }
 
+  ngOnInit() {
+    // Suscribirse al estado de loading
+    this.authService.loading$.subscribe(loading => {
+      this.loading = loading;
+    });
+  }
+
   // Validador personalizado para confirmar contraseña
-  private passwordMatchValidator(form: FormGroup) {
+  passwordMatchValidator(form: FormGroup) {
     const password = form.get('password');
     const confirmPassword = form.get('confirmPassword');
 
     if (password && confirmPassword && password.value !== confirmPassword.value) {
-      confirmPassword.setErrors({ mismatch: true });
-      return { mismatch: true };
-    }
-
-    if (confirmPassword?.errors?.['mismatch']) {
-      delete confirmPassword.errors['mismatch'];
-      if (Object.keys(confirmPassword.errors).length === 0) {
-        confirmPassword.setErrors(null);
-      }
+      confirmPassword.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
     }
 
     return null;
@@ -109,68 +92,83 @@ export class RegisterComponent implements OnInit {
 
   onSubmit() {
     if (this.registerForm.valid) {
-      this.loading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-
-      const formData = this.registerForm.value as RegisterForm;
-
-      // Formatear fecha para envío
-      const fechaNacimiento = formData.fecha_nacimiento;
-      const fechaString = fechaNacimiento.toISOString().split('T')[0]; // YYYY-MM-DD
+      const formValue = this.registerForm.value;
 
       const credentials: RegisterCredentials = {
-        email: formData.email,
-        password: formData.password,
-        name: `${formData.nombres} ${formData.apellidos}`,
-        // Datos adicionales en metadata
-        metadata: {
-          nombres: formData.nombres,
-          apellidos: formData.apellidos,
-          fecha_nacimiento: fechaString,
-          genero: formData.genero,
-          numero_celular: formData.numero_celular
-        }
+        email: formValue.email,
+        password: formValue.password,
+        name: `${formValue.nombres} ${formValue.apellidos}`.trim(),
+        nombres: formValue.nombres,
+        apellidos: formValue.apellidos,
+        fechaNacimiento: formValue.fechaNacimiento ?
+          new Date(formValue.fechaNacimiento).toISOString().split('T')[0] : undefined,
+        genero: formValue.genero,
+        numeroCelular: formValue.numeroCelular
       };
+
+      console.log('📝 Intentando registro con:', credentials.email);
 
       this.authService.register(credentials).subscribe({
         next: (response) => {
-          this.loading = false;
-
           if (response.success) {
-            this.successMessage = response.message || 'Usuario registrado exitosamente';
+            console.log('✅ Registro exitoso');
 
-            // Limpiar formulario
-            this.registerForm.reset();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Registro exitoso',
+              detail: response.message || 'Usuario registrado correctamente'
+            });
 
-            // Redirigir después de 2 segundos
+            // Redirigir al login después de un breve delay
             setTimeout(() => {
-              this.router.navigate(['/login']);
+              this.router.navigate(['/login'], {
+                queryParams: {
+                  message: 'registered',
+                  email: credentials.email
+                }
+              });
             }, 2000);
 
           } else {
-            this.errorMessage = response.error || 'Error al registrar usuario';
+            console.error('❌ Error en registro:', response.error);
+
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: response.error || 'Error al registrar usuario'
+            });
           }
         },
         error: (error) => {
-          this.loading = false;
-          this.errorMessage = 'Error de conexión. Intenta de nuevo.';
-          console.error('Error en registro:', error);
+          console.error('💥 Error inesperado:', error);
+
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error inesperado. Intenta nuevamente.'
+          });
         }
       });
+
     } else {
-      this.markFormGroupTouched();
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.registerForm.controls).forEach(key => {
+        this.registerForm.get(key)?.markAsTouched();
+      });
+
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario inválido',
+        detail: 'Por favor, completa todos los campos requeridos correctamente'
+      });
     }
   }
 
-  private markFormGroupTouched() {
-    Object.keys(this.registerForm.controls).forEach(key => {
-      const control = this.registerForm.get(key);
-      control?.markAsTouched();
-    });
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 
-  // Métodos de validación para mostrar errores
+  // Métodos auxiliares para el template
   isFieldInvalid(fieldName: string): boolean {
     const field = this.registerForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
@@ -180,14 +178,18 @@ export class RegisterComponent implements OnInit {
     const field = this.registerForm.get(fieldName);
 
     if (field?.errors) {
-      if (field.errors['required']) return `${this.getFieldLabel(fieldName)} es requerido`;
-      if (field.errors['email']) return 'Email inválido';
-      if (field.errors['minlength']) return `${this.getFieldLabel(fieldName)} debe tener al menos ${field.errors['minlength'].requiredLength} caracteres`;
-      if (field.errors['pattern']) {
-        if (fieldName === 'numero_celular') return 'Número debe tener 10 dígitos';
-        if (fieldName === 'password') return 'Contraseña debe tener al menos 1 mayúscula, 1 minúscula y 1 número';
+      if (field.errors['required']) {
+        return `${this.getFieldLabel(fieldName)} es requerido`;
       }
-      if (field.errors['mismatch']) return 'Las contraseñas no coinciden';
+      if (field.errors['email']) {
+        return 'Email inválido';
+      }
+      if (field.errors['minlength']) {
+        return `${this.getFieldLabel(fieldName)} debe tener al menos ${field.errors['minlength'].requiredLength} caracteres`;
+      }
+      if (field.errors['passwordMismatch']) {
+        return 'Las contraseñas no coinciden';
+      }
     }
 
     return '';
@@ -195,26 +197,15 @@ export class RegisterComponent implements OnInit {
 
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
+      email: 'Email',
+      password: 'Contraseña',
+      confirmPassword: 'Confirmar contraseña',
       nombres: 'Nombres',
       apellidos: 'Apellidos',
-      fecha_nacimiento: 'Fecha de nacimiento',
+      fechaNacimiento: 'Fecha de nacimiento',
       genero: 'Género',
-      email: 'Email',
-      numero_celular: 'Número celular',
-      password: 'Contraseña',
-      confirmPassword: 'Confirmación de contraseña'
+      numeroCelular: 'Número de celular'
     };
     return labels[fieldName] || fieldName;
-  }
-
-  getMaxDate(): Date {
-    // Fecha máxima: hace 13 años (para usuarios menores de edad)
-    const today = new Date();
-    today.setFullYear(today.getFullYear() - 13);
-    return today;
-  }
-
-  goToLogin() {
-    this.router.navigate(['/login']);
   }
 }
