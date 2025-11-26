@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
-import { ProductosService, NuevoProducto } from '../services/productos.service';
+import { ProductosService, NuevoProducto, Product } from '../services/productos.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
@@ -32,9 +32,11 @@ interface ProductForm {
   templateUrl: './add-product-modal.component.html',
   styleUrl: './add-product-modal.component.scss'
 })
-export class AddProductModalComponent implements OnInit, OnDestroy {
+export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() productToEdit: Product | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() productCreated = new EventEmitter<void>();
+  @Output() productUpdated = new EventEmitter<void>();
 
   product: ProductForm = {
     nombre: '',
@@ -44,6 +46,8 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
   };
 
   loading = false;
+  isEditMode = false;
+  productId: number | null = null;
 
 
   constructor(
@@ -58,6 +62,52 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // No bloquear scroll aquí, lo manejamos desde el componente padre
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['productToEdit'] && this.productToEdit) {
+      this.loadProductForEdit();
+    } else {
+      this.resetForm();
+    }
+  }
+
+  /**
+   * Cargar datos del producto para edición
+   */
+  loadProductForEdit(): void {
+    if (this.productToEdit) {
+      this.isEditMode = true;
+      this.productId = this.productToEdit.id;
+      this.product = {
+        nombre: this.productToEdit.producto,
+        stock: this.productToEdit.stock,
+        costo: this.productToEdit.costo,
+        precioVenta: this.productToEdit.precio
+      };
+
+      // Cargar imagen existente si existe
+      if (this.productToEdit.imagen && this.productToEdit.imagen !== '#f0f0f0') {
+        this.previewImage = this.productToEdit.imagen;
+        this.selectedFile = null; // No hay archivo nuevo seleccionado
+      }
+    }
+  }
+
+  /**
+   * Resetear formulario para modo creación
+   */
+  resetForm(): void {
+    this.isEditMode = false;
+    this.productId = null;
+    this.product = {
+      nombre: '',
+      stock: 0,
+      costo: 0,
+      precioVenta: 0
+    };
+    this.previewImage = null;
+    this.selectedFile = null;
   }
 
   ngOnDestroy(): void {
@@ -161,48 +211,89 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
 
     this.loading = true;
 
-    // Crear objeto NuevoProducto para enviar a la BD
-    // Usar valores por defecto para campos que no se envían
-    const nuevoProducto: NuevoProducto = {
-      nombre: this.product.nombre,
-      categoria_id: 1, // Valor por defecto
-      stock: this.product.stock,
-      stockMinimo: 0, // Valor por defecto
-      costo: this.product.costo,
-      precioVenta: this.product.precioVenta,
-      estado: 'disponible', // Valor por defecto
-      imagen: this.selectedFile || undefined
-    };
+    if (this.isEditMode && this.productId) {
+      // Modo edición: actualizar producto existente
+      const productoActualizado: Partial<NuevoProducto> = {
+        nombre: this.product.nombre,
+        stock: this.product.stock,
+        costo: this.product.costo,
+        precioVenta: this.product.precioVenta,
+        imagen: this.selectedFile || undefined,
+        imagenUrl: this.selectedFile ? undefined : this.previewImage || undefined
+      };
 
-    // Llamar al servicio para crear el producto
-    this.productosService.crearProducto(nuevoProducto).subscribe({
-      next: (producto) => {
-        this.loading = false;
-        console.log('✅ Producto creado exitosamente:', producto);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Producto agregado correctamente'
-        });
+      this.productosService.actualizarProducto(this.productId, productoActualizado).subscribe({
+        next: (producto) => {
+          this.loading = false;
+          console.log('✅ Producto actualizado exitosamente:', producto);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Producto actualizado correctamente'
+          });
 
-        // Emitir evento para que el componente padre recargue los productos
-        this.productCreated.emit();
+          // Emitir evento para que el componente padre recargue los productos
+          this.productUpdated.emit();
 
-        // Cerrar modal después de un breve delay
-        setTimeout(() => {
-          this.close.emit();
-        }, 1000);
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('❌ Error al crear producto:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: error.message || 'Error al crear el producto. Intenta nuevamente.'
-        });
-      }
-    });
+          // Cerrar modal después de un breve delay
+          setTimeout(() => {
+            this.close.emit();
+            this.resetForm();
+          }, 1000);
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('❌ Error al actualizar producto:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.message || 'Error al actualizar el producto. Intenta nuevamente.'
+          });
+        }
+      });
+    } else {
+      // Modo creación: crear nuevo producto
+      const nuevoProducto: NuevoProducto = {
+        nombre: this.product.nombre,
+        categoria_id: 1, // Valor por defecto
+        stock: this.product.stock,
+        stockMinimo: 0, // Valor por defecto
+        costo: this.product.costo,
+        precioVenta: this.product.precioVenta,
+        estado: 'disponible', // Valor por defecto
+        imagen: this.selectedFile || undefined
+      };
+
+      this.productosService.crearProducto(nuevoProducto).subscribe({
+        next: (producto) => {
+          this.loading = false;
+          console.log('✅ Producto creado exitosamente:', producto);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Producto agregado correctamente'
+          });
+
+          // Emitir evento para que el componente padre recargue los productos
+          this.productCreated.emit();
+
+          // Cerrar modal después de un breve delay
+          setTimeout(() => {
+            this.close.emit();
+            this.resetForm();
+          }, 1000);
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('❌ Error al crear producto:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.message || 'Error al crear el producto. Intenta nuevamente.'
+          });
+        }
+      });
+    }
   }
 
   viewImage(): void {
