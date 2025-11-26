@@ -63,6 +63,7 @@
   <!-- Table -->
   <div
     class="table-container bg-white rounded-lg shadow-sm border border-gray-200"
+    style="overflow: visible;"
   >
     <p-toast></p-toast>
     <p-table
@@ -100,7 +101,8 @@
               width="60"
               height="60"
               styleClass="product-image-preview"
-              [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }">
+              [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }"
+            >
             </p-image>
           </td>
 
@@ -140,6 +142,10 @@
               type="button"
               icon="pi pi-pencil"
               class="p-button-rounded p-button-text p-button-sm mr-2"
+              (click)="showEditProductModal(product)"
+              [disabled]="loading"
+              pTooltip="Editar producto"
+              tooltipPosition="top"
             ></button>
             <button
               pButton
@@ -149,8 +155,8 @@
               (click)="confirmDelete(product)"
               [disabled]="loading"
               pTooltip="Eliminar producto"
-              tooltipPosition="top">
-            </button>
+              tooltipPosition="top"
+            ></button>
           </td>
         </tr>
       </ng-template>
@@ -167,7 +173,7 @@
   </div>
 </div>
 
-<!-- Modal para agregar producto -->
+<!-- Modal para agregar/editar producto -->
 <p-dialog
   [(visible)]="displayAddProductModal"
   [modal]="true"
@@ -177,12 +183,15 @@
   [resizable]="false"
   [closable]="true"
   [showHeader]="true"
-  header="Agregar Nuevo Producto"
+  [header]="productToEdit ? 'Editar Producto' : 'Agregar Nuevo Producto'"
   (onHide)="hideAddProductModal()"
 >
   <app-add-product-modal
+    [productToEdit]="productToEdit"
     (close)="hideAddProductModal()"
-    (productCreated)="onProductCreated()">
+    (productCreated)="onProductCreated()"
+    (productUpdated)="onProductUpdated()"
+  >
   </app-add-product-modal>
 </p-dialog>
 
@@ -212,13 +221,15 @@
   [closable]="true"
   [showHeader]="true"
   header="Confirmar Eliminación"
-  (onHide)="cancelDelete()">
+  (onHide)="cancelDelete()"
+>
   <div class="flex flex-column align-items-center gap-4 py-4">
     <div class="text-center">
       <h3 class="text-xl font-semibold mb-2">¿Estás seguro?</h3>
       <p class="text-gray-600">
         ¿Deseas eliminar el producto
-        <strong>{{ productToDelete?.producto }}</strong>?
+        <strong>{{ productToDelete?.producto }}</strong
+        >?
       </p>
     </div>
   </div>
@@ -229,8 +240,8 @@
       label="Cancelar"
       class="p-button-text"
       (click)="cancelDelete()"
-      [disabled]="deleting">
-    </button>
+      [disabled]="deleting"
+    ></button>
     <button
       pButton
       type="button"
@@ -238,7 +249,7 @@
       class="p-button-danger"
       (click)="deleteProduct()"
       [loading]="deleting"
-      [disabled]="deleting">
-    </button>
+      [disabled]="deleting"
+    ></button>
   </ng-template>
 </p-dialog>
