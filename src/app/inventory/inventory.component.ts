@@ -9,19 +9,9 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { AddProductModalComponent } from '../add-product-modal/add-product-modal.component';
 import { ExportDialogComponent } from '../export-dialog/export-dialog.component';
-
-interface Product {
-  id: number;
-  imagen: string;
-  producto: string;
-  codigo: string;
-  categoria: string;
-  stock: number;
-  costo: number;
-  precio: number;
-  margen: number;
-  estado: 'disponible' | 'stock-bajo' | 'agotado';
-}
+import { ProductosService, Product } from '../services/productos.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-inventory',
@@ -35,9 +25,11 @@ interface Product {
     TooltipModule,
     FormsModule,
     DialogModule,
+    ToastModule,
     AddProductModalComponent,
     ExportDialogComponent
   ],
+  providers: [MessageService],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss'
 })
@@ -48,84 +40,39 @@ export class InventoryComponent implements OnInit {
   activeFilter: 'todos' | 'stock-bajo' | 'sin-movimiento' | 'ofertas' = 'todos';
   displayAddProductModal: boolean = false;
   displayExportDialog: boolean = false;
+  loading: boolean = false;
+
+  constructor(
+    private productosService: ProductosService,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit() {
-    this.products = [
-      {
-        id: 1,
-        imagen: '#3b82f6', // Color azul temporal
-        producto: 'Sofá Moderno Gris',
-        codigo: 'SOF-001',
-        categoria: 'Sofás',
-        stock: 15,
-        costo: 2500.00,
-        precio: 4999.00,
-        margen: 50,
-        estado: 'disponible'
-      },
-      {
-        id: 2,
-        imagen: '#8b5cf6', // Color púrpura temporal
-        producto: 'Mesa de Centro Roble',
-        codigo: 'MES-002',
-        categoria: 'Mesas',
-        stock: 8,
-        costo: 1200.00,
-        precio: 2499.00,
-        margen: 52,
-        estado: 'disponible'
-      },
-      {
-        id: 3,
-        imagen: '#10b981', // Color verde temporal
-        producto: 'Silla Ergonómica Negra',
-        codigo: 'SIL-003',
-        categoria: 'Sillas',
-        stock: 2,
-        costo: 600.00,
-        precio: 1299.00,
-        margen: 54,
-        estado: 'stock-bajo'
-      },
-      {
-        id: 4,
-        imagen: '#f59e0b', // Color naranja temporal
-        producto: 'Estantería Modular',
-        codigo: 'EST-004',
-        categoria: 'Estanterías',
-        stock: 12,
-        costo: 1500.00,
-        precio: 3199.00,
-        margen: 53,
-        estado: 'disponible'
-      },
-      {
-        id: 5,
-        imagen: '#ef4444', // Color rojo temporal
-        producto: 'Cama King Size',
-        codigo: 'CAM-005',
-        categoria: 'Camas',
-        stock: 5,
-        costo: 4500.00,
-        precio: 8999.00,
-        margen: 50,
-        estado: 'disponible'
-      },
-      {
-        id: 6,
-        imagen: '#6366f1', // Color indigo temporal
-        producto: 'Escritorio Ejecutivo',
-        codigo: 'ESC-006',
-        categoria: 'Escritorios',
-        stock: 0,
-        costo: 3000.00,
-        precio: 5499.00,
-        margen: 45,
-        estado: 'agotado'
-      }
-    ];
+    this.loadProductos();
+  }
 
-    this.applyFilters();
+  /**
+   * Cargar productos desde Supabase
+   */
+  loadProductos(): void {
+    this.loading = true;
+    this.productosService.getProductos().subscribe({
+      next: (productos) => {
+        this.products = productos;
+        this.applyFilters();
+        this.loading = false;
+        console.log('✅ Productos cargados:', productos.length);
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar productos:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los productos. Intenta nuevamente.',
+        });
+      }
+    });
   }
 
   applyFilters() {
@@ -136,8 +83,8 @@ export class InventoryComponent implements OnInit {
       const searchLower = this.searchValue.toLowerCase();
       filtered = filtered.filter(product =>
         product.producto.toLowerCase().includes(searchLower) ||
-        product.codigo.toLowerCase().includes(searchLower) ||
-        product.categoria.toLowerCase().includes(searchLower)
+        (product.codigo && product.codigo.toLowerCase().includes(searchLower)) ||
+        (product.categoria && product.categoria.toLowerCase().includes(searchLower))
       );
     }
 
@@ -145,15 +92,15 @@ export class InventoryComponent implements OnInit {
     switch (this.activeFilter) {
       case 'stock-bajo':
         filtered = filtered.filter(product =>
-          product.estado === 'stock-bajo' || product.stock < 5
+          product.estado === 'stock-bajo' || product.stock <= product.stockMinimo
         );
         break;
       case 'sin-movimiento':
-        // Por ahora simulamos productos sin movimiento con stock alto
-        filtered = filtered.filter(product => product.stock > 10);
+        // Productos con stock alto (sin movimiento)
+        filtered = filtered.filter(product => product.stock > product.stockMinimo * 2);
         break;
       case 'ofertas':
-        // Por ahora simulamos ofertas con productos con margen > 50%
+        // Productos con margen alto (> 50%)
         filtered = filtered.filter(product => product.margen > 50);
         break;
       case 'todos':

@@ -64,11 +64,13 @@
   <div
     class="table-container bg-white rounded-lg shadow-sm border border-gray-200"
   >
+    <p-toast></p-toast>
     <p-table
       [value]="filteredProducts"
       [paginator]="true"
       [rows]="10"
       [showCurrentPageReport]="true"
+      [loading]="loading"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
       [rowsPerPageOptions]="[10, 25, 50]"
       [globalFilterFields]="['producto', 'codigo', 'categoria']"
@@ -93,7 +95,7 @@
           <td>
             <div
               class="product-image"
-              [style.backgroundColor]="product.imagen"
+              [ngStyle]="{ 'background-image': 'url(' + product.imagen + ')', 'background-size': 'cover', 'background-position': 'center' }"
             ></div>
           </td>
 
@@ -185,8 +187,6 @@
   [showHeader]="false"
   (onHide)="hideExportDialog()"
 >
-  <app-export-dialog
-    [products]="filteredProducts"
-    (close)="hideExportDialog()">
+  <app-export-dialog [products]="filteredProducts" (close)="hideExportDialog()">
   </app-export-dialog>
 </p-dialog>
