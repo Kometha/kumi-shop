@@ -24,7 +24,7 @@
         <div class="flex items-center space-x-4">
           @if (currentUser$ | async; as user) {
             <div class="flex items-center space-x-3">
-              <!-- <span class="text-gray-700 text-sm">Hola, {{ user.name || user.email }}</span> -->
+              <span class="text-gray-700 text-sm">Bienvenido, {{ user.nombre }}</span>
               <button
                 pButton
                 type="button"
