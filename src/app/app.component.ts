@@ -22,7 +22,7 @@ export class AppComponent implements OnInit {
     // Verificar si hay un usuario autenticado al inicio
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        console.log('✅ Usuario autenticado:', user.email);
+        console.log('✅ Usuario autenticado:', user.username);
       } else {
         console.log('❌ No hay usuario autenticado');
       }
