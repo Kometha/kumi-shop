@@ -93,10 +93,15 @@
         <tr>
           <!-- Imagen -->
           <td>
-            <div
-              class="product-image"
-              [ngStyle]="{ 'background-image': 'url(' + product.imagen + ')', 'background-size': 'cover', 'background-position': 'center' }"
-            ></div>
+            <p-image
+              [src]="product.imagen"
+              [preview]="true"
+              [alt]="product.producto"
+              width="60"
+              height="60"
+              styleClass="product-image-preview"
+              [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }">
+            </p-image>
           </td>
 
           <!-- Producto -->
@@ -116,7 +121,7 @@
           </td>
 
           <!-- Margen -->
-          <td class="text-center">{{ product.margen }}%</td>
+          <td class="text-center">{{ formatMargin(product.margen) }}%</td>
 
           <!-- Estado -->
           <td class="text-center">
@@ -141,7 +146,11 @@
               type="button"
               icon="pi pi-trash"
               class="p-button-rounded p-button-text p-button-danger p-button-sm"
-            ></button>
+              (click)="confirmDelete(product)"
+              [disabled]="loading"
+              pTooltip="Eliminar producto"
+              tooltipPosition="top">
+            </button>
           </td>
         </tr>
       </ng-template>
@@ -171,7 +180,9 @@
   header="Agregar Nuevo Producto"
   (onHide)="hideAddProductModal()"
 >
-  <app-add-product-modal (close)="hideAddProductModal()">
+  <app-add-product-modal
+    (close)="hideAddProductModal()"
+    (productCreated)="onProductCreated()">
   </app-add-product-modal>
 </p-dialog>
 
@@ -189,4 +200,45 @@
 >
   <app-export-dialog [products]="filteredProducts" (close)="hideExportDialog()">
   </app-export-dialog>
+</p-dialog>
+
+<!-- Modal de confirmación para eliminar producto -->
+<p-dialog
+  [(visible)]="displayDeleteConfirmDialog"
+  [modal]="true"
+  [style]="{ width: 'auto', padding: '1rem' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [showHeader]="true"
+  header="Confirmar Eliminación"
+  (onHide)="cancelDelete()">
+  <div class="flex flex-column align-items-center gap-4 py-4">
+    <div class="text-center">
+      <h3 class="text-xl font-semibold mb-2">¿Estás seguro?</h3>
+      <p class="text-gray-600">
+        ¿Deseas eliminar el producto
+        <strong>{{ productToDelete?.producto }}</strong>?
+      </p>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="cancelDelete()"
+      [disabled]="deleting">
+    </button>
+    <button
+      pButton
+      type="button"
+      label="Sí, eliminar"
+      class="p-button-danger"
+      (click)="deleteProduct()"
+      [loading]="deleting"
+      [disabled]="deleting">
+    </button>
+  </ng-template>
 </p-dialog>
