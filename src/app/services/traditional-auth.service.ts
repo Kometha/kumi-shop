@@ -3,20 +3,21 @@ import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import * as CryptoJS from 'crypto-js';
 
 // Interfaces para el nuevo sistema
 export interface User {
   id: string;
-  email: string;
-  name?: string;
+  username: string;
+  nombre?: string;
+  apellido?: string;
   isActive: boolean;
-  emailVerified: boolean;
   createdAt: string;
   lastLoginAt?: string;
 }
 
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -41,8 +42,8 @@ export interface AuthResponse {
 
 export interface TokenPayload {
   userId: string;
-  email: string;
-  name: string;
+  username: string;
+  nombre?: string;
   exp: number;
   iat: number;
 }
@@ -116,7 +117,7 @@ export class TraditionalAuthService {
 
           const user = await this.getUserFromToken(token);
           if (user) {
-            console.log('✅ [AUTH] Usuario restaurado desde token:', user.email);
+            console.log('✅ [AUTH] Usuario restaurado desde token:', user.username);
             this.currentUserSubject.next(user);
           } else {
             console.log('❌ [AUTH] Usuario no encontrado en BD, limpiando token');
@@ -149,10 +150,10 @@ export class TraditionalAuthService {
 
       // Verificar que el usuario sigue activo en la BD
       const { data, error } = await this.supabase
-        .from('users')
+        .from('usuarios')
         .select('*')
         .eq('id', payload.userId)
-        .eq('is_active', true)
+        .eq('activo', true)
         .single();
 
       if (error || !data) {
@@ -162,12 +163,12 @@ export class TraditionalAuthService {
 
       return {
         id: data.id,
-        email: data.email,
-        name: data.name,
-        isActive: data.is_active,
-        emailVerified: data.email_verified,
+        username: data.username,
+        nombre: data.nombre,
+        apellido: data.apellido,
+        isActive: data.activo,
         createdAt: data.created_at,
-        lastLoginAt: data.last_login_at
+        lastLoginAt: data.updated_at
       };
     } catch (error) {
       console.error('Error getting user from token:', error);
@@ -195,13 +196,12 @@ export class TraditionalAuthService {
    */
   private async performLogin(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-
-      // 1. Buscar usuario por email
+      // 1. Buscar usuario por username
       const { data: userData, error: userError } = await this.supabase
-        .from('users')
+        .from('usuarios')
         .select('*')
-        .eq('email', credentials.email.toLowerCase())
-        .eq('is_active', true)
+        .eq('username', credentials.username)
+        .eq('activo', true)
         .single();
 
       console.log('🔍 [LOGIN] Resultado consulta usuario:', { userData, userError });
@@ -214,9 +214,9 @@ export class TraditionalAuthService {
         };
       }
 
-      console.log('✅ [LOGIN] Usuario encontrado:', userData.email);
+      console.log('✅ [LOGIN] Usuario encontrado:', userData.username);
 
-            // 2. Verificar contraseña (simulado - en producción usar bcrypt en backend)
+      // 2. Verificar contraseña usando MD5
       console.log('🔍 [LOGIN] Verificando contraseña...');
       console.log('🔍 [LOGIN] Password input:', credentials.password);
       console.log('🔍 [LOGIN] Hash en BD:', userData.password_hash);
@@ -226,8 +226,6 @@ export class TraditionalAuthService {
 
       if (!isPasswordValid) {
         console.log('❌ [LOGIN] Contraseña inválida');
-        // Incrementar intentos fallidos
-        await this.incrementLoginAttempts(userData.id);
         return {
           success: false,
           error: 'Credenciales inválidas'
@@ -239,11 +237,11 @@ export class TraditionalAuthService {
       // 3. Generar token JWT
       const token = this.generateToken({
         userId: userData.id,
-        email: userData.email,
-        name: userData.name || userData.email
+        username: userData.username,
+        nombre: userData.nombre || userData.username
       });
 
-      // 4. Guardar sesión en BD
+      // 4. Guardar sesión en BD (tabla sesiones)
       await this.createSession(userData.id, token);
 
       // 5. Actualizar último login
@@ -252,10 +250,10 @@ export class TraditionalAuthService {
       // 6. Crear objeto user
       const user: User = {
         id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        isActive: userData.is_active,
-        emailVerified: userData.email_verified,
+        username: userData.username,
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        isActive: userData.activo,
         createdAt: userData.created_at,
         lastLoginAt: new Date().toISOString()
       };
@@ -314,8 +312,8 @@ export class TraditionalAuthService {
         };
       }
 
-      // 2. Hash de la contraseña (simulado - en producción usar bcrypt)
-      const passwordHash = await this.hashPassword(credentials.password);
+      // 2. Hash de la contraseña usando MD5
+      const passwordHash = this.hashPasswordMD5(credentials.password);
 
       // 3. Crear usuario
       const { data: newUser, error: insertError } = await this.supabase
@@ -412,11 +410,13 @@ export class TraditionalAuthService {
   /**
    * Generar token JWT simple (en producción usar librería JWT)
    */
-  private generateToken(payload: { userId: string; email: string; name: string }): string {
+  private generateToken(payload: { userId: string; username: string; nombre?: string }): string {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const now = Math.floor(Date.now() / 1000);
     const tokenPayload: TokenPayload = {
-      ...payload,
+      userId: payload.userId,
+      username: payload.username,
+      nombre: payload.nombre,
       iat: now,
       exp: now + (7 * 24 * 60 * 60) // 7 días
     };
@@ -453,81 +453,93 @@ export class TraditionalAuthService {
   }
 
   /**
-   * Hash de contraseña (simplificado - usar bcrypt en producción)
+   * Generar hash MD5 de contraseña
    */
-  private async hashPassword(password: string): Promise<string> {
-    // En producción, usar bcrypt o similar
-    const result = btoa(password + 'salt_kumi_shop_2024');
-    console.log('🔍 [HASH] Password:', password, '-> Hash:', result);
-    return result;
+  private hashPasswordMD5(password: string): string {
+    const hash = CryptoJS.MD5(password).toString();
+    console.log('🔍 [HASH] Password:', password, '-> MD5 Hash:', hash);
+    return hash;
   }
 
   /**
-   * Verificar contraseña
+   * Verificar contraseña usando MD5
    */
   private async verifyPassword(password: string, hash: string): Promise<boolean> {
-    const hashedInput = await this.hashPassword(password);
-    const isValid = hashedInput === hash;
-    console.log('🔍 [VERIFY] Input hash:', hashedInput);
+    const hashedInput = this.hashPasswordMD5(password);
+    const isValid = hashedInput.toLowerCase() === hash.toLowerCase();
+    console.log('🔍 [VERIFY] Input MD5 hash:', hashedInput);
     console.log('🔍 [VERIFY] Expected hash:', hash);
     console.log('🔍 [VERIFY] Match:', isValid);
     return isValid;
   }
 
   /**
-   * Crear sesión en BD
+   * Crear sesión en BD (tabla sesiones)
    */
   private async createSession(userId: string, token: string): Promise<void> {
-    const tokenHash = btoa(token); // Simplificado
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 días
+    try {
+      const { data, error } = await this.supabase
+        .from('sesiones')
+        .insert({
+          usuario_id: userId,
+          token: token,
+          activa: true
+        })
+        .select()
+        .single();
 
-    await this.supabase
-      .from('user_sessions')
-      .insert({
-        user_id: userId,
-        token_hash: tokenHash,
-        expires_at: expiresAt.toISOString(),
-        ip_address: '0.0.0.0', // En producción obtener IP real
-        user_agent: navigator.userAgent,
-        is_active: true
-      });
+      if (error) {
+        console.error('❌ [SESSION] Error al crear sesión:', error);
+        throw error;
+      }
+
+      console.log('✅ [SESSION] Sesión creada correctamente:', data?.id);
+    } catch (error) {
+      console.error('❌ [SESSION] Error al crear sesión:', error);
+      throw error;
+    }
   }
 
   /**
    * Invalidar sesión
    */
   private async invalidateSession(token: string): Promise<void> {
-    const tokenHash = btoa(token);
-    await this.supabase
-      .from('user_sessions')
-      .update({ is_active: false })
-      .eq('token_hash', tokenHash);
+    try {
+      const { error } = await this.supabase
+        .from('sesiones')
+        .update({ activa: false })
+        .eq('token', token);
+
+      if (error) {
+        console.error('❌ [SESSION] Error al invalidar sesión:', error);
+      } else {
+        console.log('✅ [SESSION] Sesión invalidada correctamente');
+      }
+    } catch (error) {
+      console.error('❌ [SESSION] Error al invalidar sesión:', error);
+    }
   }
 
   /**
-   * Incrementar intentos de login
-   */
-  private async incrementLoginAttempts(userId: string): Promise<void> {
-    await this.supabase
-      .from('users')
-      .update({
-        login_attempts: this.supabase.from('users').select('login_attempts').eq('id', userId)
-      })
-      .eq('id', userId);
-  }
-
-  /**
-   * Actualizar último login
+   * Actualizar último login (updated_at en tabla usuarios)
    */
   private async updateLastLogin(userId: string): Promise<void> {
-    await this.supabase
-      .from('users')
-      .update({
-        last_login_at: new Date().toISOString(),
-        login_attempts: 0
-      })
-      .eq('id', userId);
+    try {
+      const { error } = await this.supabase
+        .from('usuarios')
+        .update({
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('❌ [LOGIN] Error al actualizar último login:', error);
+      } else {
+        console.log('✅ [LOGIN] Último login actualizado');
+      }
+    } catch (error) {
+      console.error('❌ [LOGIN] Error al actualizar último login:', error);
+    }
   }
 
   // ============================================
