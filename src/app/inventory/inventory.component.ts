@@ -45,6 +45,7 @@ export class InventoryComponent implements OnInit {
   displayDeleteConfirmDialog: boolean = false;
   loading: boolean = false;
   productToDelete: Product | null = null;
+  productToEdit: Product | null = null;
   deleting: boolean = false;
 
   constructor(
@@ -192,6 +193,14 @@ export class InventoryComponent implements OnInit {
   }
 
   showAddProductModal(): void {
+    this.productToEdit = null; // Asegurar que no hay producto para editar
+    this.displayAddProductModal = true;
+    // Bloquear scroll del body cuando el modal se abre
+    document.body.style.overflow = 'hidden';
+  }
+
+  showEditProductModal(product: Product): void {
+    this.productToEdit = product;
     this.displayAddProductModal = true;
     // Bloquear scroll del body cuando el modal se abre
     document.body.style.overflow = 'hidden';
@@ -199,6 +208,7 @@ export class InventoryComponent implements OnInit {
 
   hideAddProductModal(): void {
     this.displayAddProductModal = false;
+    this.productToEdit = null; // Limpiar producto al cerrar
     // Restaurar scroll del body cuando el modal se cierra
     document.body.style.overflow = 'auto';
   }
@@ -220,6 +230,14 @@ export class InventoryComponent implements OnInit {
    */
   onProductCreated(): void {
     // Recargar productos cuando se cierra el modal después de crear uno
+    this.loadProductos();
+  }
+
+  /**
+   * Manejar cuando se actualiza un producto
+   */
+  onProductUpdated(): void {
+    // Recargar productos cuando se cierra el modal después de actualizar uno
     this.loadProductos();
   }
 
