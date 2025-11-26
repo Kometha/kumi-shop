@@ -5,19 +5,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-interface Product {
-  id: number;
-  imagen: string;
-  producto: string;
-  codigo: string;
-  categoria: string;
-  stock: number;
-  costo: number;
-  precio: number;
-  margen: number;
-  estado: 'disponible' | 'stock-bajo' | 'agotado';
-}
+import { Product } from '../services/productos.service';
 
 @Component({
   selector: 'app-export-dialog',
