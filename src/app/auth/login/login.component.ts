@@ -52,8 +52,8 @@ export class LoginComponent implements OnInit {
     }
 
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required, Validators.minLength(1)]],
     });
   }
 
@@ -69,71 +69,7 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit() {
-    const credentials: LoginCredentials = this.loginForm.value;
-
-    // Validación especial para credenciales de prueba: "Admin Admin"
-    // Permitir estas credenciales incluso si el formulario no es válido (porque "Admin" no es un email válido)
-    if (credentials.email === 'Admin' && credentials.password === 'Admin') {
-      this.loading = true;
-
-      // Establecer usuario de prueba en el servicio de autenticación
-      //this.authService.setTestUser();
-
-      console.log('✅ Login exitoso con credenciales de prueba (Admin Admin)');
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'Sesión iniciada correctamente',
-      });
-
-      // Redirigir al dashboard después de un breve delay
-      setTimeout(() => {
-        this.loading = false;
-        this.router.navigate(['/dashboard']);
-      }, 1000);
-
-      return;
-    }
-
-    // Validación normal del formulario para otros casos
-    if (this.loginForm.valid) {
-      this.authService.login(credentials).subscribe({
-        next: (response) => {
-          if (response.success) {
-            console.log('✅ Login exitoso:', response.user);
-
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: response.message || 'Sesión iniciada correctamente',
-            });
-
-            // Redirigir después de un breve delay para mostrar el mensaje
-            setTimeout(() => {
-              this.router.navigate([this.returnUrl]);
-            }, 1000);
-          } else {
-            console.error('❌ Error en login:', response.error);
-
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: response.error || 'Error al iniciar sesión',
-            });
-          }
-        },
-        error: (error) => {
-          console.error('💥 Error inesperado:', error);
-
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error inesperado. Intenta nuevamente.',
-          });
-        },
-      });
-    } else {
+    if (!this.loginForm.valid) {
       // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.loginForm.controls).forEach((key) => {
         this.loginForm.get(key)?.markAsTouched();
@@ -144,7 +80,49 @@ export class LoginComponent implements OnInit {
         summary: 'Formulario inválido',
         detail: 'Por favor, completa todos los campos correctamente',
       });
+      return;
     }
+
+    this.loading = true;
+    const credentials: LoginCredentials = this.loginForm.value;
+
+    this.authService.login(credentials).subscribe({
+      next: (response) => {
+        this.loading = false;
+        if (response.success) {
+          console.log('✅ Login exitoso:', response.user);
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: response.message || 'Sesión iniciada correctamente',
+          });
+
+          // Redirigir después de un breve delay para mostrar el mensaje
+          setTimeout(() => {
+            this.router.navigate([this.returnUrl]);
+          }, 1000);
+        } else {
+          console.error('❌ Error en login:', response.error);
+
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: response.error || 'Error al iniciar sesión',
+          });
+        }
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('💥 Error inesperado:', error);
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error inesperado. Intenta nuevamente.',
+        });
+      },
+    });
   }
 
   goToRegister() {
@@ -161,10 +139,10 @@ export class LoginComponent implements OnInit {
     const field = this.loginForm.get(fieldName);
     if (field?.errors) {
       if (field.errors['required']) {
+        if (fieldName === 'username') {
+          return 'El nombre de usuario es requerido';
+        }
         return `${fieldName} es requerido`;
-      }
-      if (field.errors['email']) {
-        return 'Email inválido';
       }
       if (field.errors['minlength']) {
         return `${fieldName} debe tener al menos ${field.errors['minlength'].requiredLength} caracteres`;
