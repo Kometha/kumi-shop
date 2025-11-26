@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Observable, from, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
@@ -31,6 +31,19 @@ export interface Product {
   precio: number;
   margen: number;
   estado: 'disponible' | 'stock-bajo' | 'agotado';
+}
+
+// Interfaz para crear un nuevo producto
+export interface NuevoProducto {
+  nombre: string;
+  categoria_id: number;
+  stock: number;
+  stockMinimo: number;
+  costo: number;
+  precioVenta: number;
+  estado: 'disponible' | 'stock-bajo' | 'agotado';
+  imagen?: File; // Archivo de imagen opcional
+  imagenUrl?: string; // URL de imagen opcional (si ya está subida)
 }
 
 @Injectable({
@@ -73,7 +86,7 @@ export class ProductosService {
 
         console.log('✅ [PRODUCTOS] Productos obtenidos:', response.data?.length);
         console.log('🔍 [PRODUCTOS] Estructura de datos:', JSON.stringify(response.data?.[0], null, 2));
-        
+
         // Transformar los datos de Supabase al formato que usa el componente
         // Filtrar precios activos durante la transformación
         const productos = this.transformProductos(response.data as any[]);
@@ -96,7 +109,7 @@ export class ProductosService {
         // Extraer valores de inventario (puede venir como array o objeto único)
         let stock = 0;
         let stockMinimo = 0;
-        
+
         if (Array.isArray(item.inventario)) {
           // Si viene como array, tomar el primer elemento
           if (item.inventario.length > 0) {
@@ -195,12 +208,136 @@ export class ProductosService {
     );
   }
 
+
+  /**
+   * Subir imagen a Supabase Storage
+   */
+  private async uploadImage(file: File): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 9);
+    const fileName = `${timestamp}_${randomStr}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { data, error } = await this.supabase.storage
+      .from('productos-imagenes')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('❌ [PRODUCTOS] Error al subir imagen:', error);
+      throw new Error(`Error al subir imagen: ${error.message}`);
+    }
+
+    // Obtener URL pública de la imagen
+    const { data: urlData } = this.supabase.storage
+      .from('productos-imagenes')
+      .getPublicUrl(filePath);
+
+    if (!urlData?.publicUrl) {
+      throw new Error('No se pudo obtener la URL pública de la imagen');
+    }
+
+    console.log('✅ [PRODUCTOS] Imagen subida correctamente:', urlData.publicUrl);
+    return urlData.publicUrl;
+  }
+
   /**
    * Crear un nuevo producto
    */
-  crearProducto(producto: Partial<Product>): Observable<Product> {
-    // Implementar según la estructura de tu BD
-    throw new Error('Método no implementado aún');
+  crearProducto(producto: NuevoProducto): Observable<Product> {
+    return from(
+      (async () => {
+        try {
+          // 1. Subir imagen si existe
+          let imagenUrl = producto.imagenUrl || null;
+          if (producto.imagen && !imagenUrl) {
+            imagenUrl = await this.uploadImage(producto.imagen);
+          }
+
+          // 2. Calcular margen
+          const margenAbsoluto = producto.precioVenta - producto.costo;
+          const margenPorcentaje = producto.costo > 0
+            ? ((margenAbsoluto / producto.costo) * 100)
+            : 0;
+
+          // 3. Crear producto en la tabla productos
+          const { data: productoData, error: productoError } = await this.supabase
+            .from('productos')
+            .insert({
+              nombre: producto.nombre,
+              categoria_id: producto.categoria_id,
+              imagen_url: imagenUrl,
+              activo: true
+            })
+            .select()
+            .single();
+
+          if (productoError || !productoData) {
+            console.error('❌ [PRODUCTOS] Error al crear producto:', productoError);
+            throw new Error(productoError?.message || 'Error al crear el producto');
+          }
+
+          console.log('✅ [PRODUCTOS] Producto creado:', productoData.id);
+
+          // 4. Crear registro en inventario
+          const { error: inventarioError } = await this.supabase
+            .from('inventario')
+            .insert({
+              producto_id: productoData.id,
+              stock_actual: producto.stock,
+              stock_minimo: producto.stockMinimo
+            });
+
+          if (inventarioError) {
+            console.error('❌ [PRODUCTOS] Error al crear inventario:', inventarioError);
+            // Intentar eliminar el producto creado
+            await this.supabase.from('productos').delete().eq('id', productoData.id);
+            throw new Error(`Error al crear inventario: ${inventarioError.message}`);
+          }
+
+          // 5. Crear registro en precios
+          const { error: preciosError } = await this.supabase
+            .from('precios')
+            .insert({
+              producto_id: productoData.id,
+              costo: producto.costo,
+              precio_venta: producto.precioVenta,
+              margen_porcentaje: margenPorcentaje,
+              margen_absoluto: margenAbsoluto,
+              activo: true
+            });
+
+          if (preciosError) {
+            console.error('❌ [PRODUCTOS] Error al crear precios:', preciosError);
+            // Intentar eliminar el producto y inventario creados
+            await this.supabase.from('inventario').delete().eq('producto_id', productoData.id);
+            await this.supabase.from('productos').delete().eq('id', productoData.id);
+            throw new Error(`Error al crear precios: ${preciosError.message}`);
+          }
+
+          console.log('✅ [PRODUCTOS] Producto creado completamente');
+
+          // 6. Obtener el producto completo para retornarlo
+          const productoCompleto = await this.getProductoById(productoData.id).toPromise();
+          if (!productoCompleto) {
+            throw new Error('No se pudo obtener el producto creado');
+          }
+
+          return productoCompleto;
+        } catch (error: any) {
+          console.error('❌ [PRODUCTOS] Error en crearProducto:', error);
+          throw error;
+        }
+      })()
+    ).pipe(
+      catchError((error) => {
+        console.error('❌ [PRODUCTOS] Error en crearProducto:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
