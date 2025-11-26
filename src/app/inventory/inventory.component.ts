@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
+import { ImageModule } from 'primeng/image';
 import { AddProductModalComponent } from '../add-product-modal/add-product-modal.component';
 import { ExportDialogComponent } from '../export-dialog/export-dialog.component';
 import { ProductosService, Product } from '../services/productos.service';
@@ -25,6 +26,7 @@ import { ToastModule } from 'primeng/toast';
     TooltipModule,
     FormsModule,
     DialogModule,
+    ImageModule,
     ToastModule,
     AddProductModalComponent,
     ExportDialogComponent
@@ -40,7 +42,10 @@ export class InventoryComponent implements OnInit {
   activeFilter: 'todos' | 'stock-bajo' | 'sin-movimiento' | 'ofertas' = 'todos';
   displayAddProductModal: boolean = false;
   displayExportDialog: boolean = false;
+  displayDeleteConfirmDialog: boolean = false;
   loading: boolean = false;
+  productToDelete: Product | null = null;
+  deleting: boolean = false;
 
   constructor(
     private productosService: ProductosService,
@@ -161,6 +166,31 @@ export class InventoryComponent implements OnInit {
     }).format(value);
   }
 
+  /**
+   * Formatear margen con redondeo inteligente
+   * - Si es un número entero (o muy cercano), mostrar como entero
+   * - Si tiene decimales significativos, mostrar máximo 2 decimales
+   */
+  formatMargin(value: number): string {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0';
+    }
+
+    // Redondear a 2 decimales
+    const rounded = Math.round(value * 100) / 100;
+
+    // Si después de redondear a 2 decimales es muy cercano a un entero (diferencia < 0.01)
+    const difference = Math.abs(rounded - Math.round(rounded));
+
+    if (difference < 0.01) {
+      // Mostrar como entero
+      return Math.round(rounded).toString();
+    } else {
+      // Mostrar con máximo 2 decimales, eliminando ceros innecesarios
+      return rounded.toFixed(2).replace(/\.?0+$/, '');
+    }
+  }
+
   showAddProductModal(): void {
     this.displayAddProductModal = true;
     // Bloquear scroll del body cuando el modal se abre
@@ -183,5 +213,75 @@ export class InventoryComponent implements OnInit {
     this.displayExportDialog = false;
     // Restaurar scroll del body cuando el modal se cierra
     document.body.style.overflow = 'auto';
+  }
+
+  /**
+   * Manejar cuando se crea un producto nuevo
+   */
+  onProductCreated(): void {
+    // Recargar productos cuando se cierra el modal después de crear uno
+    this.loadProductos();
+  }
+
+  /**
+   * Abrir modal de confirmación para eliminar producto
+   */
+  confirmDelete(product: Product): void {
+    this.productToDelete = product;
+    this.displayDeleteConfirmDialog = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Cerrar modal de confirmación
+   */
+  cancelDelete(): void {
+    this.displayDeleteConfirmDialog = false;
+    this.productToDelete = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  /**
+   * Confirmar y ejecutar eliminación del producto
+   */
+  deleteProduct(): void {
+    if (!this.productToDelete) {
+      return;
+    }
+
+    this.deleting = true;
+    const productId = this.productToDelete.id;
+
+    this.productosService.eliminarProducto(productId).subscribe({
+      next: (success) => {
+        this.deleting = false;
+        if (success) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Producto eliminado correctamente'
+          });
+
+          // Cerrar modal y recargar productos
+          this.cancelDelete();
+          this.loadProductos();
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el producto'
+          });
+        }
+      },
+      error: (error) => {
+        this.deleting = false;
+        console.error('❌ Error al eliminar producto:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: error.message || 'Error al eliminar el producto. Intenta nuevamente.'
+        });
+      }
+    });
   }
 }
