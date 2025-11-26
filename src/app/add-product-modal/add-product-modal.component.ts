@@ -5,32 +5,15 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
+import { ProductosService, NuevoProducto } from '../services/productos.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 interface ProductForm {
   nombre: string;
-  codigo: string;
-  categoria: number;
   stock: number;
-  descripcion: string;
   costo: number;
-  precio: number;
-  estado: string;
-  stockMinimo: number;
-  nivelReorden: number;
-  imagen?: string;
-}
-
-interface NewProduct {
-  tenantId: number;
-  name: string;
-  description: string;
-  categoryId: number;
-  sku: string;
-  price: number;
-  cost: number;
-  stockQuantity: number;
-  minimumStock: number;
-  reorderLevel: number;
+  precioVenta: number;
 }
 
 @Component({
@@ -42,44 +25,31 @@ interface NewProduct {
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    SelectModule
+    SelectModule,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './add-product-modal.component.html',
   styleUrl: './add-product-modal.component.scss'
 })
 export class AddProductModalComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
-  @Output() save = new EventEmitter<ProductForm>();
+  @Output() productCreated = new EventEmitter<void>();
 
   product: ProductForm = {
     nombre: '',
-    codigo: '',
-    categoria: 0,
     stock: 0,
-    descripcion: '',
     costo: 0,
-    precio: 0,
-    estado: 'disponible',
-    stockMinimo: 0,
-    nivelReorden: 0
+    precioVenta: 0
   };
 
-  categorias = [
-    { label: 'Sofás', value: 1 },
-    { label: 'Mesas', value: 2 },
-    { label: 'Sillas', value: 3 },
-    { label: 'Estanterías', value: 4 },
-    { label: 'Camas', value: 5 },
-    { label: 'Escritorios', value: 6 },
-    { label: 'Armarios', value: 7 },
-    { label: 'Decoración', value: 8 }
-  ];
+  loading = false;
 
-  estados = [
-    { label: 'Disponible', value: 'disponible' },
-    { label: 'Stock Bajo', value: 'stock-bajo' },
-    { label: 'Agotado', value: 'agotado' }
-  ];
+
+  constructor(
+    private productosService: ProductosService,
+    private messageService: MessageService
+  ) {}
 
   previewImage: string | null = null;
   isDragging = false;
@@ -155,8 +125,8 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
   }
 
   calculateMargin(): number {
-    if (this.product.costo && this.product.precio) {
-      const margin = ((this.product.precio - this.product.costo) / this.product.costo) * 100;
+    if (this.product.costo && this.product.precioVenta) {
+      const margin = ((this.product.precioVenta - this.product.costo) / this.product.costo) * 100;
       return Math.round(margin * 100) / 100;
     }
     return 0;
@@ -167,33 +137,72 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
   }
 
   onSave(): void {
-        // Validación básica
-    if (!this.product.nombre || !this.product.codigo || !this.product.categoria ||
-        !this.product.precio || !this.product.costo || this.product.stockMinimo < 0 ||
-        this.product.nivelReorden < 0) {
-      alert('Por favor completa todos los campos obligatorios');
+    // Validación básica
+    if (!this.product.nombre ||
+        this.product.costo === undefined || this.product.precioVenta === undefined ||
+        this.product.stock === undefined) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos incompletos',
+        detail: 'Por favor completa todos los campos obligatorios'
+      });
       return;
     }
 
-    // Crear objeto NewProduct para enviar a la BD
-    const newProduct: NewProduct = {
-      tenantId: 1, // Siempre 1 para desarrollo
-      name: this.product.nombre,
-      description: this.product.descripcion || '',
-      categoryId: this.product.categoria,
-      sku: this.product.codigo,
-      price: this.product.precio,
-      cost: this.product.costo,
-      stockQuantity: this.product.stock,
-      minimumStock: this.product.stockMinimo,
-      reorderLevel: this.product.nivelReorden
+    if (this.product.costo < 0 || this.product.precioVenta < 0 ||
+        this.product.stock < 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Valores inválidos',
+        detail: 'Los valores no pueden ser negativos'
+      });
+      return;
+    }
+
+    this.loading = true;
+
+    // Crear objeto NuevoProducto para enviar a la BD
+    // Usar valores por defecto para campos que no se envían
+    const nuevoProducto: NuevoProducto = {
+      nombre: this.product.nombre,
+      categoria_id: 1, // Valor por defecto
+      stock: this.product.stock,
+      stockMinimo: 0, // Valor por defecto
+      costo: this.product.costo,
+      precioVenta: this.product.precioVenta,
+      estado: 'disponible', // Valor por defecto
+      imagen: this.selectedFile || undefined
     };
 
-    // Mostrar datos en consola para desarrollo
-    console.log('Datos del producto a guardar:', JSON.stringify(newProduct, null, 2));
+    // Llamar al servicio para crear el producto
+    this.productosService.crearProducto(nuevoProducto).subscribe({
+      next: (producto) => {
+        this.loading = false;
+        console.log('✅ Producto creado exitosamente:', producto);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Producto agregado correctamente'
+        });
 
-    // Cerrar modal
-    this.close.emit();
+        // Emitir evento para que el componente padre recargue los productos
+        this.productCreated.emit();
+
+        // Cerrar modal después de un breve delay
+        setTimeout(() => {
+          this.close.emit();
+        }, 1000);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error al crear producto:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: error.message || 'Error al crear el producto. Intenta nuevamente.'
+        });
+      }
+    });
   }
 
   viewImage(): void {
