@@ -343,9 +343,101 @@ export class ProductosService {
   /**
    * Actualizar un producto
    */
-  actualizarProducto(id: number, producto: Partial<Product>): Observable<Product> {
-    // Implementar según la estructura de tu BD
-    throw new Error('Método no implementado aún');
+  actualizarProducto(id: number, producto: Partial<NuevoProducto>): Observable<Product> {
+    return from(
+      (async () => {
+        try {
+          // 1. Subir nueva imagen si existe
+          let imagenUrl = producto.imagenUrl || null;
+          if (producto.imagen && !imagenUrl) {
+            imagenUrl = await this.uploadImage(producto.imagen);
+          }
+
+          // 2. Calcular margen si se actualizan costo o precio
+          let margenAbsoluto = 0;
+          let margenPorcentaje = 0;
+
+          if (producto.costo !== undefined && producto.precioVenta !== undefined) {
+            margenAbsoluto = producto.precioVenta - producto.costo;
+            margenPorcentaje = producto.costo > 0
+              ? ((margenAbsoluto / producto.costo) * 100)
+              : 0;
+          }
+
+          // 3. Actualizar producto en la tabla productos
+          const updateData: any = {};
+          if (producto.nombre) updateData.nombre = producto.nombre;
+          if (imagenUrl !== null) updateData.imagen_url = imagenUrl;
+
+          if (Object.keys(updateData).length > 0) {
+            const { error: productoError } = await this.supabase
+              .from('productos')
+              .update(updateData)
+              .eq('id', id);
+
+            if (productoError) {
+              console.error('❌ [PRODUCTOS] Error al actualizar producto:', productoError);
+              throw new Error(`Error al actualizar producto: ${productoError.message}`);
+            }
+          }
+
+          // 4. Actualizar inventario si se proporciona stock
+          if (producto.stock !== undefined || producto.stockMinimo !== undefined) {
+            const inventarioData: any = {};
+            if (producto.stock !== undefined) inventarioData.stock_actual = producto.stock;
+            if (producto.stockMinimo !== undefined) inventarioData.stock_minimo = producto.stockMinimo;
+
+            const { error: inventarioError } = await this.supabase
+              .from('inventario')
+              .update(inventarioData)
+              .eq('producto_id', id);
+
+            if (inventarioError) {
+              console.error('❌ [PRODUCTOS] Error al actualizar inventario:', inventarioError);
+              throw new Error(`Error al actualizar inventario: ${inventarioError.message}`);
+            }
+          }
+
+          // 5. Actualizar precios si se proporcionan costo o precioVenta
+          if (producto.costo !== undefined || producto.precioVenta !== undefined) {
+            const preciosData: any = {};
+            if (producto.costo !== undefined) preciosData.costo = producto.costo;
+            if (producto.precioVenta !== undefined) preciosData.precio_venta = producto.precioVenta;
+            if (margenPorcentaje !== 0) preciosData.margen_porcentaje = margenPorcentaje;
+            if (margenAbsoluto !== 0) preciosData.margen_absoluto = margenAbsoluto;
+
+            const { error: preciosError } = await this.supabase
+              .from('precios')
+              .update(preciosData)
+              .eq('producto_id', id)
+              .eq('activo', true);
+
+            if (preciosError) {
+              console.error('❌ [PRODUCTOS] Error al actualizar precios:', preciosError);
+              throw new Error(`Error al actualizar precios: ${preciosError.message}`);
+            }
+          }
+
+          console.log('✅ [PRODUCTOS] Producto actualizado completamente');
+
+          // 6. Obtener el producto completo actualizado para retornarlo
+          const productoCompleto = await this.getProductoById(id).toPromise();
+          if (!productoCompleto) {
+            throw new Error('No se pudo obtener el producto actualizado');
+          }
+
+          return productoCompleto;
+        } catch (error: any) {
+          console.error('❌ [PRODUCTOS] Error en actualizarProducto:', error);
+          throw error;
+        }
+      })()
+    ).pipe(
+      catchError((error) => {
+        console.error('❌ [PRODUCTOS] Error en actualizarProducto:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
