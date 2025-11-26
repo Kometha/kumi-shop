@@ -44,7 +44,7 @@
         </div>
         @if (isFieldInvalid('email')) {
           <small
-            class="text-red-500 text-xs mt-1 block flex items-center"
+            class="text-red-500 text-xs mt-1 flex items-center"
           >
             <i class="pi pi-exclamation-triangle mr-1"></i>
             {{ getFieldError("email") }}
@@ -52,7 +52,7 @@
         }
         @if (loginForm.get('email')?.valid && loginForm.get('email')?.touched) {
           <small
-            class="text-green-600 text-xs mt-1 block flex items-center"
+            class="text-green-600 text-xs mt-1 flex items-center"
           >
           </small>
         }
@@ -89,16 +89,6 @@
         }
       </div>
 
-      <!-- Forgot Password -->
-      <div class="text-right">
-        <button
-          type="button"
-          class="text-sm text-blue-600 hover:text-blue-800 underline"
-        >
-          ¿Olvidaste tu contraseña?
-        </button>
-      </div>
-
       <!-- Submit Button -->
       <button
         pButton
@@ -110,34 +100,6 @@
         class="w-full p-button-lg"
       ></button>
 
-      <!-- Divider -->
-      <div class="relative my-6">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-300"></div>
-        </div>
-        <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-gray-500">o</span>
-        </div>
-      </div>
-
-      <!-- Register Button -->
-      <button
-        pButton
-        type="button"
-        label="Crear Cuenta Nueva"
-        icon="pi pi-user-plus"
-        class="w-full p-button-outlined p-button-lg"
-        (click)="goToRegister()"
-        [disabled]="loading"
-      ></button>
     </form>
-
-    <!-- Footer -->
-    <div class="text-center text-sm text-gray-600 mt-8">
-      Al iniciar sesión, aceptas nuestros
-      <a href="#" class="text-blue-600 hover:text-blue-800 underline"
-        >Términos de Servicio</a
-      >
-    </div>
   </div>
 </div>

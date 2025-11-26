@@ -32,48 +32,7 @@
         >
           Todos
         </button>
-        <button
-          (click)="activeFilter = 'stock-bajo'; applyFilters()"
-          [class.active]="activeFilter === 'stock-bajo'"
-          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
-          [ngClass]="{
-            'bg-gray-900 text-white': activeFilter === 'stock-bajo',
-            'bg-gray-100 text-gray-700 hover:bg-gray-200':
-              activeFilter !== 'stock-bajo'
-          }"
-        >
-          Stock Bajo
-        </button>
-        <button
-          (click)="activeFilter = 'sin-movimiento'; applyFilters()"
-          [class.active]="activeFilter === 'sin-movimiento'"
-          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
-          [ngClass]="{
-            'bg-gray-900 text-white': activeFilter === 'sin-movimiento',
-            'bg-gray-100 text-gray-700 hover:bg-gray-200':
-              activeFilter !== 'sin-movimiento'
-          }"
-        >
-          Sin Movimiento
-        </button>
-        <button
-          (click)="activeFilter = 'ofertas'; applyFilters()"
-          [class.active]="activeFilter === 'ofertas'"
-          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all"
-          [ngClass]="{
-            'bg-gray-900 text-white': activeFilter === 'ofertas',
-            'bg-gray-100 text-gray-700 hover:bg-gray-200':
-              activeFilter !== 'ofertas'
-          }"
-        >
-          Ofertas
-        </button>
       </div>
-
-      <!-- Filter Icon -->
-      <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-        <i class="pi pi-filter text-gray-600"></i>
-      </button>
     </div>
   </div>
 
@@ -119,12 +78,10 @@
         <tr>
           <th style="width: 80px">Imagen</th>
           <th>Producto</th>
-          <th>Código</th>
-          <th>Categoría</th>
           <th style="width: 80px" class="text-center">Stock</th>
           <th style="width: 120px" class="text-right">Costo</th>
-          <th style="width: 120px" class="text-right">Precio</th>
-          <th style="width: 80px" class="text-center">Margen</th>
+          <th style="width: 120px" class="text-right">Precio Venta</th>
+          <th style="width: 120px" class="text-center">Margen (%)</th>
           <th style="width: 120px" class="text-center">Estado</th>
           <th style="width: 100px" class="text-center">Acciones</th>
         </tr>
@@ -142,12 +99,6 @@
 
           <!-- Producto -->
           <td class="font-medium">{{ product.producto }}</td>
-
-          <!-- Código -->
-          <td class="text-gray-600">{{ product.codigo }}</td>
-
-          <!-- Categoría -->
-          <td>{{ product.categoria }}</td>
 
           <!-- Stock -->
           <td class="text-center font-semibold">{{ product.stock }}</td>

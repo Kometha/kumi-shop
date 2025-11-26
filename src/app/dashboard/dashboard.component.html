@@ -35,9 +35,6 @@
               ></button>
             </div>
           }
-          <i class="pi pi-search text-gray-500 cursor-pointer hover:text-gray-700"></i>
-          <i class="pi pi-bell text-gray-500 cursor-pointer hover:text-gray-700"></i>
-          <i class="pi pi-user text-gray-500 cursor-pointer hover:text-gray-700"></i>
         </div>
       </div>
     </div>
@@ -76,28 +73,18 @@
         <span class="menu-label">Inventario</span>
       </a>
 
-      <!-- Clientes -->
-      <a
-        class="menu-item"
-        [class.active]="selectedMenu === 'clientes'"
-        (click)="selectMenu('clientes')"
-      >
-        <i class="pi pi-users menu-icon"></i>
-        <span class="menu-label">Clientes</span>
-      </a>
-
       <!-- Separador -->
       <div class="menu-separator"></div>
 
       <!-- Configuración (opcional) -->
-      <a
+      <!-- <a
         class="menu-item"
         [class.active]="selectedMenu === 'configuracion'"
         (click)="selectMenu('configuracion')"
       >
         <i class="pi pi-cog menu-icon"></i>
         <span class="menu-label">Configuración</span>
-      </a>
+      </a> -->
     </div>
   </p-drawer>
 

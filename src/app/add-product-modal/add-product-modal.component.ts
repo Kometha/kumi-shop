@@ -9,13 +9,28 @@ import { SelectModule } from 'primeng/select';
 interface ProductForm {
   nombre: string;
   codigo: string;
-  categoria: string;
+  categoria: number;
   stock: number;
   descripcion: string;
   costo: number;
   precio: number;
   estado: string;
+  stockMinimo: number;
+  nivelReorden: number;
   imagen?: string;
+}
+
+interface NewProduct {
+  tenantId: number;
+  name: string;
+  description: string;
+  categoryId: number;
+  sku: string;
+  price: number;
+  cost: number;
+  stockQuantity: number;
+  minimumStock: number;
+  reorderLevel: number;
 }
 
 @Component({
@@ -39,23 +54,25 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
   product: ProductForm = {
     nombre: '',
     codigo: '',
-    categoria: '',
+    categoria: 0,
     stock: 0,
     descripcion: '',
     costo: 0,
     precio: 0,
-    estado: 'disponible'
+    estado: 'disponible',
+    stockMinimo: 0,
+    nivelReorden: 0
   };
 
   categorias = [
-    { label: 'Sofás', value: 'sofas' },
-    { label: 'Mesas', value: 'mesas' },
-    { label: 'Sillas', value: 'sillas' },
-    { label: 'Estanterías', value: 'estanterias' },
-    { label: 'Camas', value: 'camas' },
-    { label: 'Escritorios', value: 'escritorios' },
-    { label: 'Armarios', value: 'armarios' },
-    { label: 'Decoración', value: 'decoracion' }
+    { label: 'Sofás', value: 1 },
+    { label: 'Mesas', value: 2 },
+    { label: 'Sillas', value: 3 },
+    { label: 'Estanterías', value: 4 },
+    { label: 'Camas', value: 5 },
+    { label: 'Escritorios', value: 6 },
+    { label: 'Armarios', value: 7 },
+    { label: 'Decoración', value: 8 }
   ];
 
   estados = [
@@ -150,7 +167,32 @@ export class AddProductModalComponent implements OnInit, OnDestroy {
   }
 
   onSave(): void {
-    // Por ahora solo cerramos el modal
+        // Validación básica
+    if (!this.product.nombre || !this.product.codigo || !this.product.categoria ||
+        !this.product.precio || !this.product.costo || this.product.stockMinimo < 0 ||
+        this.product.nivelReorden < 0) {
+      alert('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    // Crear objeto NewProduct para enviar a la BD
+    const newProduct: NewProduct = {
+      tenantId: 1, // Siempre 1 para desarrollo
+      name: this.product.nombre,
+      description: this.product.descripcion || '',
+      categoryId: this.product.categoria,
+      sku: this.product.codigo,
+      price: this.product.precio,
+      cost: this.product.costo,
+      stockQuantity: this.product.stock,
+      minimumStock: this.product.stockMinimo,
+      reorderLevel: this.product.nivelReorden
+    };
+
+    // Mostrar datos en consola para desarrollo
+    console.log('Datos del producto a guardar:', JSON.stringify(newProduct, null, 2));
+
+    // Cerrar modal
     this.close.emit();
   }
 
