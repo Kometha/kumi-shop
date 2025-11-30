@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { DrawerModule } from 'primeng/drawer';
 
 @Component({
@@ -28,12 +29,24 @@ export class DashboardSidebarComponent {
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() menuSelected = new EventEmitter<string>();
 
+  constructor(private router: Router) {}
+
   onVisibleChange(visible: boolean): void {
     this._visible = visible;
     this.visibleChange.emit(visible);
   }
 
   onMenuSelect(menu: string): void {
+    // Mapear el menú a la ruta correspondiente
+    const routes: { [key: string]: string } = {
+      'dashboard': '/dashboard',
+      'inventario': '/inventario'
+    };
+
+    const route = routes[menu] || '/dashboard';
+    this.router.navigate([route]);
+    
+    // Emitir evento para que el componente padre actualice el menú seleccionado
     this.menuSelected.emit(menu);
     
     // Cerrar el drawer en dispositivos móviles después de seleccionar
