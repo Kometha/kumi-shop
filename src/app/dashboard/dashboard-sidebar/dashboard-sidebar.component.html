@@ -1,0 +1,47 @@
+<p-drawer
+  [(visible)]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [modal]="false"
+  [style]="{'width':'300px'}"
+  styleClass="modern-sidebar">
+  <ng-template pTemplate="header">
+    <div class="flex items-center justify-between w-full">
+      <span class="text-blue-600/100 text-xl font-semibold">Menú</span>
+    </div>
+  </ng-template>
+
+  <div class="sidebar-content">
+    <!-- Dashboard -->
+    <a
+      class="menu-item"
+      [class.active]="selectedMenu === 'dashboard'"
+      (click)="onMenuSelect('dashboard')"
+    >
+      <i class="pi pi-home menu-icon"></i>
+      <span class="menu-label">Dashboard</span>
+    </a>
+
+    <!-- Inventario -->
+    <a
+      class="menu-item"
+      [class.active]="selectedMenu === 'inventario'"
+      (click)="onMenuSelect('inventario')"
+    >
+      <i class="pi pi-box menu-icon"></i>
+      <span class="menu-label">Inventario</span>
+    </a>
+
+    <!-- Separador -->
+    <div class="menu-separator"></div>
+
+    <!-- Configuración (opcional) -->
+    <!-- <a
+      class="menu-item"
+      [class.active]="selectedMenu === 'configuracion'"
+      (click)="onMenuSelect('configuracion')"
+    >
+      <i class="pi pi-cog menu-icon"></i>
+      <span class="menu-label">Configuración</span>
+    </a> -->
+  </div>
+</p-drawer>

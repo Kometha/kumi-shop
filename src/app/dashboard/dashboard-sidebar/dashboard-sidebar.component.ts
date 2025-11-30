@@ -1,0 +1,44 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { DrawerModule } from 'primeng/drawer';
+
+@Component({
+  selector: 'app-dashboard-sidebar',
+  standalone: true,
+  imports: [
+    CommonModule,
+    DrawerModule
+  ],
+  templateUrl: './dashboard-sidebar.component.html',
+  styleUrl: './dashboard-sidebar.component.scss'
+})
+export class DashboardSidebarComponent {
+  private _visible: boolean = false;
+
+  @Input() 
+  get visible(): boolean {
+    return this._visible;
+  }
+  set visible(value: boolean) {
+    this._visible = value;
+    this.visibleChange.emit(value);
+  }
+
+  @Input() selectedMenu: string = 'dashboard';
+  @Output() visibleChange = new EventEmitter<boolean>();
+  @Output() menuSelected = new EventEmitter<string>();
+
+  onVisibleChange(visible: boolean): void {
+    this._visible = visible;
+    this.visibleChange.emit(visible);
+  }
+
+  onMenuSelect(menu: string): void {
+    this.menuSelected.emit(menu);
+    
+    // Cerrar el drawer en dispositivos móviles después de seleccionar
+    if (window.innerWidth < 768) {
+      this.onVisibleChange(false);
+    }
+  }
+}
