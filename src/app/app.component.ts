@@ -16,7 +16,7 @@ import { TraditionalAuthService } from './services/traditional-auth.service';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  title = 'Kumi Shop';
+  title = 'Kumi Honduras';
 
   constructor(public authService: TraditionalAuthService) {}
 
