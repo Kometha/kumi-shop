@@ -5,7 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
-import { ProductosService, NuevoProducto, Product } from '../services/productos.service';
+import { DropdownModule } from 'primeng/dropdown';
+import { ProductosService, NuevoProducto, Product, Categoria } from '../services/productos.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
@@ -14,6 +15,8 @@ interface ProductForm {
   stock: number;
   costo: number;
   precioVenta: number;
+  descripcion: string;
+  categoriaId: number | null;
 }
 
 @Component({
@@ -26,6 +29,7 @@ interface ProductForm {
     InputTextModule,
     InputNumberModule,
     SelectModule,
+    DropdownModule,
     ToastModule
   ],
   providers: [MessageService],
@@ -42,12 +46,16 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
     nombre: '',
     stock: 0,
     costo: 0,
-    precioVenta: 0
+    precioVenta: 0,
+    descripcion: '',
+    categoriaId: null
   };
 
   loading = false;
   isEditMode = false;
   productId: number | null = null;
+  categorias: Categoria[] = [];
+  loadingCategorias = false;
 
 
   constructor(
@@ -62,6 +70,30 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit(): void {
     // No bloquear scroll aquí, lo manejamos desde el componente padre
+    this.cargarCategorias();
+  }
+
+  /**
+   * Cargar categorías desde el servicio
+   */
+  cargarCategorias(): void {
+    this.loadingCategorias = true;
+    this.productosService.getCategorias().subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+        this.loadingCategorias = false;
+        console.log('✅ Categorías cargadas:', categorias);
+      },
+      error: (error) => {
+        this.loadingCategorias = false;
+        console.error('❌ Error al cargar categorías:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las categorías'
+        });
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -83,7 +115,9 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
         nombre: this.productToEdit.producto,
         stock: this.productToEdit.stock,
         costo: this.productToEdit.costo,
-        precioVenta: this.productToEdit.precio
+        precioVenta: this.productToEdit.precio,
+        descripcion: '',
+        categoriaId: null
       };
 
       // Cargar imagen existente si existe
@@ -104,7 +138,9 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       nombre: '',
       stock: 0,
       costo: 0,
-      precioVenta: 0
+      precioVenta: 0,
+      descripcion: '',
+      categoriaId: null
     };
     this.previewImage = null;
     this.selectedFile = null;
@@ -255,7 +291,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       // Modo creación: crear nuevo producto
       const nuevoProducto: NuevoProducto = {
         nombre: this.product.nombre,
-        categoria_id: 1, // Valor por defecto
+        categoria_id: this.product.categoriaId || 1, // Usar categoría seleccionada o valor por defecto
         stock: this.product.stock,
         stockMinimo: 0, // Valor por defecto
         costo: this.product.costo,

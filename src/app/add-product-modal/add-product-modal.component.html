@@ -69,13 +69,39 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Stock Inicial *</label>
+        <label class="form-label">Stock *</label>
         <p-inputNumber
           [(ngModel)]="product.stock"
           [min]="0"
           placeholder="0"
           [style]="{'width':'100%'}">
         </p-inputNumber>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mt-4">
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="product.descripcion"
+          placeholder="Ingrese descripción"
+          class="w-full"
+          style="resize: none; width: 100%;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Categoría *</label>
+        <p-dropdown
+          [(ngModel)]="product.categoriaId"
+          [options]="categorias"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione una categoría"
+          [loading]="loadingCategorias"
+          [style]="{'width':'100%'}">
+        </p-dropdown>
       </div>
     </div>
   </div>

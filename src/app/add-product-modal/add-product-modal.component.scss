@@ -26,6 +26,7 @@
         border: 1px solid #e5e7eb;
         border-radius: 0.375rem;
         transition: all 0.2s;
+        resize: none;
 
         &:focus {
           outline: none;
@@ -36,6 +37,13 @@
         &::placeholder {
           color: #9ca3af;
         }
+      }
+
+      // Estilo específico para el textbox de tamaño fijo
+      input[type="text"].w-full {
+        resize: none;
+        min-width: 100%;
+        max-width: 100%;
       }
 
       .p-dropdown {
