@@ -30,7 +30,6 @@ import {
     CardModule,
     ToastModule,
   ],
-  providers: [MessageService],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
