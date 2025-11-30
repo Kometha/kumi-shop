@@ -1,0 +1,32 @@
+<div class="min-h-screen bg-gray-50 relative">
+  <!-- Fondo con gradiente más claro -->
+  <div class="fixed inset-0 -z-10">
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50"
+    ></div>
+    <div
+      class="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-50/20 to-transparent"
+    ></div>
+  </div>
+
+  <!-- Header -->
+  <app-dashboard-header
+    [title]="title"
+    (openSidebar)="openSidebar()"
+    (logout)="logout()"
+  >
+  </app-dashboard-header>
+
+  <!-- Drawer Sidebar -->
+  <app-dashboard-sidebar
+    [(visible)]="sidebarVisible"
+    [selectedMenu]="selectedMenu"
+    (menuSelected)="onMenuSelected($event)"
+  >
+  </app-dashboard-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="pt-16">
+    <router-outlet></router-outlet>
+  </main>
+</div>
