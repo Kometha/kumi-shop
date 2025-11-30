@@ -1,5 +1,6 @@
 .inventory-container {
   padding: 0 2rem;
+  padding-top: 1rem;
   max-width: 1400px;
   margin: 0 auto;
 
@@ -257,7 +258,7 @@
 
       .p-dropdown {
         position: relative;
-        
+
         .p-dropdown-panel {
           z-index: 1100 !important;
         }
