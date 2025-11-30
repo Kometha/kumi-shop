@@ -1,0 +1,22 @@
+// Estilos para el botón hamburguesa
+.hamburger-button {
+  position: relative;
+  z-index: 1000;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+
+  // Asegurar que el botón sea clickeable incluso con conflictos CSS
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    z-index: -1;
+  }
+}
+
