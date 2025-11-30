@@ -2,10 +2,17 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { DashboardHeaderComponent } from '../../dashboard/dashboard-header/dashboard-header.component';
-import { DashboardSidebarComponent } from '../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
 import { TraditionalAuthService } from '../../services/traditional-auth.service';
 import { Subject, takeUntil, filter } from 'rxjs';
+
+// Importar componentes de forma explícita
+import { DashboardHeaderComponent } from '../../dashboard/dashboard-header/dashboard-header.component';
+import { DashboardSidebarComponent } from '../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
+
+const COMPONENTS = [
+  DashboardHeaderComponent,
+  DashboardSidebarComponent
+] as const;
 
 @Component({
   selector: 'app-main-layout',
@@ -13,8 +20,7 @@ import { Subject, takeUntil, filter } from 'rxjs';
   imports: [
     CommonModule,
     RouterOutlet,
-    DashboardHeaderComponent,
-    DashboardSidebarComponent
+    ...COMPONENTS
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
