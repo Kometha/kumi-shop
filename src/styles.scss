@@ -40,6 +40,10 @@ body {
 }
 
 /* Personalización del Toast/MessageService */
+.p-toast {
+  z-index: 11000 !important; /* Asegurar que esté por encima de modales (z-index de p-dialog es 10000) */
+}
+
 .p-toast .p-toast-detail {
   color: #1f2937 !important;
 }
@@ -50,6 +54,15 @@ body {
 .p-toast-message-warn .p-toast-detail,
 .p-toast-message-error .p-toast-detail {
   color: #1f2937 !important;
+}
+
+/* Asegurar que los toasts se eliminen completamente del DOM después de desaparecer */
+.p-toast-message {
+  pointer-events: auto !important;
+}
+
+.p-toast-message-content {
+  pointer-events: auto !important;
 }
 
 /* Estilos modernos para el Drawer */
