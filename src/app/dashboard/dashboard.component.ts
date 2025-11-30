@@ -1,9 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { DrawerModule } from 'primeng/drawer';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { StatCardComponent } from '../shared/stat-card/stat-card.component';
 import { InventoryComponent } from '../inventory/inventory.component';
@@ -11,6 +8,8 @@ import { RecentSalesComponent } from './recent-sales/recent-sales.component';
 import { InventoryAlertsComponent } from './inventory-alerts/inventory-alerts.component';
 import { SalesChartComponent } from './sales-chart/sales-chart.component';
 import { InventoryChartComponent } from './inventory-chart/inventory-chart.component';
+import { DashboardHeaderComponent } from './dashboard-header/dashboard-header.component';
+import { DashboardSidebarComponent } from './dashboard-sidebar/dashboard-sidebar.component';
 import { TraditionalAuthService } from '../services/traditional-auth.service';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -19,15 +18,14 @@ import { Subject, takeUntil } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    ButtonModule,
-    DrawerModule,
-    ToastModule,
     StatCardComponent,
     InventoryComponent,
     RecentSalesComponent,
     InventoryAlertsComponent,
     SalesChartComponent,
-    InventoryChartComponent
+    InventoryChartComponent,
+    DashboardHeaderComponent,
+    DashboardSidebarComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -84,29 +82,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Abrir/cerrar el sidebar con verificación adicional
-   */
-  toggleSidebar() {
-    console.log('Toggle sidebar clicked, current state:', this.sidebarVisible);
-    this.sidebarVisible = !this.sidebarVisible;
-
-    // Forzar detección de cambios
-    this.cdr.detectChanges();
-
-    console.log('New sidebar state:', this.sidebarVisible);
-  }
-
-  /**
    * Abrir el sidebar específicamente
    */
   openSidebar() {
-    console.log('Open sidebar clicked');
     this.sidebarVisible = true;
     this.cdr.detectChanges();
   }
 
   selectMenu(menu: string) {
-    console.log('Menu selected:', menu);
     this.selectedMenu = menu;
 
     // Opcionalmente cerrar el drawer en dispositivos móviles
@@ -145,7 +128,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe({
       next: (response: any) => {
         if (response.success) {
-          console.log('Logout successful, redirecting...');
           this.router.navigate(['/login']);
         }
       },

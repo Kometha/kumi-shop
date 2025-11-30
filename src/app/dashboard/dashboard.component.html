@@ -6,87 +6,18 @@
   </div>
 
   <!-- Header -->
-  <header class="bg-white/90 backdrop-blur-sm shadow-sm border-b border-gray-200/50 fixed w-full top-0 z-40">
-    <div class="px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <button
-            pButton
-            type="button"
-            icon="pi pi-bars"
-            class="p-button-text p-button-plain p-0 hamburger-button"
-            style="width: 40px; height: 40px;"
-            (click)="openSidebar()"
-            title="Abrir menú"
-          ></button>
-          <h1 class="text-2xl font-bold text-gray-900 ml-2">{{ title }}</h1>
-        </div>
-        <div class="flex items-center space-x-4">
-          @if (currentUser$ | async; as user) {
-            <div class="flex items-center space-x-3">
-              <span class="text-gray-700 text-sm">Bienvenido, {{ user.nombre }}</span>
-              <button
-                pButton
-                type="button"
-                icon="pi pi-sign-out"
-                class="p-button-text p-button-plain"
-                (click)="logout()"
-                title="Cerrar sesión"
-              ></button>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  </header>
+  <app-dashboard-header
+    [title]="title"
+    (openSidebar)="openSidebar()"
+    (logout)="logout()">
+  </app-dashboard-header>
 
   <!-- Drawer Sidebar -->
-  <p-drawer
+  <app-dashboard-sidebar
     [(visible)]="sidebarVisible"
-    [modal]="false"
-    [style]="{'width':'300px'}"
-    styleClass="modern-sidebar">
-    <ng-template pTemplate="header">
-      <div class="flex items-center justify-between w-full">
-        <span class="text-blue-600/100 text-xl font-semibold">Menú</span>
-      </div>
-    </ng-template>
-
-    <div class="sidebar-content">
-      <!-- Dashboard -->
-      <a
-        class="menu-item"
-        [class.active]="selectedMenu === 'dashboard'"
-        (click)="selectMenu('dashboard')"
-      >
-        <i class="pi pi-home menu-icon"></i>
-        <span class="menu-label">Dashboard</span>
-      </a>
-
-      <!-- Inventario -->
-      <a
-        class="menu-item"
-        [class.active]="selectedMenu === 'inventario'"
-        (click)="selectMenu('inventario')"
-      >
-        <i class="pi pi-box menu-icon"></i>
-        <span class="menu-label">Inventario</span>
-      </a>
-
-      <!-- Separador -->
-      <div class="menu-separator"></div>
-
-      <!-- Configuración (opcional) -->
-      <!-- <a
-        class="menu-item"
-        [class.active]="selectedMenu === 'configuracion'"
-        (click)="selectMenu('configuracion')"
-      >
-        <i class="pi pi-cog menu-icon"></i>
-        <span class="menu-label">Configuración</span>
-      </a> -->
-    </div>
-  </p-drawer>
+    [selectedMenu]="selectedMenu"
+    (menuSelected)="selectMenu($event)">
+  </app-dashboard-sidebar>
 
   <!-- Main Content Area -->
   <main class="pt-16">

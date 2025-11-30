@@ -65,6 +65,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
   isDragging = false;
   selectedFile: File | null = null;
   showImageViewer = false;
+  imagenOriginal: string | null = null; // Rastrear la imagen original cuando se carga para editar
 
   ngOnInit(): void {
     // No bloquear scroll aquí, lo manejamos desde el componente padre
@@ -80,11 +81,11 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       next: (categorias) => {
         this.categorias = categorias;
         this.loadingCategorias = false;
-        console.log('✅ Categorías cargadas:', categorias);
+        // console.log('✅ Categorías cargadas:', categorias);
       },
       error: (error) => {
         this.loadingCategorias = false;
-        console.error('❌ Error al cargar categorías:', error);
+        // console.error('❌ Error al cargar categorías:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -126,10 +127,12 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
           this.productToEdit.imagen.trim() !== '' &&
           this.productToEdit.imagen !== 'null') {
         this.previewImage = this.productToEdit.imagen;
+        this.imagenOriginal = this.productToEdit.imagen; // Guardar imagen original
         this.selectedFile = null; // No hay archivo nuevo seleccionado
       } else {
         // No hay imagen válida, mostrar placeholder de subir imagen
         this.previewImage = null;
+        this.imagenOriginal = null;
         this.selectedFile = null;
       }
     }
@@ -151,6 +154,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
     };
     this.previewImage = null;
     this.selectedFile = null;
+    this.imagenOriginal = null;
   }
 
   ngOnDestroy(): void {
@@ -215,6 +219,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
     event.stopPropagation();
     this.previewImage = null;
     this.selectedFile = null;
+    // La imagen original se mantiene para saber qué eliminar del bucket si se guarda
   }
 
   calculateMargin(): number {
@@ -256,6 +261,12 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
 
     if (this.isEditMode && this.productId) {
       // Modo edición: actualizar producto existente
+      // Determinar si se debe eliminar la imagen:
+      // - Si había una imagen original (imagenOriginal) y ahora no hay previewImage ni selectedFile
+      const eliminarImagen = this.imagenOriginal !== null &&
+                             this.previewImage === null &&
+                             this.selectedFile === null;
+
       const productoActualizado: Partial<NuevoProducto> = {
         nombre: this.product.nombre,
         categoria_id: this.product.categoriaId || 1,
@@ -264,7 +275,8 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
         costo: this.product.costo,
         precioVenta: this.product.precioVenta,
         imagen: this.selectedFile || undefined,
-        imagenUrl: this.selectedFile ? undefined : this.previewImage || undefined
+        imagenUrl: this.selectedFile ? undefined : this.previewImage || undefined,
+        eliminarImagen: eliminarImagen
       };
 
       this.productosService.actualizarProducto(this.productId, productoActualizado).subscribe({
