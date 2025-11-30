@@ -2,7 +2,9 @@ import { Routes } from '@angular/router';
 import { TraditionalAuthGuard } from './guards/traditional-auth.guard';
 import { PublicGuard } from './guards/public.guard';
 import { LoginComponent } from './auth/login/login.component';
-import { DashboardComponent } from './dashboard/dashboard.component';
+import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { DashboardHomeComponent } from './dashboard/dashboard-home/dashboard-home.component';
+import { InventoryComponent } from './inventory/inventory.component';
 
 export const routes: Routes = [
   // Rutas públicas (solo accesibles si NO está autenticado)
@@ -12,11 +14,26 @@ export const routes: Routes = [
     canActivate: [PublicGuard]
   },
 
-  // Rutas privadas (solo accesibles si ESTÁ autenticado)
+  // Rutas privadas con layout (header y sidebar globales)
   {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [TraditionalAuthGuard]
+    path: '',
+    component: MainLayoutComponent,
+    canActivate: [TraditionalAuthGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        component: DashboardHomeComponent
+      },
+      {
+        path: 'inventario',
+        component: InventoryComponent
+      }
+    ]
   },
 
   // Redirección para rutas no encontradas
