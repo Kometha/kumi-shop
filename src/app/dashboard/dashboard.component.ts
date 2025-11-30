@@ -31,7 +31,7 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  title = 'Kumi Shop';
+  title = 'Kumi Honduras';
   sidebarVisible = false;
   selectedMenu: string = 'dashboard';
   private destroy$ = new Subject<void>();
