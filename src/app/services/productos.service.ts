@@ -25,6 +25,8 @@ export interface Product {
   producto: string;
   codigo: string;
   categoria: string;
+  categoria_id: number | null;
+  descripcion: string | null;
   stock: number;
   stockMinimo: number;
   costo: number;
@@ -37,6 +39,7 @@ export interface Product {
 export interface NuevoProducto {
   nombre: string;
   categoria_id: number;
+  descripcion?: string | null;
   stock: number;
   stockMinimo: number;
   costo: number;
@@ -80,6 +83,8 @@ export class ProductosService {
           nombre,
           codigo_producto,
           categoria_id,
+          descripcion,
+          categorias(id, nombre, descripcion),
           inventario(stock_actual, stock_minimo),
           precios(costo, precio_venta, margen_porcentaje, margen_absoluto, activo),
           activo
@@ -167,12 +172,30 @@ export class ProductosService {
           estado = 'stock-bajo';
         }
 
+        // Extraer información de categoría
+        let categoriaNombre = 'Sin categoría';
+        let categoriaId: number | null = null;
+
+        if (item.categorias) {
+          if (Array.isArray(item.categorias) && item.categorias.length > 0) {
+            categoriaNombre = item.categorias[0].nombre || 'Sin categoría';
+            categoriaId = item.categorias[0].id || null;
+          } else if (item.categorias && typeof item.categorias === 'object') {
+            categoriaNombre = item.categorias.nombre || 'Sin categoría';
+            categoriaId = item.categorias.id || null;
+          }
+        } else if (item.categoria_id) {
+          categoriaId = item.categoria_id;
+        }
+
         return {
           id: item.id,
           imagen: item.imagen_url || '#f0f0f0',
           producto: item.nombre || 'Sin nombre',
           codigo: item.codigo_producto || `PROD-${item.id}`,
-          categoria: item.categoria_id ? `Categoría ${item.categoria_id}` : 'Sin categoría',
+          categoria: categoriaNombre,
+          categoria_id: categoriaId,
+          descripcion: item.descripcion || null,
           stock: Number(stock) || 0,
           stockMinimo: Number(stockMinimo) || 0,
           costo: Number(costo) || 0,
@@ -196,6 +219,8 @@ export class ProductosService {
           nombre,
           codigo_producto,
           categoria_id,
+          descripcion,
+          categorias(id, nombre, descripcion),
           inventario(stock_actual, stock_minimo),
           precios(costo, precio_venta, margen_porcentaje, margen_absoluto, activo),
           activo
@@ -277,6 +302,7 @@ export class ProductosService {
             .insert({
               nombre: producto.nombre,
               categoria_id: producto.categoria_id,
+              descripcion: producto.descripcion || null,
               imagen_url: imagenUrl,
               activo: true
             })
@@ -375,6 +401,8 @@ export class ProductosService {
           // 3. Actualizar producto en la tabla productos
           const updateData: any = {};
           if (producto.nombre) updateData.nombre = producto.nombre;
+          if (producto.categoria_id !== undefined) updateData.categoria_id = producto.categoria_id;
+          if (producto.descripcion !== undefined) updateData.descripcion = producto.descripcion || null;
           if (imagenUrl !== null) updateData.imagen_url = imagenUrl;
 
           if (Object.keys(updateData).length > 0) {
