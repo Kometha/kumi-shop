@@ -31,7 +31,6 @@ import { ToastModule } from 'primeng/toast';
     AddProductModalComponent,
     ExportDialogComponent
   ],
-  providers: [MessageService],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.scss'
 })
@@ -197,15 +196,15 @@ export class InventoryComponent implements OnInit {
    */
   getProductImageUrl(product: Product): string {
     const defaultImageUrl = 'https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg';
-    
+
     // Si no hay imagen, es null, vacío, o es el valor por defecto '#f0f0f0', usar imagen por defecto
-    if (!product.imagen || 
-        product.imagen.trim() === '' || 
+    if (!product.imagen ||
+        product.imagen.trim() === '' ||
         product.imagen === '#f0f0f0' ||
         product.imagen === 'null') {
       return defaultImageUrl;
     }
-    
+
     return product.imagen;
   }
 
