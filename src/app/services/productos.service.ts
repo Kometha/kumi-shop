@@ -46,6 +46,14 @@ export interface NuevoProducto {
   imagenUrl?: string; // URL de imagen opcional (si ya está subida)
 }
 
+// Interfaz para las categorías
+export interface Categoria {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -456,6 +464,31 @@ export class ProductosService {
           return false;
         }
         return true;
+      })
+    );
+  }
+
+  /**
+   * Obtener todas las categorías activas
+   */
+  getCategorias(): Observable<Categoria[]> {
+    return from(
+      this.supabase
+        .from('categorias')
+        .select('id, nombre, descripcion, activo')
+        .eq('activo', true)
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [PRODUCTOS] Error al obtener categorías:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [PRODUCTOS] Categorías obtenidas:', response.data?.length);
+        return response.data as Categoria[];
+      }),
+      catchError((error) => {
+        console.error('❌ [PRODUCTOS] Error en petición de categorías:', error);
+        throw error;
       })
     );
   }
