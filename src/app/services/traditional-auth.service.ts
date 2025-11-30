@@ -65,7 +65,7 @@ export class TraditionalAuthService {
   public isAuthenticated$ = this.currentUser$.pipe(map(user => !!user));
 
   constructor() {
-    console.log('🚀 [AUTH] Traditional Auth Service initialized');
+    // console.log('🚀 [AUTH] Traditional Auth Service initialized');
     // Solo usar Supabase como cliente de base de datos
     this.supabase = createClient(
       environment.supabase.url,
@@ -86,15 +86,15 @@ export class TraditionalAuthService {
    * Inicializar autenticación de forma controlada
    */
   private async initializeAuth(): Promise<void> {
-    console.log('🔄 [AUTH] Iniciando verificación de sesión...');
+    // console.log('🔄 [AUTH] Iniciando verificación de sesión...');
 
     try {
       await this.checkStoredToken();
     } catch (error) {
-      console.error('❌ [AUTH] Error en inicialización:', error);
+      // console.error('❌ [AUTH] Error en inicialización:', error);
     } finally {
       this.initializedSubject.next(true);
-      console.log('✅ [AUTH] Inicialización completada');
+      // console.log('✅ [AUTH] Inicialización completada');
     }
   }
 
@@ -103,40 +103,40 @@ export class TraditionalAuthService {
    */
   private async checkStoredToken(): Promise<void> {
     this.loadingSubject.next(true);
-    console.log('🔍 [AUTH] Verificando token almacenado...');
+    // console.log('🔍 [AUTH] Verificando token almacenado...');
 
     try {
       const token = this.getStoredToken();
-      console.log('🔍 [AUTH] Token encontrado:', !!token);
+      // console.log('🔍 [AUTH] Token encontrado:', !!token);
 
       if (token) {
-        console.log('🔍 [AUTH] Verificando validez del token...');
+        // console.log('🔍 [AUTH] Verificando validez del token...');
 
         if (this.isTokenValid(token)) {
-          console.log('✅ [AUTH] Token válido, obteniendo usuario...');
+          // console.log('✅ [AUTH] Token válido, obteniendo usuario...');
 
           const user = await this.getUserFromToken(token);
           if (user) {
-            console.log('✅ [AUTH] Usuario restaurado desde token:', user.username);
+            // console.log('✅ [AUTH] Usuario restaurado desde token:', user.username);
             this.currentUserSubject.next(user);
           } else {
-            console.log('❌ [AUTH] Usuario no encontrado en BD, limpiando token');
+            // console.log('❌ [AUTH] Usuario no encontrado en BD, limpiando token');
             this.clearToken();
           }
         } else {
-          console.log('❌ [AUTH] Token expirado o inválido, limpiando');
+          // console.log('❌ [AUTH] Token expirado o inválido, limpiando');
           this.clearToken();
         }
       } else {
-        console.log('ℹ️ [AUTH] No hay token almacenado');
+        // console.log('ℹ️ [AUTH] No hay token almacenado');
         this.clearToken();
       }
     } catch (error) {
-      console.error('❌ [AUTH] Error checking stored token:', error);
+      // console.error('❌ [AUTH] Error checking stored token:', error);
       this.clearToken();
     } finally {
       this.loadingSubject.next(false);
-      console.log('🏁 [AUTH] Verificación de token completada');
+      // console.log('🏁 [AUTH] Verificación de token completada');
     }
   }
 
@@ -204,35 +204,35 @@ export class TraditionalAuthService {
         .eq('activo', true)
         .single();
 
-      console.log('🔍 [LOGIN] Resultado consulta usuario:', { userData, userError });
+      // console.log('🔍 [LOGIN] Resultado consulta usuario:', { userData, userError });
 
       if (userError || !userData) {
-        console.log('❌ [LOGIN] Usuario no encontrado o error:', userError);
+        // console.log('❌ [LOGIN] Usuario no encontrado o error:', userError);
         return {
           success: false,
           error: 'Credenciales inválidas'
         };
       }
 
-      console.log('✅ [LOGIN] Usuario encontrado:', userData.username);
+      // console.log('✅ [LOGIN] Usuario encontrado:', userData.username);
 
       // 2. Verificar contraseña usando MD5
-      console.log('🔍 [LOGIN] Verificando contraseña...');
-      console.log('🔍 [LOGIN] Password input:', credentials.password);
-      console.log('🔍 [LOGIN] Hash en BD:', userData.password_hash);
+      // console.log('🔍 [LOGIN] Verificando contraseña...');
+      // console.log('🔍 [LOGIN] Password input:', credentials.password);
+      // console.log('🔍 [LOGIN] Hash en BD:', userData.password_hash);
 
       const isPasswordValid = await this.verifyPassword(credentials.password, userData.password_hash);
-      console.log('🔍 [LOGIN] Password válida:', isPasswordValid);
+      // console.log('🔍 [LOGIN] Password válida:', isPasswordValid);
 
       if (!isPasswordValid) {
-        console.log('❌ [LOGIN] Contraseña inválida');
+        // console.log('❌ [LOGIN] Contraseña inválida');
         return {
           success: false,
           error: 'Credenciales inválidas'
         };
       }
 
-      console.log('✅ [LOGIN] Contraseña correcta');
+      // console.log('✅ [LOGIN] Contraseña correcta');
 
       // 3. Generar token JWT
       const token = this.generateToken({
@@ -270,7 +270,7 @@ export class TraditionalAuthService {
       };
 
     } catch (error: any) {
-      console.error('Login error:', error);
+      // console.error('Login error:', error);
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -329,7 +329,7 @@ export class TraditionalAuthService {
         .single();
 
       if (insertError || !newUser) {
-        console.error('Insert error:', insertError);
+        // console.error('Insert error:', insertError);
         return {
           success: false,
           error: 'Error al crear el usuario'
@@ -356,7 +356,7 @@ export class TraditionalAuthService {
       };
 
     } catch (error: any) {
-      console.error('Register error:', error);
+      // console.error('Register error:', error);
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -391,7 +391,7 @@ export class TraditionalAuthService {
         message: 'Sesión cerrada correctamente'
       };
     } catch (error) {
-      console.error('Logout error:', error);
+      // console.error('Logout error:', error);
       // Aunque haya error, limpiar estado local
       this.clearToken();
       this.currentUserSubject.next(null);
@@ -457,7 +457,7 @@ export class TraditionalAuthService {
    */
   private hashPasswordMD5(password: string): string {
     const hash = CryptoJS.MD5(password).toString();
-    console.log('🔍 [HASH] Password:', password, '-> MD5 Hash:', hash);
+    // console.log('🔍 [HASH] Password:', password, '-> MD5 Hash:', hash);
     return hash;
   }
 
@@ -467,9 +467,9 @@ export class TraditionalAuthService {
   private async verifyPassword(password: string, hash: string): Promise<boolean> {
     const hashedInput = this.hashPasswordMD5(password);
     const isValid = hashedInput.toLowerCase() === hash.toLowerCase();
-    console.log('🔍 [VERIFY] Input MD5 hash:', hashedInput);
-    console.log('🔍 [VERIFY] Expected hash:', hash);
-    console.log('🔍 [VERIFY] Match:', isValid);
+    // console.log('🔍 [VERIFY] Input MD5 hash:', hashedInput);
+    // console.log('🔍 [VERIFY] Expected hash:', hash);
+    // console.log('🔍 [VERIFY] Match:', isValid);
     return isValid;
   }
 
@@ -489,13 +489,13 @@ export class TraditionalAuthService {
         .single();
 
       if (error) {
-        console.error('❌ [SESSION] Error al crear sesión:', error);
+        // console.error('❌ [SESSION] Error al crear sesión:', error);
         throw error;
       }
 
-      console.log('✅ [SESSION] Sesión creada correctamente:', data?.id);
+      // console.log('✅ [SESSION] Sesión creada correctamente:', data?.id);
     } catch (error) {
-      console.error('❌ [SESSION] Error al crear sesión:', error);
+      // console.error('❌ [SESSION] Error al crear sesión:', error);
       throw error;
     }
   }
@@ -511,12 +511,12 @@ export class TraditionalAuthService {
         .eq('token', token);
 
       if (error) {
-        console.error('❌ [SESSION] Error al invalidar sesión:', error);
+        // console.error('❌ [SESSION] Error al invalidar sesión:', error);
       } else {
-        console.log('✅ [SESSION] Sesión invalidada correctamente');
+        // console.log('✅ [SESSION] Sesión invalidada correctamente');
       }
     } catch (error) {
-      console.error('❌ [SESSION] Error al invalidar sesión:', error);
+      // console.error('❌ [SESSION] Error al invalidar sesión:', error);
     }
   }
 
@@ -533,12 +533,12 @@ export class TraditionalAuthService {
         .eq('id', userId);
 
       if (error) {
-        console.error('❌ [LOGIN] Error al actualizar último login:', error);
+        // console.error('❌ [LOGIN] Error al actualizar último login:', error);
       } else {
-        console.log('✅ [LOGIN] Último login actualizado');
+        // console.log('✅ [LOGIN] Último login actualizado');
       }
     } catch (error) {
-      console.error('❌ [LOGIN] Error al actualizar último login:', error);
+      // console.error('❌ [LOGIN] Error al actualizar último login:', error);
     }
   }
 
