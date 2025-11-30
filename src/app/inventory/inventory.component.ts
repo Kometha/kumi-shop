@@ -192,6 +192,23 @@ export class InventoryComponent implements OnInit {
     }
   }
 
+  /**
+   * Obtener la URL de la imagen del producto, con fallback a imagen por defecto
+   */
+  getProductImageUrl(product: Product): string {
+    const defaultImageUrl = 'https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg';
+    
+    // Si no hay imagen, es null, vacío, o es el valor por defecto '#f0f0f0', usar imagen por defecto
+    if (!product.imagen || 
+        product.imagen.trim() === '' || 
+        product.imagen === '#f0f0f0' ||
+        product.imagen === 'null') {
+      return defaultImageUrl;
+    }
+    
+    return product.imagen;
+  }
+
   showAddProductModal(): void {
     this.productToEdit = null; // Asegurar que no hay producto para editar
     this.displayAddProductModal = true;
