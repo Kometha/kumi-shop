@@ -1,3 +1,6 @@
+<!-- Toast global para toda la aplicación -->
+<p-toast [life]="2000" [showTransformOptions]="'translateX(100%)'" [hideTransformOptions]="'translateX(100%)'"></p-toast>
+
 <!-- Loading spinner mientras se verifica la sesión -->
 @if (authService.loading$ | async) {
   <div class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">

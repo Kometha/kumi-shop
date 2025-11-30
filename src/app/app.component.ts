@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ToastModule } from 'primeng/toast';
 import { TraditionalAuthService } from './services/traditional-auth.service';
 
 @Component({
@@ -8,7 +9,8 @@ import { TraditionalAuthService } from './services/traditional-auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet
+    RouterOutlet,
+    ToastModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
