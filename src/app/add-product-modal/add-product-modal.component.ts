@@ -120,10 +120,19 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
         categoriaId: null
       };
 
-      // Cargar imagen existente si existe
-      if (this.productToEdit.imagen && this.productToEdit.imagen !== '#f0f0f0') {
+      // Cargar imagen existente si existe y es válida
+      // Si no hay imagen o es el valor por defecto '#f0f0f0', previewImage será null
+      // y se mostrará el placeholder de "Subir Imagen"
+      if (this.productToEdit.imagen &&
+          this.productToEdit.imagen !== '#f0f0f0' &&
+          this.productToEdit.imagen.trim() !== '' &&
+          this.productToEdit.imagen !== 'null') {
         this.previewImage = this.productToEdit.imagen;
         this.selectedFile = null; // No hay archivo nuevo seleccionado
+      } else {
+        // No hay imagen válida, mostrar placeholder de subir imagen
+        this.previewImage = null;
+        this.selectedFile = null;
       }
     }
   }
