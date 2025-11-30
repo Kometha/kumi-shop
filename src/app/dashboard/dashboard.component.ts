@@ -29,7 +29,6 @@ import { Subject, takeUntil } from 'rxjs';
     SalesChartComponent,
     InventoryChartComponent
   ],
-  providers: [MessageService],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
