@@ -29,10 +29,8 @@ interface ProductForm {
     InputTextModule,
     InputNumberModule,
     SelectModule,
-    DropdownModule,
-    ToastModule
+    DropdownModule
   ],
-  providers: [MessageService],
   templateUrl: './add-product-modal.component.html',
   styleUrl: './add-product-modal.component.scss'
 })
@@ -116,8 +114,8 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
         stock: this.productToEdit.stock,
         costo: this.productToEdit.costo,
         precioVenta: this.productToEdit.precio,
-        descripcion: '',
-        categoriaId: null
+        descripcion: this.productToEdit.descripcion || '',
+        categoriaId: this.productToEdit.categoria_id
       };
 
       // Cargar imagen existente si existe y es válida
@@ -260,6 +258,8 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       // Modo edición: actualizar producto existente
       const productoActualizado: Partial<NuevoProducto> = {
         nombre: this.product.nombre,
+        categoria_id: this.product.categoriaId || 1,
+        descripcion: this.product.descripcion || null,
         stock: this.product.stock,
         costo: this.product.costo,
         precioVenta: this.product.precioVenta,
@@ -301,6 +301,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       const nuevoProducto: NuevoProducto = {
         nombre: this.product.nombre,
         categoria_id: this.product.categoriaId || 1, // Usar categoría seleccionada o valor por defecto
+        descripcion: this.product.descripcion || null,
         stock: this.product.stock,
         stockMinimo: 0, // Valor por defecto
         costo: this.product.costo,
