@@ -47,6 +47,7 @@ export interface NuevoProducto {
   estado: 'disponible' | 'stock-bajo' | 'agotado';
   imagen?: File; // Archivo de imagen opcional
   imagenUrl?: string; // URL de imagen opcional (si ya está subida)
+  eliminarImagen?: boolean; // Flag para indicar que se debe eliminar la imagen
 }
 
 // Interfaz para las categorías
@@ -97,17 +98,17 @@ export class ProductosService {
           throw new Error(response.error.message);
         }
 
-        console.log('✅ [PRODUCTOS] Productos obtenidos:', response.data?.length);
-        console.log('🔍 [PRODUCTOS] Estructura de datos:', JSON.stringify(response.data?.[0], null, 2));
+        // console.log('✅ [PRODUCTOS] Productos obtenidos:', response.data?.length);
+        // console.log('🔍 [PRODUCTOS] Estructura de datos:', JSON.stringify(response.data?.[0], null, 2));
 
         // Transformar los datos de Supabase al formato que usa el componente
         // Filtrar precios activos durante la transformación
         const productos = this.transformProductos(response.data as any[]);
-        console.log('✅ [PRODUCTOS] Productos transformados:', JSON.stringify(productos[0], null, 2));
+        // console.log('✅ [PRODUCTOS] Productos transformados:', JSON.stringify(productos[0], null, 2));
         return productos;
       }),
       catchError((error) => {
-        console.error('❌ [PRODUCTOS] Error en petición:', error);
+        // console.error('❌ [PRODUCTOS] Error en petición:', error);
         throw error;
       })
     );
@@ -231,7 +232,7 @@ export class ProductosService {
     ).pipe(
       map((response) => {
         if (response.error) {
-          console.error('❌ [PRODUCTOS] Error al obtener producto:', response.error);
+          // console.error('❌ [PRODUCTOS] Error al obtener producto:', response.error);
           return null;
         }
 
@@ -260,7 +261,7 @@ export class ProductosService {
       });
 
     if (error) {
-      console.error('❌ [PRODUCTOS] Error al subir imagen:', error);
+      // console.error('❌ [PRODUCTOS] Error al subir imagen:', error);
       throw new Error(`Error al subir imagen: ${error.message}`);
     }
 
@@ -273,8 +274,42 @@ export class ProductosService {
       throw new Error('No se pudo obtener la URL pública de la imagen');
     }
 
-    console.log('✅ [PRODUCTOS] Imagen subida correctamente:', urlData.publicUrl);
+    // console.log('✅ [PRODUCTOS] Imagen subida correctamente:', urlData.publicUrl);
     return urlData.publicUrl;
+  }
+
+  /**
+   * Eliminar imagen del bucket de Supabase Storage
+   * Extrae el nombre del archivo de la URL y lo elimina del bucket
+   */
+  private async deleteImage(imageUrl: string): Promise<void> {
+    try {
+      // Extraer el nombre del archivo de la URL
+      // La URL de Supabase tiene formato: https://[project].supabase.co/storage/v1/object/public/productos-imagenes/[filename]
+      const urlParts = imageUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+
+      if (!fileName) {
+        // console.warn('⚠️ [PRODUCTOS] No se pudo extraer el nombre del archivo de la URL:', imageUrl);
+        return;
+      }
+
+      // Eliminar el archivo del bucket
+      const { error } = await this.supabase.storage
+        .from('productos-imagenes')
+        .remove([fileName]);
+
+      if (error) {
+        // console.error('❌ [PRODUCTOS] Error al eliminar imagen del bucket:', error);
+        // No lanzar error, solo loguear, para que la actualización del producto continúe
+        // console.warn('⚠️ [PRODUCTOS] Continuando con la actualización aunque no se pudo eliminar la imagen del bucket');
+      } else {
+        // console.log('✅ [PRODUCTOS] Imagen eliminada del bucket:', fileName);
+      }
+    } catch (error: any) {
+      // console.error('❌ [PRODUCTOS] Error al procesar eliminación de imagen:', error);
+      // No lanzar error para que la actualización continúe
+    }
   }
 
   /**
@@ -310,11 +345,11 @@ export class ProductosService {
             .single();
 
           if (productoError || !productoData) {
-            console.error('❌ [PRODUCTOS] Error al crear producto:', productoError);
+            // console.error('❌ [PRODUCTOS] Error al crear producto:', productoError);
             throw new Error(productoError?.message || 'Error al crear el producto');
           }
 
-          console.log('✅ [PRODUCTOS] Producto creado:', productoData.id);
+          // console.log('✅ [PRODUCTOS] Producto creado:', productoData.id);
 
           // 4. Crear registro en inventario
           const { error: inventarioError } = await this.supabase
@@ -326,7 +361,7 @@ export class ProductosService {
             });
 
           if (inventarioError) {
-            console.error('❌ [PRODUCTOS] Error al crear inventario:', inventarioError);
+            // console.error('❌ [PRODUCTOS] Error al crear inventario:', inventarioError);
             // Intentar eliminar el producto creado
             await this.supabase.from('productos').delete().eq('id', productoData.id);
             throw new Error(`Error al crear inventario: ${inventarioError.message}`);
@@ -345,14 +380,14 @@ export class ProductosService {
             });
 
           if (preciosError) {
-            console.error('❌ [PRODUCTOS] Error al crear precios:', preciosError);
+            // console.error('❌ [PRODUCTOS] Error al crear precios:', preciosError);
             // Intentar eliminar el producto y inventario creados
             await this.supabase.from('inventario').delete().eq('producto_id', productoData.id);
             await this.supabase.from('productos').delete().eq('id', productoData.id);
             throw new Error(`Error al crear precios: ${preciosError.message}`);
           }
 
-          console.log('✅ [PRODUCTOS] Producto creado completamente');
+          // console.log('✅ [PRODUCTOS] Producto creado completamente');
 
           // 6. Obtener el producto completo para retornarlo
           const productoCompleto = await this.getProductoById(productoData.id).toPromise();
@@ -362,13 +397,13 @@ export class ProductosService {
 
           return productoCompleto;
         } catch (error: any) {
-          console.error('❌ [PRODUCTOS] Error en crearProducto:', error);
+          // console.error('❌ [PRODUCTOS] Error en crearProducto:', error);
           throw error;
         }
       })()
     ).pipe(
       catchError((error) => {
-        console.error('❌ [PRODUCTOS] Error en crearProducto:', error);
+        // console.error('❌ [PRODUCTOS] Error en crearProducto:', error);
         return throwError(() => error);
       })
     );
@@ -381,13 +416,32 @@ export class ProductosService {
     return from(
       (async () => {
         try {
-          // 1. Subir nueva imagen si existe
+          // 1. Obtener imagen actual del producto antes de actualizar
+          const { data: productoActual } = await this.supabase
+            .from('productos')
+            .select('imagen_url')
+            .eq('id', id)
+            .single();
+
+          const imagenActual = productoActual?.imagen_url;
+
+          // 2. Manejar eliminación de imagen
+          if (producto.eliminarImagen && imagenActual) {
+            // Eliminar la imagen del bucket
+            await this.deleteImage(imagenActual);
+          }
+
+          // 3. Subir nueva imagen si existe
           let imagenUrl = producto.imagenUrl || null;
           if (producto.imagen && !imagenUrl) {
+            // Si hay una imagen nueva, eliminar la anterior si existe
+            if (imagenActual && !producto.eliminarImagen) {
+              await this.deleteImage(imagenActual);
+            }
             imagenUrl = await this.uploadImage(producto.imagen);
           }
 
-          // 2. Calcular margen si se actualizan costo o precio
+          // 4. Calcular margen si se actualizan costo o precio
           let margenAbsoluto = 0;
           let margenPorcentaje = 0;
 
@@ -398,12 +452,21 @@ export class ProductosService {
               : 0;
           }
 
-          // 3. Actualizar producto en la tabla productos
+          // 5. Actualizar producto en la tabla productos
           const updateData: any = {};
           if (producto.nombre) updateData.nombre = producto.nombre;
           if (producto.categoria_id !== undefined) updateData.categoria_id = producto.categoria_id;
           if (producto.descripcion !== undefined) updateData.descripcion = producto.descripcion || null;
-          if (imagenUrl !== null) updateData.imagen_url = imagenUrl;
+
+          // Manejar imagen_url: null si se elimina sin nueva imagen, nueva URL si se sube nueva, mantener si no cambia
+          if (producto.eliminarImagen && !producto.imagen && imagenUrl === null) {
+            // Se eliminó la imagen y no se subió una nueva
+            updateData.imagen_url = null;
+          } else if (imagenUrl !== null) {
+            // Hay una nueva imagen (ya sea nueva subida o la misma que se mantiene)
+            updateData.imagen_url = imagenUrl;
+          }
+          // Si no se cumple ninguna condición, no se actualiza imagen_url (se mantiene la actual)
 
           if (Object.keys(updateData).length > 0) {
             const { error: productoError } = await this.supabase
@@ -412,7 +475,7 @@ export class ProductosService {
               .eq('id', id);
 
             if (productoError) {
-              console.error('❌ [PRODUCTOS] Error al actualizar producto:', productoError);
+              // console.error('❌ [PRODUCTOS] Error al actualizar producto:', productoError);
               throw new Error(`Error al actualizar producto: ${productoError.message}`);
             }
           }
