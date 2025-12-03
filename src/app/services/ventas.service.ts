@@ -1,0 +1,87 @@
+import { Injectable } from '@angular/core';
+import { Observable, from } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { environment } from '../../environments/environment';
+
+// Interfaz para Canal
+export interface Canal {
+  id: number;
+  nombre: string;
+  url_icono: string | null;
+}
+
+// Interfaz para EstadoPedido
+export interface EstadoPedido {
+  id: number;
+  nombre: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class VentasService {
+  private supabase: SupabaseClient;
+
+  constructor() {
+    this.supabase = createClient(
+      environment.supabase.url,
+      environment.supabase.anonKey
+    );
+  }
+
+  /**
+   * Obtener todos los canales activos del schema ventas
+   */
+  getCanales(): Observable<Canal[]> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('canales')
+        .select('id, nombre, url_icono')
+        .eq('activo', true)
+        .order('nombre', { ascending: true })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener canales:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Canales obtenidos:', response.data?.length);
+        return response.data as Canal[];
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de canales:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener todos los estados de pedido activos del schema ventas
+   */
+  getEstadosPedido(): Observable<EstadoPedido[]> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('estados_pedido')
+        .select('id, nombre')
+        .eq('activo', true)
+        .order('nombre', { ascending: true })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener estados de pedido:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Estados de pedido obtenidos:', response.data?.length);
+        return response.data as EstadoPedido[];
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de estados de pedido:', error);
+        throw error;
+      })
+    );
+  }
+}
+
