@@ -342,6 +342,13 @@
         }
       }
 
+      .auto-resize-textarea {
+        min-height: 80px;
+        max-height: 300px;
+        overflow-y: auto;
+        resize: none;
+      }
+
       .p-checkbox {
         .p-checkbox-box {
           border-color: #e5e7eb;
@@ -435,6 +442,16 @@
           border: none;
           border-bottom: 1px solid #f3f4f6;
           color: #1f2937;
+        }
+      }
+
+      .p-datatable-tfoot > tr.total-row {
+        background: #f9fafb;
+        border-top: 2px solid #e5e7eb;
+
+        > td {
+          padding: 1rem;
+          border: none;
         }
       }
     }
@@ -554,5 +571,57 @@
 
   &:hover {
     background: #9ca3af;
+  }
+}
+
+// Estilos para la tabla de productos con cantidades
+.productos-cantidad-table {
+  :host ::ng-deep {
+    .p-inputnumber {
+      width: 80px !important;
+
+      .p-inputnumber-input {
+        text-align: center;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.875rem !important;
+        width: 50px !important;
+        min-width: 50px !important;
+      }
+
+      .p-inputnumber-button {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        padding: 0 !important;
+        font-size: 0.75rem !important;
+
+        .p-button-icon {
+          font-size: 0.75rem !important;
+        }
+      }
+
+      &.compact-input-number {
+        .p-inputnumber-button-group {
+          .p-inputnumber-button {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+          }
+        }
+      }
+    }
+  }
+
+  table {
+    th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 0.5rem !important;
+    }
+
+    td {
+      font-size: 0.875rem;
+      padding: 0.75rem 0.5rem !important;
+    }
   }
 }

@@ -12,6 +12,9 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ImageModule } from 'primeng/image';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { ProductosService, Product } from '../services/productos.service';
 import { VentasService, Canal, EstadoPedido } from '../services/ventas.service';
 
@@ -31,7 +34,9 @@ import { VentasService, Canal, EstadoPedido } from '../services/ventas.service';
     DropdownModule,
     CheckboxModule,
     ImageModule,
-    MultiSelectModule
+    MultiSelectModule,
+    InputNumberModule,
+    ToastModule
   ],
   templateUrl: './ventas.component.html',
   styleUrl: './ventas.component.scss'
@@ -59,7 +64,8 @@ export class VentasComponent implements OnInit {
     telefonoCliente: '',
     canal: null,
     fechaPedido: null as Date | null,
-    estado: null
+    estado: null,
+    notas: ''
   };
 
   // Detalles del pedido
@@ -68,18 +74,22 @@ export class VentasComponent implements OnInit {
     imagen: string;
     producto: string;
     precio: number;
+    cantidad: number;
+    stock: number;
   }> = [];
 
   // Modal de selección de productos
   displaySeleccionarProductosModal: boolean = false;
   productosDisponibles: Product[] = [];
   productosSeleccionados: Product[] = [];
+  productosConCantidad: Array<{ producto: Product; cantidad: number }> = [];
   loadingProductos: boolean = false;
   selectedItemsLabel: string = '{0} productos seleccionados';
 
   constructor(
     private productosService: ProductosService,
-    private ventasService: VentasService
+    private ventasService: VentasService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
@@ -184,12 +194,14 @@ export class VentasComponent implements OnInit {
       telefonoCliente: '',
       canal: null,
       fechaPedido: null,
-      estado: null
+      estado: null,
+      notas: ''
     };
     this.fueHoy = false;
     this.fechaPedidoDisabled = false;
     this.detallesPedido = [];
     this.productosSeleccionados = [];
+    this.productosConCantidad = [];
   }
 
   onFueHoyChange(): void {
@@ -199,6 +211,12 @@ export class VentasComponent implements OnInit {
     } else {
       this.fechaPedidoDisabled = false;
     }
+  }
+
+  onNotasInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
   }
 
   guardarVenta(): void {
@@ -212,29 +230,109 @@ export class VentasComponent implements OnInit {
   showSeleccionarProductosModal(): void {
     this.displaySeleccionarProductosModal = true;
     this.productosSeleccionados = [];
+    this.productosConCantidad = [];
     document.body.style.overflow = 'hidden';
   }
 
   hideSeleccionarProductosModal(): void {
     this.displaySeleccionarProductosModal = false;
     this.productosSeleccionados = [];
+    this.productosConCantidad = [];
     document.body.style.overflow = 'auto';
   }
 
+  onProductosSeleccionadosChange(): void {
+    // Sincronizar productosConCantidad con productosSeleccionados
+    this.productosConCantidad = this.productosSeleccionados.map(producto => {
+      const existente = this.productosConCantidad.find(p => p.producto.id === producto.id);
+      return {
+        producto: producto,
+        cantidad: existente ? existente.cantidad : 1
+      };
+    });
+  }
+
+  actualizarCantidadDetalle(detalle: any, nuevaCantidad: number): void {
+    if (nuevaCantidad <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cantidad inválida',
+        detail: 'La cantidad debe ser mayor a 0'
+      });
+      return;
+    }
+
+    if (nuevaCantidad > detalle.stock) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Stock insuficiente',
+        detail: `No se puede vender más de ${detalle.stock} unidades de ${detalle.producto}. Stock disponible: ${detalle.stock}`
+      });
+      return;
+    }
+
+    detalle.cantidad = nuevaCantidad;
+  }
+
   finalizarSeleccionProductos(): void {
+    // Validar cantidades antes de agregar
+    let hayError = false;
+
+    this.productosConCantidad.forEach(item => {
+      if (!item.cantidad || item.cantidad <= 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Cantidad inválida',
+          detail: `Debes ingresar una cantidad válida para ${item.producto.producto}`
+        });
+        hayError = true;
+        return;
+      }
+
+      if (item.cantidad > item.producto.stock) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Stock insuficiente',
+          detail: `No se puede vender más de ${item.producto.stock} unidades de ${item.producto.producto}. Stock disponible: ${item.producto.stock}`
+        });
+        hayError = true;
+        return;
+      }
+    });
+
+    if (hayError) {
+      return;
+    }
+
     // Agregar productos seleccionados a la tabla de detalles
-    this.productosSeleccionados.forEach(producto => {
+    this.productosConCantidad.forEach(item => {
       // Verificar si el producto ya está en la tabla
-      const existe = this.detallesPedido.some(detalle => detalle.id === producto.id);
-      if (!existe) {
+      const existeIndex = this.detallesPedido.findIndex(detalle => detalle.id === item.producto.id);
+      if (existeIndex !== -1) {
+        // Si ya existe, actualizar cantidad (validando stock total)
+        const nuevaCantidad = this.detallesPedido[existeIndex].cantidad + item.cantidad;
+        if (nuevaCantidad > item.producto.stock) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Stock insuficiente',
+            detail: `No se puede vender más de ${item.producto.stock} unidades de ${item.producto.producto}. Ya tienes ${this.detallesPedido[existeIndex].cantidad} en el pedido.`
+          });
+          return;
+        }
+        this.detallesPedido[existeIndex].cantidad = nuevaCantidad;
+      } else {
+        // Si no existe, agregarlo
         this.detallesPedido.push({
-          id: producto.id,
-          imagen: this.getProductImageUrl(producto),
-          producto: producto.producto,
-          precio: producto.precio
+          id: item.producto.id,
+          imagen: this.getProductImageUrl(item.producto),
+          producto: item.producto.producto,
+          precio: item.producto.precio,
+          cantidad: item.cantidad,
+          stock: item.producto.stock
         });
       }
     });
+
     this.hideSeleccionarProductosModal();
   }
 
@@ -261,5 +359,17 @@ export class VentasComponent implements OnInit {
       currency: 'HNL',
       minimumFractionDigits: 2
     }).format(value);
+  }
+
+  calcularSubtotal(): number {
+    return this.detallesPedido.reduce((total, detalle) => total + (detalle.precio * detalle.cantidad), 0);
+  }
+
+  calcularIVA(): number {
+    return this.calcularSubtotal() * 0.15;
+  }
+
+  calcularTotal(): number {
+    return this.calcularSubtotal() + this.calcularIVA();
   }
 }
