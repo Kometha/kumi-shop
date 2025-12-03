@@ -13,6 +13,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ImageModule } from 'primeng/image';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ProductosService, Product } from '../services/productos.service';
+import { VentasService, Canal, EstadoPedido } from '../services/ventas.service';
 
 @Component({
   selector: 'app-ventas',
@@ -47,20 +48,10 @@ export class VentasComponent implements OnInit {
   fechaPedidoDisabled: boolean = false;
 
   // Opciones de dropdowns
-  canales = [
-    { label: 'WhatsApp', value: 'whatsapp' },
-    { label: 'Instagram', value: 'instagram' },
-    { label: 'Messenger', value: 'messenger' },
-    { label: 'Otro', value: 'otro' }
-  ];
-
-  estados = [
-    { label: 'Pendiente', value: 'pendiente' },
-    { label: 'Enviado', value: 'enviado' },
-    { label: 'Entregado', value: 'entregado' },
-    { label: 'Devuelvo', value: 'devuelvo' },
-    { label: 'Cancelado', value: 'cancelado' }
-  ];
+  canales: Canal[] = [];
+  estados: EstadoPedido[] = [];
+  loadingCanales: boolean = false;
+  loadingEstados: boolean = false;
 
   // Formulario de nueva venta
   nuevaVenta = {
@@ -86,10 +77,15 @@ export class VentasComponent implements OnInit {
   loadingProductos: boolean = false;
   selectedItemsLabel: string = '{0} productos seleccionados';
 
-  constructor(private productosService: ProductosService) {}
+  constructor(
+    private productosService: ProductosService,
+    private ventasService: VentasService
+  ) {}
 
   ngOnInit(): void {
     this.loadProductos();
+    this.loadCanales();
+    this.loadEstadosPedido();
   }
 
   loadProductos(): void {
@@ -102,6 +98,34 @@ export class VentasComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar productos:', error);
         this.loadingProductos = false;
+      }
+    });
+  }
+
+  loadCanales(): void {
+    this.loadingCanales = true;
+    this.ventasService.getCanales().subscribe({
+      next: (canales) => {
+        this.canales = canales;
+        this.loadingCanales = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar canales:', error);
+        this.loadingCanales = false;
+      }
+    });
+  }
+
+  loadEstadosPedido(): void {
+    this.loadingEstados = true;
+    this.ventasService.getEstadosPedido().subscribe({
+      next: (estados) => {
+        this.estados = estados;
+        this.loadingEstados = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar estados de pedido:', error);
+        this.loadingEstados = false;
       }
     });
   }
