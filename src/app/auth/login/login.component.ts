@@ -91,12 +91,6 @@ export class LoginComponent implements OnInit {
         if (response.success) {
           console.log('✅ Login exitoso:', response.user);
 
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: response.message || 'Sesión iniciada correctamente',
-          });
-
           // Redirigir después de un breve delay para mostrar el mensaje
           setTimeout(() => {
             this.router.navigate([this.returnUrl]);
