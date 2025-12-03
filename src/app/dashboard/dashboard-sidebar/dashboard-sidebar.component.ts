@@ -16,7 +16,7 @@ import { DrawerModule } from 'primeng/drawer';
 export class DashboardSidebarComponent {
   private _visible: boolean = false;
 
-  @Input() 
+  @Input()
   get visible(): boolean {
     return this._visible;
   }
@@ -40,15 +40,16 @@ export class DashboardSidebarComponent {
     // Mapear el menú a la ruta correspondiente
     const routes: { [key: string]: string } = {
       'dashboard': '/dashboard',
-      'inventario': '/inventario'
+      'inventario': '/inventario',
+      'ventas': '/ventas'
     };
 
     const route = routes[menu] || '/dashboard';
     this.router.navigate([route]);
-    
+
     // Emitir evento para que el componente padre actualice el menú seleccionado
     this.menuSelected.emit(menu);
-    
+
     // Cerrar el drawer en dispositivos móviles después de seleccionar
     if (window.innerWidth < 768) {
       this.onVisibleChange(false);
