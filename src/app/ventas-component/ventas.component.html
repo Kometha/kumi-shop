@@ -243,6 +243,7 @@
       <div class="form-group mt-4">
         <label class="form-label">Fecha de Pedido *</label>
         <p-calendar
+          appendTo="body"
           [(ngModel)]="nuevaVenta.fechaPedido"
           [disabled]="fechaPedidoDisabled"
           [showIcon]="true"
