@@ -1,0 +1,279 @@
+.inventory-container {
+  padding: 0 2rem;
+  padding-top: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 0.5rem;
+  }
+}
+
+.search-filters-container {
+  margin-bottom: 1.5rem;
+}
+
+.table-container {
+  background-color: #ffffff;
+  margin: 0 auto;
+  position: relative;
+  overflow: visible !important;
+
+  ::ng-deep {
+    .p-datatable {
+      overflow: visible !important;
+      .p-datatable-header {
+        background: transparent;
+        border: none;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .p-datatable-tbody > tr {
+        background: #ffffff;
+
+        &:hover {
+          background: #f9fafb;
+        }
+
+        > td {
+          padding: 1rem;
+          border: none;
+          border-bottom: 1px solid #f3f4f6;
+          color: #1f2937;
+        }
+      }
+
+      .p-paginator {
+        background: #f9fafb;
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        padding: 0.75rem 1rem;
+        color: #6b7280;
+        position: relative;
+        overflow: visible;
+
+        .p-paginator-current {
+          color: #6b7280;
+        }
+
+        // Dropdown de rows per page
+        .p-paginator-rpp-options {
+          position: relative;
+          overflow: visible;
+          z-index: 1000;
+
+          .p-dropdown {
+            position: relative;
+            overflow: visible;
+          }
+        }
+      }
+    }
+
+    // Asegurar que el input de búsqueda sea light
+    input.p-inputtext {
+      background-color: #ffffff;
+      border-color: #e5e7eb;
+      color: #1f2937;
+
+      &:hover {
+        border-color: #d1d5db;
+      }
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+      }
+    }
+
+    // Botones en modo light
+    .p-button {
+      &.p-button-outlined {
+        background-color: transparent;
+        color: #3b82f6;
+        border-color: #3b82f6;
+
+        &:hover {
+          background-color: rgba(59, 130, 246, 0.1);
+        }
+      }
+    }
+  }
+}
+
+.product-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+// Ajustes para los tags de estado
+::ng-deep {
+  .p-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+  }
+}
+
+// Ajustes para el input de búsqueda
+::ng-deep {
+  .p-input-icon-left > input {
+    padding-left: 2.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  .p-input-icon-left > .pi {
+    left: 0.75rem;
+    color: #6b7280;
+  }
+}
+
+// Estilos para el Dialog
+:host ::ng-deep {
+  .p-dialog {
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+
+    .p-dialog-content {
+      padding: 0;
+      overflow-y: auto;
+      flex-grow: 1;
+      max-height: calc(90vh - 80px);
+    }
+
+    .p-dialog-header {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1.25rem 1.5rem;
+      background-color: #f9fafb;
+      border-radius: 0.75rem 0.75rem 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .p-dialog-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        &::before {
+          content: '📦';
+          width: 2.5rem;
+          height: 2.5rem;
+          background-color: #374151;
+          border-radius: 0.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+        }
+      }
+
+      .p-dialog-header-icons {
+        .p-dialog-header-icon {
+          width: 2rem;
+          height: 2rem;
+          color: #6b7280;
+          border-radius: 0.375rem;
+          transition: all 0.2s;
+
+          &:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+          }
+
+          &:last-child {
+            color: #ef4444;
+
+            &:hover {
+              background-color: #fef2f2;
+              color: #dc2626;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .p-dialog-mask {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  .p-dialog-mask.p-component-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  // Estilos globales para el dropdown del paginador
+  .p-paginator .p-dropdown-panel {
+    z-index: 1100 !important;
+  }
+}
+
+// Estilos globales para el dropdown del paginador
+::ng-deep {
+  // Asegurar que el panel del dropdown del paginador se muestre correctamente
+  .p-paginator {
+    .p-dropdown-panel {
+      z-index: 1100 !important;
+    }
+
+    .p-paginator-rpp-options {
+      position: relative;
+      z-index: 1000;
+
+      .p-dropdown {
+        position: relative;
+
+        .p-dropdown-panel {
+          z-index: 1100 !important;
+        }
+      }
+    }
+  }
+
+  // Asegurar que el contenedor de la tabla permita overflow
+  .p-datatable-wrapper {
+    overflow: visible !important;
+  }
+
+  // Solución específica para el dropdown del paginador cuando está abierto
+  .p-paginator-rpp-options .p-dropdown.p-dropdown-open .p-dropdown-panel {
+    position: fixed !important;
+    z-index: 1100 !important;
+  }
+}

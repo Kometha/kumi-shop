@@ -1,1 +1,156 @@
-<p>ventas-component works!</p>
+<div class="inventory-container p-6">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-4">Gestión de Ventas</h2>
+
+  <!-- Search and Filters Bar -->
+  <div class="search-filters-container mb-6">
+    <div
+      class="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+    >
+      <!-- Search Input -->
+      <div class="flex-1 relative">
+        <i
+          class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        ></i>
+        <input
+          type="text"
+          [(ngModel)]="searchValue"
+          (ngModelChange)="applyFilters()"
+          placeholder="Buscar ventas..."
+          class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="flex items-center gap-2">
+        <button
+          (click)="applyFilters()"
+          class="filter-tab px-4 py-2 rounded-lg font-medium text-sm transition-all bg-gray-900 text-white"
+        >
+          Todos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="flex justify-between items-center mb-4">
+    <p class="text-gray-600">
+      Mostrando
+      <span class="font-semibold">{{ getFilteredVentasCount() }}</span>
+      ventas
+    </p>
+    <div class="flex gap-2">
+      <button
+        pButton
+        label="Exportar"
+        icon="pi pi-download"
+        class="p-button-outlined"
+      ></button>
+      <button
+        pButton
+        label="Nueva Venta"
+        icon="pi pi-plus"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div
+    class="table-container bg-white rounded-lg shadow-sm border border-gray-200"
+    style="overflow: visible;"
+  >
+    <p-table
+      [value]="filteredVentas"
+      [paginator]="true"
+      [rows]="10"
+      [showCurrentPageReport]="true"
+      [loading]="loading"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} ventas"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Cliente</th>
+          <th>Pedido</th>
+          <th>Canal</th>
+          <th>Fecha</th>
+          <th style="width: 120px" class="text-right">Total (L.)</th>
+          <th style="width: 120px" class="text-center">Estado</th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-venta>
+        <tr>
+          <!-- Cliente -->
+          <td class="font-medium">{{ venta.cliente || '-' }}</td>
+
+          <!-- Pedido -->
+          <td>{{ venta.pedido || '-' }}</td>
+
+          <!-- Canal -->
+          <td>{{ venta.canal || '-' }}</td>
+
+          <!-- Fecha -->
+          <td>{{ venta.fecha || '-' }}</td>
+
+          <!-- Total (L.) -->
+          <td class="text-right font-mono font-semibold">
+            {{ venta.total ? formatCurrency(venta.total) : '-' }}
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="getEstadoLabel(venta.estado || 'pendiente')"
+              [severity]="getEstadoSeverity(venta.estado || 'pendiente')"
+              [rounded]="true"
+            >
+            </p-tag>
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-eye"
+              class="p-button-rounded p-button-text p-button-sm mr-2"
+              [disabled]="loading"
+              pTooltip="Ver detalles"
+              tooltipPosition="top"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text p-button-sm mr-2"
+              [disabled]="loading"
+              pTooltip="Editar venta"
+              tooltipPosition="top"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger p-button-sm"
+              [disabled]="loading"
+              pTooltip="Eliminar venta"
+              tooltipPosition="top"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-8">
+            <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+            <p class="text-gray-500">No se encontraron ventas</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
