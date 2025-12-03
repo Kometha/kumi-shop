@@ -218,11 +218,20 @@
           <p-dropdown
             [(ngModel)]="nuevaVenta.canal"
             [options]="canales"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="nombre"
+            optionValue="id"
             placeholder="Seleccione un canal"
+            [loading]="loadingCanales"
             [style]="{'width':'100%'}"
           >
+            <ng-template let-canal pTemplate="item">
+              <div class="flex items-center gap-2">
+                @if (canal.url_icono) {
+                  <img [src]="canal.url_icono" [alt]="canal.nombre" class="w-5 h-5" />
+                }
+                <span>{{ canal.nombre }}</span>
+              </div>
+            </ng-template>
           </p-dropdown>
         </div>
 
@@ -231,9 +240,10 @@
           <p-dropdown
             [(ngModel)]="nuevaVenta.estado"
             [options]="estados"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="nombre"
+            optionValue="id"
             placeholder="Seleccione un estado"
+            [loading]="loadingEstados"
             [style]="{'width':'100%'}"
           >
           </p-dropdown>
