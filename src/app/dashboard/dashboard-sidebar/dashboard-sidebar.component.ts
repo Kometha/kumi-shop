@@ -50,9 +50,7 @@ export class DashboardSidebarComponent {
     // Emitir evento para que el componente padre actualice el menú seleccionado
     this.menuSelected.emit(menu);
 
-    // Cerrar el drawer en dispositivos móviles después de seleccionar
-    if (window.innerWidth < 768) {
-      this.onVisibleChange(false);
-    }
+    // Cerrar el drawer automáticamente después de seleccionar
+    this.onVisibleChange(false);
   }
 }
