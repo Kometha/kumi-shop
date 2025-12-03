@@ -50,6 +50,7 @@
         pButton
         label="Nueva Venta"
         icon="pi pi-plus"
+        (click)="showNuevaVentaModal()"
       ></button>
     </div>
   </div>
@@ -154,3 +155,297 @@
     </p-table>
   </div>
 </div>
+
+<!-- Modal para nueva venta -->
+<p-dialog
+  [(visible)]="displayNuevaVentaModal"
+  [modal]="true"
+  [style]="{ width: '50vw', minWidth: '600px', maxHeight: '90vh' }"
+  [breakpoints]="{ '1024px': '75vw', '640px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [showHeader]="true"
+  header="Nueva Venta"
+  (onHide)="hideNuevaVentaModal()"
+>
+  <div class="nueva-venta-modal">
+    <!-- Descripción -->
+    <div class="modal-description mb-6">
+      <p class="text-sm text-gray-600">Completa la información de la venta</p>
+    </div>
+
+    <!-- Información del Cliente -->
+    <div class="section mb-6">
+      <h3 class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+        INFORMACIÓN DEL CLIENTE
+      </h3>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Nombre del Cliente *</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="nuevaVenta.nombreCliente"
+            placeholder="Ej: Juan Pérez"
+            class="w-full"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Número de Teléfono *</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="nuevaVenta.telefonoCliente"
+            placeholder="Ej: +504 9999-9999"
+            class="w-full"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Información del Pedido -->
+    <div class="section mb-6">
+      <h3 class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+        INFORMACIÓN DEL PEDIDO
+      </h3>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Canal *</label>
+          <p-dropdown
+            [(ngModel)]="nuevaVenta.canal"
+            [options]="canales"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccione un canal"
+            [style]="{'width':'100%'}"
+          >
+          </p-dropdown>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estado *</label>
+          <p-dropdown
+            [(ngModel)]="nuevaVenta.estado"
+            [options]="estados"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccione un estado"
+            [style]="{'width':'100%'}"
+          >
+          </p-dropdown>
+        </div>
+      </div>
+
+      <div class="form-group mt-4">
+        <label class="form-label">Fecha de Pedido *</label>
+        <p-calendar
+          [(ngModel)]="nuevaVenta.fechaPedido"
+          [disabled]="fechaPedidoDisabled"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="Seleccione una fecha"
+          [style]="{'width':'100%'}"
+        >
+        </p-calendar>
+        <div class="mt-2">
+          <p-checkbox
+            [(ngModel)]="fueHoy"
+            (ngModelChange)="onFueHoyChange()"
+            inputId="fueHoy"
+            [binary]="true"
+          >
+          </p-checkbox>
+          <label for="fueHoy" class="ml-2 text-sm text-gray-700 cursor-pointer">
+            Fue hoy
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalles del Pedido -->
+    <div class="section mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider">
+          DETALLES DEL PEDIDO
+        </h3>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Agregar Producto"
+          class="p-button-success p-button-sm"
+          (click)="showSeleccionarProductosModal()"
+        ></button>
+      </div>
+
+      <div class="table-container-detalles bg-white rounded-lg border border-gray-200">
+        <p-table
+          [value]="detallesPedido"
+          [paginator]="false"
+          styleClass="p-datatable-gridlines"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 80px">Imagen</th>
+              <th>Producto</th>
+              <th style="width: 150px" class="text-right">Precio Venta</th>
+              <th style="width: 80px" class="text-center">Acciones</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-detalle>
+            <tr>
+              <!-- Imagen -->
+              <td>
+                <p-image
+                  [src]="detalle.imagen"
+                  [preview]="true"
+                  [alt]="detalle.producto"
+                  width="60"
+                  height="60"
+                  styleClass="product-image-preview"
+                  [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }"
+                >
+                </p-image>
+              </td>
+
+              <!-- Producto -->
+              <td class="font-medium">{{ detalle.producto }}</td>
+
+              <!-- Precio Venta -->
+              <td class="text-right font-mono font-semibold">
+                {{ formatCurrency(detalle.precio) }}
+              </td>
+
+              <!-- Acciones -->
+              <td class="text-center">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                  (click)="eliminarDetallePedido(detalle.id)"
+                  pTooltip="Eliminar producto"
+                  tooltipPosition="top"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="text-center py-8">
+                <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+                <p class="text-gray-500">No hay productos agregados</p>
+                <p class="text-sm text-gray-400 mt-2">Haz clic en "Agregar Producto" para comenzar</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="modal-footer flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        class="p-button-text"
+        (click)="hideNuevaVentaModal()"
+      >
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Guardar Venta"
+        class="p-button-primary"
+        (click)="guardarVenta()"
+      >
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Modal para seleccionar productos -->
+<p-dialog
+  [(visible)]="displaySeleccionarProductosModal"
+  [modal]="true"
+  [style]="{ width: '60vw', minWidth: '700px', maxHeight: '90vh' }"
+  [breakpoints]="{ '1024px': '85vw', '640px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [showHeader]="true"
+  header="Seleccionar Productos"
+  (onHide)="hideSeleccionarProductosModal()"
+>
+  <div class="seleccionar-productos-modal">
+    <!-- Descripción -->
+    <div class="modal-description mb-4">
+      <p class="text-sm text-gray-600">Selecciona uno o más productos para agregar al pedido</p>
+    </div>
+
+    <!-- MultiSelect de Productos -->
+    <div class="form-group mb-6">
+      <label class="form-label">Productos *</label>
+      <p-multiSelect
+        [(ngModel)]="productosSeleccionados"
+        [options]="productosDisponibles"
+        appendTo="body"
+        optionLabel="producto"
+        placeholder="Seleccione productos"
+        [loading]="loadingProductos"
+        [style]="{'width':'100%'}"
+        [displaySelectedLabel]="true"
+        [selectedItemsLabel]="selectedItemsLabel"
+        [maxSelectedLabels]="3"
+        [showToggleAll]="true"
+      >
+        <ng-template let-product pTemplate="item">
+          <div class="flex items-center gap-3">
+            <p-image
+              [src]="getProductImageUrl(product)"
+              [preview]="false"
+              [alt]="product.producto"
+              width="40"
+              height="40"
+              styleClass="product-image-preview-small"
+              [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }"
+            >
+            </p-image>
+            <div>
+              <div class="font-medium">{{ product.producto }}</div>
+              <div class="text-sm text-gray-500">{{ formatCurrency(product.precio) }}</div>
+            </div>
+          </div>
+        </ng-template>
+      </p-multiSelect>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="modal-footer flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        class="p-button-text"
+        (click)="hideSeleccionarProductosModal()"
+      >
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Finalizar"
+        class="p-button-success"
+        [disabled]="productosSeleccionados.length === 0"
+        (click)="finalizarSeleccionProductos()"
+      >
+      </button>
+    </div>
+  </div>
+</p-dialog>
