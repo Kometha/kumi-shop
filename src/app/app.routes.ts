@@ -5,6 +5,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { DashboardHomeComponent } from './dashboard/dashboard-home/dashboard-home.component';
 import { InventoryComponent } from './inventory/inventory.component';
+import { VentasComponent } from './ventas-component/ventas-component.component';
 
 export const routes: Routes = [
   // Rutas públicas (solo accesibles si NO está autenticado)
@@ -32,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'inventario',
         component: InventoryComponent
+      },
+      {
+        path: 'ventas',
+        component: VentasComponent
       }
     ]
   },
