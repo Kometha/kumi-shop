@@ -220,10 +220,66 @@ export class VentasComponent implements OnInit {
   }
 
   guardarVenta(): void {
-    // Lógica futura para guardar la venta
-    console.log('Guardar venta:', this.nuevaVenta);
-    console.log('Detalles del pedido:', this.detallesPedido);
-    this.hideNuevaVentaModal();
+    // Validar que haya productos en el pedido
+    if (this.detallesPedido.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Pedido vacío',
+        detail: 'Debes agregar al menos un producto al pedido'
+      });
+      return;
+    }
+
+    // Validar campos requeridos
+    if (!this.nuevaVenta.nombreCliente || !this.nuevaVenta.telefonoCliente ||
+        !this.nuevaVenta.canal || !this.nuevaVenta.estado || !this.nuevaVenta.fechaPedido) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campos incompletos',
+        detail: 'Por favor completa todos los campos requeridos'
+      });
+      return;
+    }
+
+    // Formatear fecha_pedido (formato ISO o según necesites)
+    const fechaPedido = this.nuevaVenta.fechaPedido
+      ? new Date(this.nuevaVenta.fechaPedido).toISOString().split('T')[0]
+      : null;
+
+    // Construir JSON de la venta
+    const ventaJSON = {
+      canalId: this.nuevaVenta.canal,
+      estadoId: this.nuevaVenta.estado,
+      fechaPedido: fechaPedido,
+      total: this.calcularTotal(),
+      notas: this.nuevaVenta.notas || null,
+      nombreCliente: this.nuevaVenta.nombreCliente,
+      telefonoCliente: this.nuevaVenta.telefonoCliente
+    };
+
+    // Construir array de detalles
+    const detallesJSON = this.detallesPedido.map(detalle => ({
+      productoId: detalle.id,
+      cantidad: detalle.cantidad,
+      precioUnitario: detalle.precio,
+      subtotal: detalle.precio * 0.15 // 15% del precio_unitario
+    }));
+
+    // JSON completo
+    const ventaCompletaJSON = {
+      venta: ventaJSON,
+      detalles: detallesJSON
+    };
+
+    // Mostrar en consola para análisis
+    console.log('=== JSON DE VENTA ===');
+    console.log(JSON.stringify(ventaCompletaJSON, null, 2));
+    console.log('=====================');
+
+    // Aquí irá la lógica para guardar en la BD
+    // TODO: Llamar al servicio para guardar la venta
+
+    // this.hideNuevaVentaModal();
   }
 
   // Métodos para el modal de selección de productos
