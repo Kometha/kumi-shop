@@ -48,6 +48,17 @@
     <div class="flex gap-2">
       <button
         pButton
+        label="Actualizar"
+        icon="pi pi-refresh"
+        class="p-button-outlined"
+        (click)="refreshProductos()"
+        [loading]="loading"
+        [disabled]="loading"
+        pTooltip="Actualizar inventario"
+        tooltipPosition="top"
+      ></button>
+      <button
+        pButton
         label="Exportar"
         icon="pi pi-download"
         class="p-button-outlined"

@@ -80,6 +80,19 @@ export class InventoryComponent implements OnInit {
     });
   }
 
+  /**
+   * Refrescar inventario (recargar productos)
+   */
+  refreshProductos(): void {
+    this.loadProductos();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Actualizando',
+      detail: 'Refrescando inventario...',
+      life: 2000
+    });
+  }
+
   applyFilters() {
     let filtered = [...this.products];
 
