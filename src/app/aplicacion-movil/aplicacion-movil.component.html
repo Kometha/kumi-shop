@@ -1,77 +1,124 @@
 <div class="app-versions-container">
   <!-- Header -->
-  <div class="header-section mb-6">
+  <div class="header-section">
     <h1 class="page-title">Versiones de la Aplicación Móvil</h1>
     <p class="page-subtitle">Gestiona y descarga las versiones disponibles de la aplicación</p>
   </div>
 
-  <!-- Table Container -->
-  <div class="table-container bg-white rounded-lg shadow-sm border border-gray-200">
-    <p-table
-      [value]="appVersions"
-      [paginator]="true"
-      [rows]="10"
-      [showCurrentPageReport]="true"
-      [loading]="loading"
-      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} versiones"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="p-datatable-gridlines"
-      [responsive]="true"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 80px">ID</th>
-          <th>Versión</th>
-          <th>Descripción</th>
-          <th style="width: 200px" class="text-center">Descargar APK</th>
-        </tr>
-      </ng-template>
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+      <p class="text-gray-500 mt-4">Cargando versiones...</p>
+    </div>
+  }
 
-      <ng-template pTemplate="body" let-version>
-        <tr>
-          <!-- ID -->
-          <td class="font-semibold text-gray-600">{{ version.id }}</td>
+  <!-- Empty State -->
+  @if (!loading && appVersions.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-mobile text-5xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg">No hay versiones disponibles</p>
+    </div>
+  }
 
-          <!-- Versión -->
-          <td class="font-medium text-gray-800">{{ version.version_name }}</td>
+  <!-- Desktop Table View -->
+  @if (!loading && appVersions.length > 0) {
+    <div class="desktop-view">
+      <div class="table-container bg-white rounded-lg shadow-sm border border-gray-200">
+        <p-table
+          [value]="appVersions"
+          [paginator]="true"
+          [rows]="10"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} versiones"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          styleClass="p-datatable-gridlines"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 80px">ID</th>
+              <th>Versión</th>
+              <th>Descripción</th>
+              <th style="width: 200px" class="text-center">Descargar APK</th>
+            </tr>
+          </ng-template>
 
-          <!-- Descripción -->
-          <td>
-            <span class="text-gray-600">
-              {{ version.description || 'Sin descripción' }}
-            </span>
-          </td>
+          <ng-template pTemplate="body" let-version>
+            <tr>
+              <td class="font-semibold text-gray-600">{{ version.id }}</td>
+              <td class="font-medium text-gray-800">{{ version.version_name }}</td>
+              <td>
+                <span class="text-gray-600">
+                  {{ version.description || 'Sin descripción' }}
+                </span>
+              </td>
+              <td class="text-center">
+                @if (version.apk_url) {
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-download"
+                    label="Descargar"
+                    class="p-button-primary p-button-sm download-btn"
+                    (click)="downloadApk(version.apk_url, version.version_name)"
+                  ></button>
+                } @else {
+                  <span class="text-gray-400 text-sm">No disponible</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
 
-          <!-- Descargar APK -->
-          <td class="text-center">
-            @if (version.apk_url) {
-              <button
-                pButton
-                type="button"
-                icon="pi pi-download"
-                label="Descargar"
-                class="p-button-primary p-button-sm download-btn"
-                (click)="downloadApk(version.apk_url, version.version_name)"
-              ></button>
-            } @else {
-              <span class="text-gray-400 text-sm">No disponible</span>
-            }
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="4" class="text-center py-8">
-            <div class="empty-state">
-              <i class="pi pi-mobile text-4xl text-gray-300 mb-3"></i>
-              <p class="text-gray-500">No hay versiones disponibles</p>
+    <!-- Mobile Card View -->
+    <div class="mobile-view">
+      <div class="versions-grid">
+        @for (version of appVersions; track version.id) {
+          <div class="version-card">
+            <div class="card-header">
+              <div class="version-info">
+                <span class="version-badge">ID: {{ version.id }}</span>
+                <h3 class="version-name">{{ version.version_name }}</h3>
+              </div>
             </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
+
+            <div class="card-body">
+              <p class="version-description">
+                {{ version.description || 'Sin descripción' }}
+              </p>
+            </div>
+
+            <div class="card-footer">
+              @if (version.apk_url) {
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-download"
+                  label="Descargar APK"
+                  class="p-button-primary p-button-block download-btn-mobile"
+                  (click)="downloadApk(version.apk_url, version.version_name)"
+                ></button>
+              } @else {
+                <div class="unavailable-badge">
+                  <i class="pi pi-ban"></i>
+                  <span>No disponible</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Mobile Pagination -->
+      <div class="mobile-pagination">
+        <p class="pagination-info">
+          Mostrando {{ appVersions.length }} versión{{ appVersions.length !== 1 ? 'es' : '' }}
+        </p>
+      </div>
+    </div>
+  }
 </div>
 
 <p-toast></p-toast>
