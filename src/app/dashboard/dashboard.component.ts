@@ -105,7 +105,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const titles: { [key: string]: string } = {
       'dashboard': 'Dashboard',
       'inventario': 'Gestión de Inventario',
-      'clientes': 'Gestión de Clientes',
+      'ventas': 'Gestión de Ventas',
+      'aplicacion-movil': 'Aplicación Movil',
       'configuracion': 'Configuración'
     };
     return titles[this.selectedMenu] || 'Dashboard';

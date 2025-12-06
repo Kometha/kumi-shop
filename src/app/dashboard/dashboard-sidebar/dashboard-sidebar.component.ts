@@ -41,7 +41,8 @@ export class DashboardSidebarComponent {
     const routes: { [key: string]: string } = {
       'dashboard': '/dashboard',
       'inventario': '/inventario',
-      'ventas': '/ventas'
+      'ventas': '/ventas',
+      'aplicacion-movil': '/aplicacion-movil'
     };
 
     const route = routes[menu] || '/dashboard';
