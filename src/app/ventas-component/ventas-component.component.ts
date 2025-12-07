@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -16,7 +16,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ProductosService, Product } from '../services/productos.service';
-import { VentasService, Canal, EstadoPedido } from '../services/ventas.service';
+import { VentasService, Canal, EstadoPedido, MetodoPago } from '../services/ventas.service';
 
 @Component({
   selector: 'app-ventas',
@@ -55,8 +55,10 @@ export class VentasComponent implements OnInit {
   // Opciones de dropdowns
   canales: Canal[] = [];
   estados: EstadoPedido[] = [];
+  metodosPago: MetodoPago[] = [];
   loadingCanales: boolean = false;
   loadingEstados: boolean = false;
+  loadingMetodosPago: boolean = false;
 
   // Formulario de nueva venta
   nuevaVenta = {
@@ -65,6 +67,7 @@ export class VentasComponent implements OnInit {
     canal: null,
     fechaPedido: null as Date | null,
     estado: null,
+    metodoPago: null,
     notas: ''
   };
 
@@ -96,6 +99,7 @@ export class VentasComponent implements OnInit {
     this.loadProductos();
     this.loadCanales();
     this.loadEstadosPedido();
+    this.loadMetodosPago();
   }
 
   loadProductos(): void {
@@ -136,6 +140,25 @@ export class VentasComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar estados de pedido:', error);
         this.loadingEstados = false;
+      }
+    });
+  }
+
+  loadMetodosPago(): void {
+    this.loadingMetodosPago = true;
+    this.ventasService.getMetodosPago().subscribe({
+      next: (metodosPago) => {
+        this.metodosPago = metodosPago;
+        this.loadingMetodosPago = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar métodos de pago:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los métodos de pago'
+        });
+        this.loadingMetodosPago = false;
       }
     });
   }
@@ -195,6 +218,7 @@ export class VentasComponent implements OnInit {
       canal: null,
       fechaPedido: null,
       estado: null,
+      metodoPago: null,
       notas: ''
     };
     this.fueHoy = false;
@@ -250,6 +274,7 @@ export class VentasComponent implements OnInit {
     const ventaJSON = {
       canalId: this.nuevaVenta.canal,
       estadoId: this.nuevaVenta.estado,
+      metodoPagoId: this.nuevaVenta.metodoPago || null,
       fechaPedido: fechaPedido,
       total: this.calcularTotal(),
       notas: this.nuevaVenta.notas || null,
@@ -427,5 +452,19 @@ export class VentasComponent implements OnInit {
 
   calcularTotal(): number {
     return this.calcularSubtotal() + this.calcularIVA();
+  }
+
+  onMetodoPagoDropdownShow(container: HTMLElement): void {
+    // Sincronizar el ancho del panel con el ancho del input
+    setTimeout(() => {
+      const inputElement = container.querySelector('.p-dropdown') as HTMLElement;
+      const panelElement = document.querySelector('.metodo-pago-dropdown-panel') as HTMLElement;
+      
+      if (inputElement && panelElement) {
+        const inputWidth = inputElement.getBoundingClientRect().width;
+        panelElement.style.width = `${inputWidth}px`;
+        panelElement.style.minWidth = `${inputWidth}px`;
+      }
+    }, 0);
   }
 }

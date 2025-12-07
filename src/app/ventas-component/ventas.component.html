@@ -252,6 +252,35 @@
         </div>
       </div>
 
+      <div class="form-group mt-4 metodo-pago-container" #metodoPagoContainer>
+        <label class="form-label">Método de Pago</label>
+        <p-dropdown
+          #metodoPagoDropdown
+          [(ngModel)]="nuevaVenta.metodoPago"
+          [options]="metodosPago"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione un método de pago"
+          [loading]="loadingMetodosPago"
+          [style]="{'width':'100%'}"
+          appendTo="body"
+          panelStyleClass="metodo-pago-dropdown-panel"
+          (onShow)="onMetodoPagoDropdownShow(metodoPagoContainer)"
+        >
+          <ng-template let-metodo pTemplate="item">
+            <div class="flex flex-col gap-1">
+              <span class="font-medium">{{ metodo.nombre }}</span>
+              @if (metodo.comision_porcentaje ) {
+                <span class="text-xs text-gray-500">{{ metodo.comision_porcentaje }}%</span>
+              }
+            </div>
+          </ng-template>
+          <ng-template let-metodo pTemplate="selectedItem">
+            <span>{{ metodo.nombre }}</span>
+          </ng-template>
+        </p-dropdown>
+      </div>
+
       <div class="form-group mt-4">
         <label class="form-label">Fecha de Pedido *</label>
         <p-calendar
