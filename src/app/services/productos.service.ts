@@ -38,6 +38,7 @@ export interface Product {
 // Interfaz para crear un nuevo producto
 export interface NuevoProducto {
   nombre: string;
+  codigo?: string | null;
   categoria_id: number;
   descripcion?: string | null;
   stock: number;
@@ -87,7 +88,7 @@ export class ProductosService {
           descripcion,
           categorias(id, nombre, descripcion),
           inventario(stock_actual, stock_minimo),
-          precios(costo, precio_venta, margen_porcentaje, margen_absoluto, activo),
+          precios(costo, precio_venta_lempiras, margen_porcentaje, margen_absoluto, activo),
           activo
         `)
         .eq('activo', true)
@@ -150,7 +151,7 @@ export class ProductosService {
             const precioActivo = item.precios.find((p: any) => p.activo === true) || item.precios[0];
             if (precioActivo) {
               costo = precioActivo.costo ?? 0;
-              precioVenta = precioActivo.precio_venta ?? 0;
+              precioVenta = precioActivo.precio_venta_lempiras ?? 0;
               margenPorcentaje = precioActivo.margen_porcentaje ?? 0;
               margenAbsoluto = precioActivo.margen_absoluto ?? 0;
             }
@@ -159,7 +160,7 @@ export class ProductosService {
           // Si viene como objeto único y está activo
           if (item.precios.activo === true) {
             costo = item.precios.costo ?? 0;
-            precioVenta = item.precios.precio_venta ?? 0;
+            precioVenta = item.precios.precio_venta_lempiras ?? 0;
             margenPorcentaje = item.precios.margen_porcentaje ?? 0;
             margenAbsoluto = item.precios.margen_absoluto ?? 0;
           }
@@ -223,7 +224,7 @@ export class ProductosService {
           descripcion,
           categorias(id, nombre, descripcion),
           inventario(stock_actual, stock_minimo),
-          precios(costo, precio_venta, margen_porcentaje, margen_absoluto, activo),
+          precios(costo, precio_venta_lempiras, margen_porcentaje, margen_absoluto, activo),
           activo
         `)
         .eq('id', id)
@@ -373,7 +374,7 @@ export class ProductosService {
             .insert({
               producto_id: productoData.id,
               costo: producto.costo,
-              precio_venta: producto.precioVenta,
+              precio_venta_lempiras: producto.precioVenta,
               margen_porcentaje: margenPorcentaje,
               margen_absoluto: margenAbsoluto,
               activo: true
@@ -501,7 +502,7 @@ export class ProductosService {
           if (producto.costo !== undefined || producto.precioVenta !== undefined) {
             const preciosData: any = {};
             if (producto.costo !== undefined) preciosData.costo = producto.costo;
-            if (producto.precioVenta !== undefined) preciosData.precio_venta = producto.precioVenta;
+            if (producto.precioVenta !== undefined) preciosData.precio_venta_lempiras = producto.precioVenta;
             if (margenPorcentaje !== 0) preciosData.margen_porcentaje = margenPorcentaje;
             if (margenAbsoluto !== 0) preciosData.margen_absoluto = margenAbsoluto;
 
