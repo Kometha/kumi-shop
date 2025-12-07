@@ -29,6 +29,17 @@ export interface MetodoPago {
   activo: boolean;
 }
 
+// Interfaz para TipoEnvio
+export interface TipoEnvio {
+  id: number;
+  nombre: string;
+  tipo: string;
+  costo_base: number | null;
+  es_costo_fijo: boolean;
+  activo: boolean;
+  descripcion: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -118,6 +129,33 @@ export class VentasService {
       }),
       catchError((error) => {
         console.error('❌ [VENTAS] Error en petición de métodos de pago:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener todos los tipos de envío activos del schema ventas
+   */
+  getTiposEnvio(): Observable<TipoEnvio[]> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('tipos_envio')
+        .select('id, nombre, tipo, costo_base, es_costo_fijo, activo, descripcion')
+        .eq('activo', true)
+        .order('nombre', { ascending: true })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener tipos de envío:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Tipos de envío obtenidos:', response.data?.length);
+        return response.data as TipoEnvio[];
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de tipos de envío:', error);
         throw error;
       })
     );
