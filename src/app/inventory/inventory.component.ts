@@ -159,9 +159,9 @@ export class InventoryComponent implements OnInit {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-HN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'HNL',
       minimumFractionDigits: 2
     }).format(value);
   }
