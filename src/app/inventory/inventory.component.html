@@ -83,7 +83,7 @@
           <th style="width: 80px">Imagen</th>
           <th>Producto</th>
           <th style="width: 80px" class="text-center">Stock</th>
-          <th style="width: 120px" class="text-right">Costo</th>
+          <th style="width: 120px" class="text-right">Costo (USD)</th>
           <th style="width: 120px" class="text-right">Precio Venta (L.)</th>
           <th style="width: 120px" class="text-center">Margen (%)</th>
           <th style="width: 120px" class="text-center">Estado</th>
@@ -115,12 +115,12 @@
 
           <!-- Costo -->
           <td class="text-right font-mono">
-            {{ formatCurrency(product.costo) }}
+            {{ formatCurrencyUSD(product.costo) }}
           </td>
 
           <!-- Precio -->
           <td class="text-right font-mono font-semibold">
-            {{ formatCurrency(product.precio) }}
+            {{ formatCurrencyLempiras(product.precio) }}
           </td>
 
           <!-- Margen -->
