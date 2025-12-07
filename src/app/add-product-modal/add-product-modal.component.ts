@@ -11,7 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 interface ProductForm {
-  codigo: string;
+  numero_codigo_barra: string;
   nombre: string;
   stock: number;
   costo: number;
@@ -42,7 +42,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
   @Output() productUpdated = new EventEmitter<void>();
 
   product: ProductForm = {
-    codigo: '',
+    numero_codigo_barra: '',
     nombre: '',
     stock: 0,
     costo: 0,
@@ -116,7 +116,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       this.isEditMode = true;
       this.productId = this.productToEdit.id;
       this.product = {
-        codigo: this.productToEdit.codigo || '',
+        numero_codigo_barra: this.productToEdit.numero_codigo_barra || this.productToEdit.codigo || '',
         nombre: this.productToEdit.producto,
         stock: this.productToEdit.stock,
         costo: this.productToEdit.costo,
@@ -151,7 +151,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
     this.isEditMode = false;
     this.productId = null;
     this.product = {
-      codigo: '',
+      numero_codigo_barra: '',
       nombre: '',
       stock: 0,
       costo: 0,
@@ -302,14 +302,17 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
                              this.previewImage === null &&
                              this.selectedFile === null;
 
+      const costoEnLempiras = this.convertirCostoALempiras();
+
       const productoActualizado: Partial<NuevoProducto> = {
         nombre: this.product.nombre,
-        codigo: this.product.codigo || null,
+        numero_codigo_barra: this.product.numero_codigo_barra || '',
         categoria_id: this.product.categoriaId || 1,
         descripcion: this.product.descripcion || null,
         stock: this.product.stock,
-        costo: this.product.costo,
-        precioVenta: this.product.precioVenta,
+        costo: this.product.costo, // Costo en USD
+        costoLempiras: costoEnLempiras, // Costo convertido a lempiras
+        precioVenta: this.product.precioVenta, // Precio de venta en lempiras
         imagen: this.selectedFile || undefined,
         imagenUrl: this.selectedFile ? undefined : this.previewImage || undefined,
         eliminarImagen: eliminarImagen
@@ -346,15 +349,18 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       });
     } else {
       // Modo creación: crear nuevo producto
+      const costoEnLempiras = this.convertirCostoALempiras();
+
       const nuevoProducto: NuevoProducto = {
         nombre: this.product.nombre,
-        codigo: this.product.codigo || null,
+        numero_codigo_barra: this.product.numero_codigo_barra || '',
         categoria_id: this.product.categoriaId || 1, // Usar categoría seleccionada o valor por defecto
         descripcion: this.product.descripcion || null,
         stock: this.product.stock,
         stockMinimo: 0, // Valor por defecto
-        costo: this.product.costo,
-        precioVenta: this.product.precioVenta,
+        costo: this.product.costo, // Costo en USD
+        costoLempiras: costoEnLempiras, // Costo convertido a lempiras
+        precioVenta: this.product.precioVenta, // Precio de venta en lempiras
         estado: 'disponible', // Valor por defecto
         imagen: this.selectedFile || undefined
       };
