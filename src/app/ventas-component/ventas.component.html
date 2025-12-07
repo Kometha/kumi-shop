@@ -475,6 +475,7 @@
               <th>Producto</th>
               <th style="width: 100px" class="text-center">Cantidad</th>
               <th style="width: 150px" class="text-right">Precio Venta</th>
+              <th style="width: 90px" class="text-right">Descuento</th>
               <th style="width: 150px" class="text-right">Subtotal</th>
               <th style="width: 80px" class="text-center">Acciones</th>
             </tr>
@@ -509,9 +510,22 @@
                 {{ formatCurrency(detalle.precio) }}
               </td>
 
+              <!-- Descuento -->
+              <td class="text-right">
+                <p-inputNumber
+                  [(ngModel)]="detalle.descuento"
+                  [min]="0"
+                  [max]="detalle.precio * detalle.cantidad"
+                  [style]="{'width':'90px', 'max-width':'90px'}"
+                  [showButtons]="false"
+                  placeholder="0.00"
+                  [inputStyle]="{'text-align': 'right', 'padding': '0.25rem 0.5rem', 'width': '90px'}"
+                ></p-inputNumber>
+              </td>
+
               <!-- Subtotal -->
               <td class="text-right font-mono font-bold">
-                {{ formatCurrency(detalle.precio * detalle.cantidad) }}
+                {{ formatCurrency(calcularSubtotalIndividual(detalle)) }}
               </td>
 
               <!-- Acciones -->
@@ -531,7 +545,7 @@
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="6" class="text-center py-8">
+              <td colspan="7" class="text-center py-8">
                 <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
                 <p class="text-gray-500">No hay productos agregados</p>
                 <p class="text-sm text-gray-400 mt-2">Haz clic en "Agregar Producto" para comenzar</p>
