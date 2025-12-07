@@ -382,6 +382,71 @@
       </div>
     </div>
 
+        <!-- Envío -->
+        <div class="section mb-6">
+          <div class="form-group">
+            <p-checkbox
+              [(ngModel)]="necesitaEnvio"
+              inputId="necesitaEnvio"
+              [binary]="true"
+            >
+            </p-checkbox>
+            <label for="necesitaEnvio" class="ml-2 text-sm text-gray-700 cursor-pointer">
+              Necesita envío
+            </label>
+          </div>
+
+          @if (necesitaEnvio) {
+            <div class="form-group mt-4">
+              <label class="form-label">Tipo de Envío</label>
+              <p-dropdown
+                [(ngModel)]="tipoEnvio"
+                [options]="tiposEnvio"
+                optionLabel="nombre"
+                placeholder="Seleccione un tipo de envío"
+                [loading]="loadingTiposEnvio"
+                [style]="{'width':'100%'}"
+                appendTo="body"
+              >
+                <ng-template let-tipo pTemplate="item">
+                  <div class="flex flex-col gap-1">
+                    <span class="font-medium">{{ tipo.nombre }}</span>
+                    @if (tipo.costo_base !== null) {
+                      <span class="text-xs text-gray-500">
+                        {{ formatCurrency(tipo.costo_base) }}
+                        @if (!tipo.es_costo_fijo) {
+                          <span class="text-gray-400">(variable)</span>
+                        }
+                      </span>
+                    }
+                    @if (tipo.descripcion) {
+                      <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
+                    }
+                  </div>
+                </ng-template>
+                <ng-template let-tipo pTemplate="selectedItem">
+                  <span>{{ tipo?.nombre }}</span>
+                </ng-template>
+              </p-dropdown>
+            </div>
+
+            @if (tipoEnvio?.id === 1) {
+              <div class="form-group mt-4">
+                <label class="form-label">Cantidad de Envío *</label>
+                <p-inputNumber
+                  [(ngModel)]="cantidadEnvio"
+                  [min]="0"
+                  [max]="999999"
+                  [style]="{'width':'100%'}"
+                  [showButtons]="true"
+                  buttonLayout="horizontal"
+                  placeholder="Ingrese la cantidad de envío"
+                ></p-inputNumber>
+              </div>
+            }
+          }
+        </div>
+
     <!-- Detalles del Pedido -->
     <div class="section mb-6">
       <div class="flex justify-between items-center mb-4">
@@ -501,71 +566,6 @@
           </div>
         }
       </div>
-    </div>
-
-    <!-- Envío -->
-    <div class="section mb-6">
-      <div class="form-group">
-        <p-checkbox
-          [(ngModel)]="necesitaEnvio"
-          inputId="necesitaEnvio"
-          [binary]="true"
-        >
-        </p-checkbox>
-        <label for="necesitaEnvio" class="ml-2 text-sm text-gray-700 cursor-pointer">
-          Necesita envío
-        </label>
-      </div>
-
-      @if (necesitaEnvio) {
-        <div class="form-group mt-4">
-          <label class="form-label">Tipo de Envío</label>
-          <p-dropdown
-            [(ngModel)]="tipoEnvio"
-            [options]="tiposEnvio"
-            optionLabel="nombre"
-            placeholder="Seleccione un tipo de envío"
-            [loading]="loadingTiposEnvio"
-            [style]="{'width':'100%'}"
-            appendTo="body"
-          >
-            <ng-template let-tipo pTemplate="item">
-              <div class="flex flex-col gap-1">
-                <span class="font-medium">{{ tipo.nombre }}</span>
-                @if (tipo.costo_base !== null) {
-                  <span class="text-xs text-gray-500">
-                    {{ formatCurrency(tipo.costo_base) }}
-                    @if (!tipo.es_costo_fijo) {
-                      <span class="text-gray-400">(variable)</span>
-                    }
-                  </span>
-                }
-                @if (tipo.descripcion) {
-                  <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
-                }
-              </div>
-            </ng-template>
-            <ng-template let-tipo pTemplate="selectedItem">
-              <span>{{ tipo?.nombre }}</span>
-            </ng-template>
-          </p-dropdown>
-        </div>
-
-        @if (tipoEnvio?.id === 1) {
-          <div class="form-group mt-4">
-            <label class="form-label">Cantidad de Envío *</label>
-            <p-inputNumber
-              [(ngModel)]="cantidadEnvio"
-              [min]="0"
-              [max]="999999"
-              [style]="{'width':'100%'}"
-              [showButtons]="true"
-              buttonLayout="horizontal"
-              placeholder="Ingrese la cantidad de envío"
-            ></p-inputNumber>
-          </div>
-        }
-      }
     </div>
 
     <!-- Botones de Acción -->
