@@ -16,7 +16,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ProductosService, Product } from '../services/productos.service';
-import { VentasService, Canal, EstadoPedido, MetodoPago } from '../services/ventas.service';
+import { VentasService, Canal, EstadoPedido, MetodoPago, TipoEnvio } from '../services/ventas.service';
 
 @Component({
   selector: 'app-ventas',
@@ -56,9 +56,11 @@ export class VentasComponent implements OnInit {
   canales: Canal[] = [];
   estados: EstadoPedido[] = [];
   metodosPago: MetodoPago[] = [];
+  tiposEnvio: TipoEnvio[] = [];
   loadingCanales: boolean = false;
   loadingEstados: boolean = false;
   loadingMetodosPago: boolean = false;
+  loadingTiposEnvio: boolean = false;
 
   // Formulario de nueva venta
   nuevaVenta = {
@@ -70,6 +72,11 @@ export class VentasComponent implements OnInit {
     metodoPago: null,
     notas: ''
   };
+
+  // Envío
+  necesitaEnvio: boolean = false;
+  tipoEnvio: TipoEnvio | null = null;
+  cantidadEnvio: number | null = null;
 
   // Detalles del pedido
   detallesPedido: Array<{
@@ -100,6 +107,7 @@ export class VentasComponent implements OnInit {
     this.loadCanales();
     this.loadEstadosPedido();
     this.loadMetodosPago();
+    this.loadTiposEnvio();
   }
 
   loadProductos(): void {
@@ -159,6 +167,25 @@ export class VentasComponent implements OnInit {
           detail: 'No se pudieron cargar los métodos de pago'
         });
         this.loadingMetodosPago = false;
+      }
+    });
+  }
+
+  loadTiposEnvio(): void {
+    this.loadingTiposEnvio = true;
+    this.ventasService.getTiposEnvio().subscribe({
+      next: (tiposEnvio) => {
+        this.tiposEnvio = tiposEnvio;
+        this.loadingTiposEnvio = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar tipos de envío:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los tipos de envío'
+        });
+        this.loadingTiposEnvio = false;
       }
     });
   }
@@ -226,6 +253,9 @@ export class VentasComponent implements OnInit {
     this.detallesPedido = [];
     this.productosSeleccionados = [];
     this.productosConCantidad = [];
+    this.necesitaEnvio = false;
+    this.tipoEnvio = null;
+    this.cantidadEnvio = null;
   }
 
   onFueHoyChange(): void {
