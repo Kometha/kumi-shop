@@ -17,6 +17,29 @@ export interface EstadoPedido {
   nombre: string;
 }
 
+// Interfaz para MetodoPago
+export interface MetodoPago {
+  id: number;
+  nombre: string;
+  tipo: string;
+  comision_porcentaje: number | null;
+  comision_fija: number | null;
+  meses_plazo: number | null;
+  comision_pos_porcentaje: number | null;
+  activo: boolean;
+}
+
+// Interfaz para TipoEnvio
+export interface TipoEnvio {
+  id: number;
+  nombre: string;
+  tipo: string;
+  costo_base: number | null;
+  es_costo_fijo: boolean;
+  activo: boolean;
+  descripcion: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -79,6 +102,60 @@ export class VentasService {
       }),
       catchError((error) => {
         console.error('❌ [VENTAS] Error en petición de estados de pedido:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener todos los métodos de pago activos del schema ventas
+   */
+  getMetodosPago(): Observable<MetodoPago[]> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('metodos_pago')
+        .select('id, nombre, tipo, comision_porcentaje, comision_fija, meses_plazo, comision_pos_porcentaje, activo')
+        .eq('activo', true)
+        .order('nombre', { ascending: true })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener métodos de pago:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Métodos de pago obtenidos:', response.data?.length);
+        return response.data as MetodoPago[];
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de métodos de pago:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener todos los tipos de envío activos del schema ventas
+   */
+  getTiposEnvio(): Observable<TipoEnvio[]> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('tipos_envio')
+        .select('id, nombre, tipo, costo_base, es_costo_fijo, activo, descripcion')
+        .eq('activo', true)
+        .order('nombre', { ascending: true })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener tipos de envío:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Tipos de envío obtenidos:', response.data?.length);
+        return response.data as TipoEnvio[];
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de tipos de envío:', error);
         throw error;
       })
     );

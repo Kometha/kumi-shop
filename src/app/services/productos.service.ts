@@ -23,7 +23,8 @@ export interface Product {
   id: number;
   imagen: string;
   producto: string;
-  codigo: string;
+  codigo: string; // Mantener para compatibilidad, se mapea desde numero_codigo_barra
+  numero_codigo_barra: string;
   categoria: string;
   categoria_id: number | null;
   descripcion: string | null;
@@ -38,12 +39,14 @@ export interface Product {
 // Interfaz para crear un nuevo producto
 export interface NuevoProducto {
   nombre: string;
+  numero_codigo_barra?: string | null;
   categoria_id: number;
   descripcion?: string | null;
   stock: number;
   stockMinimo: number;
-  costo: number;
-  precioVenta: number;
+  costo: number; // Costo en USD
+  costoLempiras?: number; // Costo convertido a lempiras
+  precioVenta: number; // Precio de venta en lempiras
   estado: 'disponible' | 'stock-bajo' | 'agotado';
   imagen?: File; // Archivo de imagen opcional
   imagenUrl?: string; // URL de imagen opcional (si ya está subida)
@@ -82,12 +85,12 @@ export class ProductosService {
           id,
           imagen_url,
           nombre,
-          codigo_producto,
+          numero_codigo_barra,
           categoria_id,
           descripcion,
           categorias(id, nombre, descripcion),
           inventario(stock_actual, stock_minimo),
-          precios(costo, precio_venta, margen_porcentaje, margen_absoluto, activo),
+          precios(costo, precio_venta_lempiras, margen_porcentaje, margen_absoluto, activo),
           activo
         `)
         .eq('activo', true)
@@ -150,7 +153,7 @@ export class ProductosService {
             const precioActivo = item.precios.find((p: any) => p.activo === true) || item.precios[0];
             if (precioActivo) {
               costo = precioActivo.costo ?? 0;
-              precioVenta = precioActivo.precio_venta ?? 0;
+              precioVenta = precioActivo.precio_venta_lempiras ?? 0;
               margenPorcentaje = precioActivo.margen_porcentaje ?? 0;
               margenAbsoluto = precioActivo.margen_absoluto ?? 0;
             }
@@ -159,7 +162,7 @@ export class ProductosService {
           // Si viene como objeto único y está activo
           if (item.precios.activo === true) {
             costo = item.precios.costo ?? 0;
-            precioVenta = item.precios.precio_venta ?? 0;
+            precioVenta = item.precios.precio_venta_lempiras ?? 0;
             margenPorcentaje = item.precios.margen_porcentaje ?? 0;
             margenAbsoluto = item.precios.margen_absoluto ?? 0;
           }
@@ -189,11 +192,13 @@ export class ProductosService {
           categoriaId = item.categoria_id;
         }
 
+        const numeroCodigoBarra = item.numero_codigo_barra || '';
         return {
           id: item.id,
           imagen: item.imagen_url || '#f0f0f0',
           producto: item.nombre || 'Sin nombre',
-          codigo: item.codigo_producto || `PROD-${item.id}`,
+          codigo: numeroCodigoBarra, // Mantener para compatibilidad
+          numero_codigo_barra: numeroCodigoBarra,
           categoria: categoriaNombre,
           categoria_id: categoriaId,
           descripcion: item.descripcion || null,
@@ -218,12 +223,12 @@ export class ProductosService {
           id,
           imagen_url,
           nombre,
-          codigo_producto,
+          numero_codigo_barra,
           categoria_id,
           descripcion,
           categorias(id, nombre, descripcion),
           inventario(stock_actual, stock_minimo),
-          precios(costo, precio_venta, margen_porcentaje, margen_absoluto, activo),
+          precios(costo, precio_venta_lempiras, margen_porcentaje, margen_absoluto, activo),
           activo
         `)
         .eq('id', id)
@@ -325,10 +330,11 @@ export class ProductosService {
             imagenUrl = await this.uploadImage(producto.imagen);
           }
 
-          // 2. Calcular margen
-          const margenAbsoluto = producto.precioVenta - producto.costo;
-          const margenPorcentaje = producto.costo > 0
-            ? ((margenAbsoluto / producto.costo) * 100)
+          // 2. Calcular margen usando costo en lempiras
+          const costoLempirasCalculado = producto.costoLempiras || producto.costo;
+          const margenAbsoluto = producto.precioVenta - costoLempirasCalculado;
+          const margenPorcentaje = costoLempirasCalculado > 0
+            ? ((margenAbsoluto / costoLempirasCalculado) * 100)
             : 0;
 
           // 3. Crear producto en la tabla productos
@@ -339,6 +345,7 @@ export class ProductosService {
               categoria_id: producto.categoria_id,
               descripcion: producto.descripcion || null,
               imagen_url: imagenUrl,
+              numero_codigo_barra: producto.numero_codigo_barra || '',
               activo: true
             })
             .select()
@@ -372,8 +379,9 @@ export class ProductosService {
             .from('precios')
             .insert({
               producto_id: productoData.id,
-              costo: producto.costo,
-              precio_venta: producto.precioVenta,
+              costo: producto.costo, // Costo en USD
+              costo_lempiras: costoLempirasCalculado,
+              precio_venta_lempiras: producto.precioVenta,
               margen_porcentaje: margenPorcentaje,
               margen_absoluto: margenAbsoluto,
               activo: true
@@ -441,14 +449,15 @@ export class ProductosService {
             imagenUrl = await this.uploadImage(producto.imagen);
           }
 
-          // 4. Calcular margen si se actualizan costo o precio
+          // 4. Calcular margen si se actualizan costo o precio (usando costo en lempiras)
           let margenAbsoluto = 0;
           let margenPorcentaje = 0;
 
-          if (producto.costo !== undefined && producto.precioVenta !== undefined) {
-            margenAbsoluto = producto.precioVenta - producto.costo;
-            margenPorcentaje = producto.costo > 0
-              ? ((margenAbsoluto / producto.costo) * 100)
+          if (producto.precioVenta !== undefined) {
+            const costoLempirasActualizado = producto.costoLempiras || producto.costo || 0;
+            margenAbsoluto = producto.precioVenta - costoLempirasActualizado;
+            margenPorcentaje = costoLempirasActualizado > 0
+              ? ((margenAbsoluto / costoLempirasActualizado) * 100)
               : 0;
           }
 
@@ -457,6 +466,10 @@ export class ProductosService {
           if (producto.nombre) updateData.nombre = producto.nombre;
           if (producto.categoria_id !== undefined) updateData.categoria_id = producto.categoria_id;
           if (producto.descripcion !== undefined) updateData.descripcion = producto.descripcion || null;
+          if (producto.numero_codigo_barra !== undefined) updateData.numero_codigo_barra = producto.numero_codigo_barra || null;
+
+          // Siempre actualizar updated_at cuando se edita
+          updateData.updated_at = new Date().toISOString();
 
           // Manejar imagen_url: null si se elimina sin nueva imagen, nueva URL si se sube nueva, mantener si no cambia
           if (producto.eliminarImagen && !producto.imagen && imagenUrl === null) {
@@ -500,8 +513,9 @@ export class ProductosService {
           // 5. Actualizar precios si se proporcionan costo o precioVenta
           if (producto.costo !== undefined || producto.precioVenta !== undefined) {
             const preciosData: any = {};
-            if (producto.costo !== undefined) preciosData.costo = producto.costo;
-            if (producto.precioVenta !== undefined) preciosData.precio_venta = producto.precioVenta;
+            if (producto.costo !== undefined) preciosData.costo = producto.costo; // Costo en USD
+            if (producto.costoLempiras !== undefined) preciosData.costo_lempiras = producto.costoLempiras;
+            if (producto.precioVenta !== undefined) preciosData.precio_venta_lempiras = producto.precioVenta;
             if (margenPorcentaje !== 0) preciosData.margen_porcentaje = margenPorcentaje;
             if (margenAbsoluto !== 0) preciosData.margen_absoluto = margenAbsoluto;
 

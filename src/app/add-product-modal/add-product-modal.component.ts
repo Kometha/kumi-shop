@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 interface ProductForm {
+  numero_codigo_barra: string;
   nombre: string;
   stock: number;
   costo: number;
@@ -41,6 +42,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
   @Output() productUpdated = new EventEmitter<void>();
 
   product: ProductForm = {
+    numero_codigo_barra: '',
     nombre: '',
     stock: 0,
     costo: 0,
@@ -54,6 +56,9 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
   productId: number | null = null;
   categorias: Categoria[] = [];
   loadingCategorias = false;
+
+  // Tasa de cambio USD a HNL (se puede actualizar desde una API)
+  tasaCambioUSD_HNL: number = 26.338; // Basado en ejemplo: 10 USD = 263.38 HNL
 
 
   constructor(
@@ -111,6 +116,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       this.isEditMode = true;
       this.productId = this.productToEdit.id;
       this.product = {
+        numero_codigo_barra: this.productToEdit.numero_codigo_barra || this.productToEdit.codigo || '',
         nombre: this.productToEdit.producto,
         stock: this.productToEdit.stock,
         costo: this.productToEdit.costo,
@@ -145,6 +151,7 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
     this.isEditMode = false;
     this.productId = null;
     this.product = {
+      numero_codigo_barra: '',
       nombre: '',
       stock: 0,
       costo: 0,
@@ -222,10 +229,38 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
     // La imagen original se mantiene para saber qué eliminar del bucket si se guarda
   }
 
+  /**
+   * Convertir costo de USD a HNL
+   */
+  convertirCostoALempiras(): number {
+    if (this.product.costo) {
+      return this.product.costo * this.tasaCambioUSD_HNL;
+    }
+    return 0;
+  }
+
+  /**
+   * Formatear valor en lempiras
+   */
+  formatLempiras(value: number): string {
+    return new Intl.NumberFormat('es-HN', {
+      style: 'currency',
+      currency: 'HNL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
+  /**
+   * Calcular margen usando el costo convertido a lempiras
+   */
   calculateMargin(): number {
     if (this.product.costo && this.product.precioVenta) {
-      const margin = ((this.product.precioVenta - this.product.costo) / this.product.costo) * 100;
-      return Math.round(margin * 100) / 100;
+      const costoEnLempiras = this.convertirCostoALempiras();
+      if (costoEnLempiras > 0) {
+        const margin = ((this.product.precioVenta - costoEnLempiras) / costoEnLempiras) * 100;
+        return Math.round(margin * 100) / 100;
+      }
     }
     return 0;
   }
@@ -267,13 +302,17 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
                              this.previewImage === null &&
                              this.selectedFile === null;
 
+      const costoEnLempiras = this.convertirCostoALempiras();
+
       const productoActualizado: Partial<NuevoProducto> = {
         nombre: this.product.nombre,
+        numero_codigo_barra: this.product.numero_codigo_barra || '',
         categoria_id: this.product.categoriaId || 1,
         descripcion: this.product.descripcion || null,
         stock: this.product.stock,
-        costo: this.product.costo,
-        precioVenta: this.product.precioVenta,
+        costo: this.product.costo, // Costo en USD
+        costoLempiras: costoEnLempiras, // Costo convertido a lempiras
+        precioVenta: this.product.precioVenta, // Precio de venta en lempiras
         imagen: this.selectedFile || undefined,
         imagenUrl: this.selectedFile ? undefined : this.previewImage || undefined,
         eliminarImagen: eliminarImagen
@@ -310,14 +349,18 @@ export class AddProductModalComponent implements OnInit, OnDestroy, OnChanges {
       });
     } else {
       // Modo creación: crear nuevo producto
+      const costoEnLempiras = this.convertirCostoALempiras();
+
       const nuevoProducto: NuevoProducto = {
         nombre: this.product.nombre,
+        numero_codigo_barra: this.product.numero_codigo_barra || '',
         categoria_id: this.product.categoriaId || 1, // Usar categoría seleccionada o valor por defecto
         descripcion: this.product.descripcion || null,
         stock: this.product.stock,
         stockMinimo: 0, // Valor por defecto
-        costo: this.product.costo,
-        precioVenta: this.product.precioVenta,
+        costo: this.product.costo, // Costo en USD
+        costoLempiras: costoEnLempiras, // Costo convertido a lempiras
+        precioVenta: this.product.precioVenta, // Precio de venta en lempiras
         estado: 'disponible', // Valor por defecto
         imagen: this.selectedFile || undefined
       };

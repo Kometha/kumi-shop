@@ -252,6 +252,97 @@
         </div>
       </div>
 
+      <div class="form-group mt-4 metodo-pago-container" #metodoPagoContainer>
+        <div class="flex items-center justify-between mb-2">
+          <label class="form-label">Métodos de Pago</label>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            label="Agregar Método"
+            class="p-button-sm p-button-outlined"
+            (click)="agregarMetodoPago()"
+            [disabled]="!metodoPagoTemporal"
+          ></button>
+        </div>
+
+        <p-dropdown
+          #metodoPagoDropdown
+          [(ngModel)]="metodoPagoTemporal"
+          [options]="getMetodosPagoDisponibles()"
+          optionLabel="nombre"
+          placeholder="Seleccione un método de pago"
+          [loading]="loadingMetodosPago"
+          [style]="{'width':'100%'}"
+          appendTo="body"
+          panelStyleClass="metodo-pago-dropdown-panel"
+          (onShow)="onMetodoPagoDropdownShow(metodoPagoContainer)"
+        >
+          <ng-template let-metodo pTemplate="item">
+            <div class="flex flex-col gap-1">
+              <span class="font-medium">{{ metodo.nombre }}</span>
+              @if (metodo.comision_porcentaje) {
+                <span class="text-xs text-gray-500">{{ metodo.comision_porcentaje }}%</span>
+              }
+            </div>
+          </ng-template>
+          <ng-template let-metodo pTemplate="selectedItem">
+            <span>{{ metodo?.nombre }}</span>
+          </ng-template>
+        </p-dropdown>
+
+        @if (metodosPagoSeleccionados.length > 0) {
+          <div class="mt-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <p-table
+              [value]="metodosPagoSeleccionados"
+              [paginator]="false"
+              styleClass="p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Método de Pago</th>
+                  <th style="width: 200px" class="text-right">Monto</th>
+                  <th style="width: 80px" class="text-center">Acciones</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-metodoPago>
+                <tr>
+                  <td class="font-medium">
+                    <div class="flex flex-col gap-1">
+                      <span>{{ metodoPago.metodoPago.nombre }}</span>
+                      @if (metodoPago.metodoPago.comision_porcentaje) {
+                        <span class="text-xs text-gray-500">{{ metodoPago.metodoPago.comision_porcentaje }}%</span>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      [(ngModel)]="metodoPago.monto"
+                      [min]="0"
+                      [max]="calcularTotal()"
+                      class="w-full"
+                    />
+                  </td>
+                  <td class="text-center">
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                      (click)="eliminarMetodoPago(metodoPago.id)"
+                      pTooltip="Eliminar método de pago"
+                      tooltipPosition="top"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        }
+      </div>
+
       <div class="form-group mt-4">
         <label class="form-label">Fecha de Pedido *</label>
         <p-calendar
@@ -290,6 +381,71 @@
         ></textarea>
       </div>
     </div>
+
+        <!-- Envío -->
+        <div class="section mb-6">
+          <div class="form-group">
+            <p-checkbox
+              [(ngModel)]="necesitaEnvio"
+              inputId="necesitaEnvio"
+              [binary]="true"
+            >
+            </p-checkbox>
+            <label for="necesitaEnvio" class="ml-2 text-sm text-gray-700 cursor-pointer">
+              Necesita envío
+            </label>
+          </div>
+
+          @if (necesitaEnvio) {
+            <div class="form-group mt-4">
+              <label class="form-label">Tipo de Envío</label>
+              <p-dropdown
+                [(ngModel)]="tipoEnvio"
+                [options]="tiposEnvio"
+                optionLabel="nombre"
+                placeholder="Seleccione un tipo de envío"
+                [loading]="loadingTiposEnvio"
+                [style]="{'width':'100%'}"
+                appendTo="body"
+              >
+                <ng-template let-tipo pTemplate="item">
+                  <div class="flex flex-col gap-1">
+                    <span class="font-medium">{{ tipo.nombre }}</span>
+                    @if (tipo.costo_base !== null) {
+                      <span class="text-xs text-gray-500">
+                        {{ formatCurrency(tipo.costo_base) }}
+                        @if (!tipo.es_costo_fijo) {
+                          <span class="text-gray-400">(variable)</span>
+                        }
+                      </span>
+                    }
+                    @if (tipo.descripcion) {
+                      <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
+                    }
+                  </div>
+                </ng-template>
+                <ng-template let-tipo pTemplate="selectedItem">
+                  <span>{{ tipo?.nombre }}</span>
+                </ng-template>
+              </p-dropdown>
+            </div>
+
+            @if (tipoEnvio?.id === 1) {
+              <div class="form-group mt-4">
+                <label class="form-label">Cantidad de Envío *</label>
+                <p-inputNumber
+                  [(ngModel)]="cantidadEnvio"
+                  [min]="0"
+                  [max]="999999"
+                  [style]="{'width':'100%'}"
+                  [showButtons]="true"
+                  buttonLayout="horizontal"
+                  placeholder="Ingrese la cantidad de envío"
+                ></p-inputNumber>
+              </div>
+            }
+          }
+        </div>
 
     <!-- Detalles del Pedido -->
     <div class="section mb-6">
@@ -406,6 +562,14 @@
                   {{ formatCurrency(calcularTotal()) }}
                 </span>
               </div>
+              @if (esEfectivoUnico() && calcularVuelto() > 0) {
+                <div class="flex items-center gap-4 pt-2">
+                  <span class="font-semibold text-green-600 text-base">Vuelto:</span>
+                  <span class="font-mono font-bold text-lg text-green-600">
+                    {{ formatCurrency(calcularVuelto()) }}
+                  </span>
+                </div>
+              }
             </div>
           </div>
         }
