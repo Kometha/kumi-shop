@@ -94,6 +94,7 @@ export class VentasComponent implements OnInit {
     precio: number;
     cantidad: number;
     stock: number;
+    descuento: number;
   }> = [];
 
   // Modal de selección de productos
@@ -381,7 +382,8 @@ export class VentasComponent implements OnInit {
     const detallesJSON = this.detallesPedido.map(detalle => ({
       productoId: detalle.id,
       cantidad: detalle.cantidad,
-      precioUnitario: detalle.precio
+      precioUnitario: detalle.precio,
+      descuento: detalle.descuento || 0
     }));
 
     // Construir array de métodos de pago
@@ -510,6 +512,10 @@ export class VentasComponent implements OnInit {
           return;
         }
         this.detallesPedido[existeIndex].cantidad = nuevaCantidad;
+        // Asegurar que el descuento esté inicializado
+        if (this.detallesPedido[existeIndex].descuento === undefined || this.detallesPedido[existeIndex].descuento === null) {
+          this.detallesPedido[existeIndex].descuento = 0;
+        }
       } else {
         // Si no existe, agregarlo
         this.detallesPedido.push({
@@ -518,7 +524,8 @@ export class VentasComponent implements OnInit {
           producto: item.producto.producto,
           precio: item.producto.precio,
           cantidad: item.cantidad,
-          stock: item.producto.stock
+          stock: item.producto.stock,
+          descuento: 0
         });
       }
     });
@@ -552,7 +559,17 @@ export class VentasComponent implements OnInit {
   }
 
   calcularSubtotal(): number {
-    return this.detallesPedido.reduce((total, detalle) => total + (detalle.precio * detalle.cantidad), 0);
+    return this.detallesPedido.reduce((total, detalle) => {
+      const subtotalProducto = detalle.precio * detalle.cantidad;
+      const descuento = detalle.descuento || 0;
+      return total + (subtotalProducto - descuento);
+    }, 0);
+  }
+
+  calcularSubtotalIndividual(detalle: any): number {
+    const subtotalProducto = detalle.precio * detalle.cantidad;
+    const descuento = detalle.descuento || 0;
+    return subtotalProducto - descuento;
   }
 
   calcularIVA(): number {
