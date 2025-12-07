@@ -158,10 +158,18 @@ export class InventoryComponent implements OnInit {
     }
   }
 
-  formatCurrency(value: number): string {
+  formatCurrencyLempiras(value: number): string {
     return new Intl.NumberFormat('es-HN', {
       style: 'currency',
       currency: 'HNL',
+      minimumFractionDigits: 2
+    }).format(value);
+  }
+
+  formatCurrencyUSD(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
       minimumFractionDigits: 2
     }).format(value);
   }
