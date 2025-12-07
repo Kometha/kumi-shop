@@ -562,6 +562,14 @@
                   {{ formatCurrency(calcularTotal()) }}
                 </span>
               </div>
+              @if (esEfectivoUnico() && calcularVuelto() > 0) {
+                <div class="flex items-center gap-4 pt-2">
+                  <span class="font-semibold text-green-600 text-base">Vuelto:</span>
+                  <span class="font-mono font-bold text-lg text-green-600">
+                    {{ formatCurrency(calcularVuelto()) }}
+                  </span>
+                </div>
+              }
             </div>
           </div>
         }
