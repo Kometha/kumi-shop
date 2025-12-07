@@ -73,6 +73,14 @@ export class VentasComponent implements OnInit {
     notas: ''
   };
 
+  // Métodos de pago múltiples
+  metodosPagoSeleccionados: Array<{
+    id: number;
+    metodoPago: MetodoPago;
+    monto: number;
+  }> = [];
+  metodoPagoTemporal: MetodoPago | null = null;
+
   // Envío
   necesitaEnvio: boolean = false;
   tipoEnvio: TipoEnvio | null = null;
@@ -256,6 +264,8 @@ export class VentasComponent implements OnInit {
     this.necesitaEnvio = false;
     this.tipoEnvio = null;
     this.cantidadEnvio = null;
+    this.metodosPagoSeleccionados = [];
+    this.metodoPagoTemporal = null;
   }
 
   onFueHoyChange(): void {
@@ -295,6 +305,38 @@ export class VentasComponent implements OnInit {
       return;
     }
 
+    // Validar métodos de pago
+    if (this.metodosPagoSeleccionados.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Métodos de pago requeridos',
+        detail: 'Debes agregar al menos un método de pago'
+      });
+      return;
+    }
+
+    // Validar que todos los métodos de pago tengan monto
+    const metodosSinMonto = this.metodosPagoSeleccionados.filter(mp => !mp.monto || mp.monto <= 0);
+    if (metodosSinMonto.length > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Montos incompletos',
+        detail: 'Todos los métodos de pago deben tener un monto válido'
+      });
+      return;
+    }
+
+    // Validar que la suma de métodos de pago sea igual al total
+    const diferencia = this.getDiferenciaPago();
+    if (Math.abs(diferencia) > 0.01) { // Tolerancia de 1 centavo
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Suma incorrecta',
+        detail: `La suma de los métodos de pago (${this.formatCurrency(this.calcularTotalMetodosPago())}) debe ser igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`
+      });
+      return;
+    }
+
     // Formatear fecha_pedido (formato ISO o según necesites)
     const fechaPedido = this.nuevaVenta.fechaPedido
       ? new Date(this.nuevaVenta.fechaPedido).toISOString().split('T')[0]
@@ -304,12 +346,14 @@ export class VentasComponent implements OnInit {
     const ventaJSON = {
       canalId: this.nuevaVenta.canal,
       estadoId: this.nuevaVenta.estado,
-      metodoPagoId: this.nuevaVenta.metodoPago || null,
       fechaPedido: fechaPedido,
       total: this.calcularTotal(),
       notas: this.nuevaVenta.notas || null,
       nombreCliente: this.nuevaVenta.nombreCliente,
-      telefonoCliente: this.nuevaVenta.telefonoCliente
+      telefonoCliente: this.nuevaVenta.telefonoCliente,
+      necesitaEnvio: this.necesitaEnvio,
+      tipoEnvioId: this.tipoEnvio?.id || null,
+      cantidadEnvio: this.cantidadEnvio || null
     };
 
     // Construir array de detalles
@@ -320,10 +364,17 @@ export class VentasComponent implements OnInit {
       subtotal: detalle.precio * 0.15 // 15% del precio_unitario
     }));
 
+    // Construir array de métodos de pago
+    const metodosPagoJSON = this.metodosPagoSeleccionados.map(mp => ({
+      metodoPagoId: mp.metodoPago.id,
+      monto: mp.monto
+    }));
+
     // JSON completo
     const ventaCompletaJSON = {
       venta: ventaJSON,
-      detalles: detallesJSON
+      detalles: detallesJSON,
+      metodosPago: metodosPagoJSON
     };
 
     // Mostrar en consola para análisis
@@ -496,5 +547,68 @@ export class VentasComponent implements OnInit {
         panelElement.style.minWidth = `${inputWidth}px`;
       }
     }, 0);
+  }
+
+  // Métodos para manejar métodos de pago múltiples
+  agregarMetodoPago(): void {
+    if (!this.metodoPagoTemporal) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Selección requerida',
+        detail: 'Por favor seleccione un método de pago'
+      });
+      return;
+    }
+
+    // Verificar si el método ya está agregado
+    const yaExiste = this.metodosPagoSeleccionados.some(
+      mp => mp.metodoPago.id === this.metodoPagoTemporal!.id
+    );
+
+    if (yaExiste) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Método duplicado',
+        detail: 'Este método de pago ya está agregado'
+      });
+      return;
+    }
+
+    // Agregar el método de pago con monto inicial en 0
+    this.metodosPagoSeleccionados.push({
+      id: Date.now(), // ID temporal único
+      metodoPago: this.metodoPagoTemporal,
+      monto: 0
+    });
+
+    // Limpiar la selección temporal
+    this.metodoPagoTemporal = null;
+  }
+
+  eliminarMetodoPago(id: number): void {
+    this.metodosPagoSeleccionados = this.metodosPagoSeleccionados.filter(mp => mp.id !== id);
+  }
+
+  actualizarMontoMetodoPago(id: number, nuevoMonto: number | null): void {
+    const metodoPago = this.metodosPagoSeleccionados.find(mp => mp.id === id);
+    if (metodoPago) {
+      metodoPago.monto = nuevoMonto !== null && nuevoMonto !== undefined ? nuevoMonto : 0;
+    }
+  }
+
+  getMetodosPagoDisponibles(): MetodoPago[] {
+    // Filtrar métodos de pago que ya están seleccionados
+    const idsSeleccionados = this.metodosPagoSeleccionados.map(mp => mp.metodoPago.id);
+    return this.metodosPago.filter(mp => !idsSeleccionados.includes(mp.id));
+  }
+
+  calcularTotalMetodosPago(): number {
+    return this.metodosPagoSeleccionados.reduce((total, mp) => {
+      return total + (mp.monto || 0);
+    }, 0);
+  }
+
+  getDiferenciaPago(): number {
+    return this.calcularTotal() - this.calcularTotalMetodosPago();
   }
 }
