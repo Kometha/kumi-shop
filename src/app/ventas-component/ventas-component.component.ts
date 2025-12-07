@@ -327,14 +327,32 @@ export class VentasComponent implements OnInit {
     }
 
     // Validar que la suma de métodos de pago sea igual al total
+    // Si es efectivo único, permitir vuelto (monto pagado >= total)
     const diferencia = this.getDiferenciaPago();
-    if (Math.abs(diferencia) > 0.01) { // Tolerancia de 1 centavo
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Suma incorrecta',
-        detail: `La suma de los métodos de pago (${this.formatCurrency(this.calcularTotalMetodosPago())}) debe ser igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`
-      });
-      return;
+    const esEfectivoUnico = this.esEfectivoUnico();
+    
+    if (esEfectivoUnico) {
+      // Si es efectivo único, el monto pagado debe ser mayor o igual al total
+      // diferencia > 0 significa que falta dinero (total > totalPagado)
+      if (diferencia > 0.01) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Monto insuficiente',
+          detail: `El monto pagado (${this.formatCurrency(this.calcularTotalMetodosPago())}) debe ser mayor o igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`
+        });
+        return;
+      }
+      // Si diferencia <= 0, hay vuelto o está exacto, lo cual está permitido
+    } else {
+      // Si no es efectivo único, la suma debe ser exactamente igual al total
+      if (Math.abs(diferencia) > 0.01) { // Tolerancia de 1 centavo
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Suma incorrecta',
+          detail: `La suma de los métodos de pago (${this.formatCurrency(this.calcularTotalMetodosPago())}) debe ser igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`
+        });
+        return;
+      }
     }
 
     // Formatear fecha_pedido (formato ISO o según necesites)
@@ -353,15 +371,17 @@ export class VentasComponent implements OnInit {
       telefonoCliente: this.nuevaVenta.telefonoCliente,
       necesitaEnvio: this.necesitaEnvio,
       tipoEnvioId: this.tipoEnvio?.id || null,
-      cantidadEnvio: this.cantidadEnvio || null
+      cantidadEnvio: this.cantidadEnvio || null,
+      costoEnvio: this.necesitaEnvio && this.tipoEnvio?.costo_base !== null && this.tipoEnvio?.costo_base !== undefined 
+        ? this.tipoEnvio.costo_base 
+        : null
     };
 
-    // Construir array de detalles
+    // Construir array de detalles (sin subtotal individual)
     const detallesJSON = this.detallesPedido.map(detalle => ({
       productoId: detalle.id,
       cantidad: detalle.cantidad,
-      precioUnitario: detalle.precio,
-      subtotal: detalle.precio * 0.15 // 15% del precio_unitario
+      precioUnitario: detalle.precio
     }));
 
     // Construir array de métodos de pago
@@ -370,10 +390,18 @@ export class VentasComponent implements OnInit {
       monto: mp.monto
     }));
 
+    // Construir objeto de totales
+    const totalesJSON = {
+      subtotal: this.calcularSubtotal(),
+      iva: this.calcularIVA(),
+      total: this.calcularTotal()
+    };
+
     // JSON completo
     const ventaCompletaJSON = {
       venta: ventaJSON,
       detalles: detallesJSON,
+      totales: totalesJSON,
       metodosPago: metodosPagoJSON
     };
 
@@ -610,5 +638,19 @@ export class VentasComponent implements OnInit {
 
   getDiferenciaPago(): number {
     return this.calcularTotal() - this.calcularTotalMetodosPago();
+  }
+
+  esEfectivoUnico(): boolean {
+    return this.metodosPagoSeleccionados.length === 1 && 
+           this.metodosPagoSeleccionados[0].metodoPago.id === 1;
+  }
+
+  calcularVuelto(): number {
+    if (this.esEfectivoUnico()) {
+      const montoPagado = this.calcularTotalMetodosPago();
+      const totalVenta = this.calcularTotal();
+      return montoPagado - totalVenta;
+    }
+    return 0;
   }
 }
