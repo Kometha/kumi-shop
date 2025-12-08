@@ -40,6 +40,13 @@ export interface TipoEnvio {
   descripcion: string | null;
 }
 
+// Interfaz para la respuesta de crear_venta_completa
+export interface CrearVentaResponse {
+  pedido_id: number | null;
+  mensaje: string;
+  exito: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -156,6 +163,40 @@ export class VentasService {
       }),
       catchError((error) => {
         console.error('❌ [VENTAS] Error en petición de tipos de envío:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Crear una venta completa usando la función SQL crear_venta_completa
+   */
+  crearVentaCompleta(ventaJSON: any): Observable<CrearVentaResponse> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .rpc('crear_venta_completa', { p_venta_json: ventaJSON })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al crear venta:', response.error);
+          throw new Error(response.error.message);
+        }
+        
+        // La función retorna un array con un objeto
+        const resultado = response.data && response.data.length > 0 
+          ? response.data[0] 
+          : null;
+        
+        if (!resultado) {
+          throw new Error('No se recibió respuesta de la función crear_venta_completa');
+        }
+
+        console.log('✅ [VENTAS] Venta creada:', resultado);
+        return resultado as CrearVentaResponse;
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de crear venta:', error);
         throw error;
       })
     );

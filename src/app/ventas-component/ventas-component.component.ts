@@ -16,7 +16,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ProductosService, Product } from '../services/productos.service';
-import { VentasService, Canal, EstadoPedido, MetodoPago, TipoEnvio } from '../services/ventas.service';
+import { VentasService, Canal, EstadoPedido, MetodoPago, TipoEnvio, CrearVentaResponse } from '../services/ventas.service';
 
 @Component({
   selector: 'app-ventas',
@@ -94,6 +94,7 @@ export class VentasComponent implements OnInit {
     precio: number;
     cantidad: number;
     stock: number;
+    descuento: number;
   }> = [];
 
   // Modal de selección de productos
@@ -330,7 +331,7 @@ export class VentasComponent implements OnInit {
     // Si es efectivo único, permitir vuelto (monto pagado >= total)
     const diferencia = this.getDiferenciaPago();
     const esEfectivoUnico = this.esEfectivoUnico();
-    
+
     if (esEfectivoUnico) {
       // Si es efectivo único, el monto pagado debe ser mayor o igual al total
       // diferencia > 0 significa que falta dinero (total > totalPagado)
@@ -372,8 +373,8 @@ export class VentasComponent implements OnInit {
       necesitaEnvio: this.necesitaEnvio,
       tipoEnvioId: this.tipoEnvio?.id || null,
       cantidadEnvio: this.cantidadEnvio || null,
-      costoEnvio: this.necesitaEnvio && this.tipoEnvio?.costo_base !== null && this.tipoEnvio?.costo_base !== undefined 
-        ? this.tipoEnvio.costo_base 
+      costoEnvio: this.necesitaEnvio && this.tipoEnvio?.costo_base !== null && this.tipoEnvio?.costo_base !== undefined
+        ? this.tipoEnvio.costo_base
         : null
     };
 
@@ -381,7 +382,8 @@ export class VentasComponent implements OnInit {
     const detallesJSON = this.detallesPedido.map(detalle => ({
       productoId: detalle.id,
       cantidad: detalle.cantidad,
-      precioUnitario: detalle.precio
+      precioUnitario: detalle.precio,
+      descuento: detalle.descuento || 0
     }));
 
     // Construir array de métodos de pago
@@ -410,10 +412,42 @@ export class VentasComponent implements OnInit {
     console.log(JSON.stringify(ventaCompletaJSON, null, 2));
     console.log('=====================');
 
-    // Aquí irá la lógica para guardar en la BD
-    // TODO: Llamar al servicio para guardar la venta
+    // Llamar al servicio para guardar la venta
+    this.loading = true;
+    this.ventasService.crearVentaCompleta(ventaCompletaJSON).subscribe({
+      next: (response: CrearVentaResponse) => {
+        this.loading = false;
 
-    // this.hideNuevaVentaModal();
+        if (response.exito && response.pedido_id) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Venta guardada',
+            detail: `Venta #${response.pedido_id} creada exitosamente`
+          });
+
+          // Cerrar modal y resetear formulario
+          this.hideNuevaVentaModal();
+
+          // TODO: Recargar la lista de ventas si es necesario
+          // this.loadVentas();
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error al guardar',
+            detail: response.mensaje || 'No se pudo crear la venta'
+          });
+        }
+      },
+      error: (error: any) => {
+        this.loading = false;
+        console.error('❌ Error al guardar venta:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al guardar',
+          detail: error.message || 'Ocurrió un error al intentar guardar la venta. Por favor intenta nuevamente.'
+        });
+      }
+    });
   }
 
   // Métodos para el modal de selección de productos
@@ -510,6 +544,10 @@ export class VentasComponent implements OnInit {
           return;
         }
         this.detallesPedido[existeIndex].cantidad = nuevaCantidad;
+        // Asegurar que el descuento esté inicializado
+        if (this.detallesPedido[existeIndex].descuento === undefined || this.detallesPedido[existeIndex].descuento === null) {
+          this.detallesPedido[existeIndex].descuento = 0;
+        }
       } else {
         // Si no existe, agregarlo
         this.detallesPedido.push({
@@ -518,7 +556,8 @@ export class VentasComponent implements OnInit {
           producto: item.producto.producto,
           precio: item.producto.precio,
           cantidad: item.cantidad,
-          stock: item.producto.stock
+          stock: item.producto.stock,
+          descuento: 0
         });
       }
     });
@@ -552,7 +591,17 @@ export class VentasComponent implements OnInit {
   }
 
   calcularSubtotal(): number {
-    return this.detallesPedido.reduce((total, detalle) => total + (detalle.precio * detalle.cantidad), 0);
+    return this.detallesPedido.reduce((total, detalle) => {
+      const subtotalProducto = detalle.precio * detalle.cantidad;
+      const descuento = detalle.descuento || 0;
+      return total + (subtotalProducto - descuento);
+    }, 0);
+  }
+
+  calcularSubtotalIndividual(detalle: any): number {
+    const subtotalProducto = detalle.precio * detalle.cantidad;
+    const descuento = detalle.descuento || 0;
+    return subtotalProducto - descuento;
   }
 
   calcularIVA(): number {
@@ -568,7 +617,7 @@ export class VentasComponent implements OnInit {
     setTimeout(() => {
       const inputElement = container.querySelector('.p-dropdown') as HTMLElement;
       const panelElement = document.querySelector('.metodo-pago-dropdown-panel') as HTMLElement;
-      
+
       if (inputElement && panelElement) {
         const inputWidth = inputElement.getBoundingClientRect().width;
         panelElement.style.width = `${inputWidth}px`;
@@ -641,7 +690,7 @@ export class VentasComponent implements OnInit {
   }
 
   esEfectivoUnico(): boolean {
-    return this.metodosPagoSeleccionados.length === 1 && 
+    return this.metodosPagoSeleccionados.length === 1 &&
            this.metodosPagoSeleccionados[0].metodoPago.id === 1;
   }
 
