@@ -67,7 +67,7 @@
       [paginator]="true"
       [rows]="10"
       [showCurrentPageReport]="true"
-      [loading]="loading"
+      [loading]="loadingVentas"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} ventas"
       [rowsPerPageOptions]="[10, 25, 50]"
       styleClass="p-datatable-gridlines"
@@ -90,7 +90,7 @@
           <td class="font-medium">{{ venta.cliente || '-' }}</td>
 
           <!-- Pedido -->
-          <td>{{ venta.pedido || '-' }}</td>
+          <td>{{ venta.codigopedido || '-' }}</td>
 
           <!-- Canal -->
           <td>{{ venta.canal || '-' }}</td>

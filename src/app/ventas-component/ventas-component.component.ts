@@ -24,6 +24,7 @@ import {
   TipoEnvio,
   CrearVentaResponse,
 } from '../services/ventas.service';
+import { Pedido } from '../services/interfaces/ventas.interfaces';
 
 @Component({
   selector: 'app-ventas',
@@ -50,9 +51,10 @@ import {
 })
 export class VentasComponent implements OnInit {
   searchValue: string = '';
+  loadingVentas: boolean = false;
   loading: boolean = false;
-  ventas: any[] = []; // Placeholder para datos futuros
-  filteredVentas: any[] = []; // Placeholder para datos futuros
+  ventas: Pedido[] = []; // Placeholder para datos futuros
+  filteredVentas: Pedido[] = []; // Placeholder para datos futuros
 
   // Modal de nueva venta
   displayNuevaVentaModal: boolean = false;
@@ -126,6 +128,25 @@ export class VentasComponent implements OnInit {
     this.loadEstadosPedido();
     this.loadMetodosPago();
     this.loadTiposEnvio();
+    this.loadVentas();
+  }
+
+  loadVentas(): void {
+    this.loadingVentas = true;
+    this.ventasService.getVentas().subscribe({
+      next: (ventas) => {
+        this.ventas = ventas;
+        this.filteredVentas = ventas;
+        this.loadingVentas = false;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar ventas:', error);
+        this.loadingVentas = false;
+      },
+      complete: () => {
+        this.loadingVentas = false;
+      },
+    });
   }
 
   loadProductos(): void {
