@@ -3,6 +3,7 @@ import { Observable, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { Pedido } from './interfaces/ventas.interfaces';
 
 // Interfaz para Canal
 export interface Canal {
@@ -57,6 +58,23 @@ export class VentasService {
     this.supabase = createClient(
       environment.supabase.url,
       environment.supabase.anonKey
+    );
+  }
+
+  getVentas(): Observable<Pedido[]> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('vw_pedidos')
+        .select('*')
+    ).pipe(
+      map((response) => {
+        return response.data as Pedido[];
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error al obtener ventas:', error);
+        throw error;
+      })
     );
   }
 
