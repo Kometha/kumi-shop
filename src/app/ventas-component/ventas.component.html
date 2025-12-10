@@ -370,6 +370,18 @@
       </div>
 
       <div class="form-group mt-4">
+        <label class="form-label">Dirección del Cliente</label>
+        <textarea
+          pInputText
+          [(ngModel)]="nuevaVenta.direccionCliente"
+          (input)="onNotasInput($event)"
+          placeholder="Agregar la dirección del cliente..."
+          class="w-full auto-resize-textarea"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="form-group mt-2">
         <label class="form-label">Notas</label>
         <textarea
           pInputText

@@ -16,7 +16,14 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ProductosService, Product } from '../services/productos.service';
-import { VentasService, Canal, EstadoPedido, MetodoPago, TipoEnvio, CrearVentaResponse } from '../services/ventas.service';
+import {
+  VentasService,
+  Canal,
+  EstadoPedido,
+  MetodoPago,
+  TipoEnvio,
+  CrearVentaResponse,
+} from '../services/ventas.service';
 
 @Component({
   selector: 'app-ventas',
@@ -36,10 +43,10 @@ import { VentasService, Canal, EstadoPedido, MetodoPago, TipoEnvio, CrearVentaRe
     ImageModule,
     MultiSelectModule,
     InputNumberModule,
-    ToastModule
+    ToastModule,
   ],
   templateUrl: './ventas.component.html',
-  styleUrl: './ventas.component.scss'
+  styleUrl: './ventas.component.scss',
 })
 export class VentasComponent implements OnInit {
   searchValue: string = '';
@@ -70,7 +77,8 @@ export class VentasComponent implements OnInit {
     fechaPedido: null as Date | null,
     estado: null,
     metodoPago: null,
-    notas: ''
+    notas: '',
+    direccionCliente: '',
   };
 
   // Métodos de pago múltiples
@@ -129,7 +137,7 @@ export class VentasComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar productos:', error);
         this.loadingProductos = false;
-      }
+      },
     });
   }
 
@@ -143,7 +151,7 @@ export class VentasComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar canales:', error);
         this.loadingCanales = false;
-      }
+      },
     });
   }
 
@@ -157,7 +165,7 @@ export class VentasComponent implements OnInit {
       error: (error) => {
         console.error('❌ Error al cargar estados de pedido:', error);
         this.loadingEstados = false;
-      }
+      },
     });
   }
 
@@ -173,10 +181,10 @@ export class VentasComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron cargar los métodos de pago'
+          detail: 'No se pudieron cargar los métodos de pago',
         });
         this.loadingMetodosPago = false;
-      }
+      },
     });
   }
 
@@ -192,10 +200,10 @@ export class VentasComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron cargar los tipos de envío'
+          detail: 'No se pudieron cargar los tipos de envío',
         });
         this.loadingTiposEnvio = false;
-      }
+      },
     });
   }
 
@@ -255,7 +263,8 @@ export class VentasComponent implements OnInit {
       fechaPedido: null,
       estado: null,
       metodoPago: null,
-      notas: ''
+      notas: '',
+      direccionCliente: '',
     };
     this.fueHoy = false;
     this.fechaPedidoDisabled = false;
@@ -290,18 +299,24 @@ export class VentasComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Pedido vacío',
-        detail: 'Debes agregar al menos un producto al pedido'
+        detail: 'Debes agregar al menos un producto al pedido',
       });
       return;
     }
 
     // Validar campos requeridos
-    if (!this.nuevaVenta.nombreCliente || !this.nuevaVenta.telefonoCliente ||
-        !this.nuevaVenta.canal || !this.nuevaVenta.estado || !this.nuevaVenta.fechaPedido) {
+    if (
+      !this.nuevaVenta.nombreCliente ||
+      !this.nuevaVenta.telefonoCliente ||
+      !this.nuevaVenta.canal ||
+      !this.nuevaVenta.estado ||
+      !this.nuevaVenta.fechaPedido ||
+      !this.nuevaVenta.direccionCliente
+    ) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campos incompletos',
-        detail: 'Por favor completa todos los campos requeridos'
+        detail: 'Por favor completa todos los campos requeridos',
       });
       return;
     }
@@ -311,18 +326,20 @@ export class VentasComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Métodos de pago requeridos',
-        detail: 'Debes agregar al menos un método de pago'
+        detail: 'Debes agregar al menos un método de pago',
       });
       return;
     }
 
     // Validar que todos los métodos de pago tengan monto
-    const metodosSinMonto = this.metodosPagoSeleccionados.filter(mp => !mp.monto || mp.monto <= 0);
+    const metodosSinMonto = this.metodosPagoSeleccionados.filter(
+      (mp) => !mp.monto || mp.monto <= 0
+    );
     if (metodosSinMonto.length > 0) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Montos incompletos',
-        detail: 'Todos los métodos de pago deben tener un monto válido'
+        detail: 'Todos los métodos de pago deben tener un monto válido',
       });
       return;
     }
@@ -339,18 +356,27 @@ export class VentasComponent implements OnInit {
         this.messageService.add({
           severity: 'warn',
           summary: 'Monto insuficiente',
-          detail: `El monto pagado (${this.formatCurrency(this.calcularTotalMetodosPago())}) debe ser mayor o igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`
+          detail: `El monto pagado (${this.formatCurrency(
+            this.calcularTotalMetodosPago()
+          )}) debe ser mayor o igual al total de la venta (${this.formatCurrency(
+            this.calcularTotal()
+          )})`,
         });
         return;
       }
       // Si diferencia <= 0, hay vuelto o está exacto, lo cual está permitido
     } else {
       // Si no es efectivo único, la suma debe ser exactamente igual al total
-      if (Math.abs(diferencia) > 0.01) { // Tolerancia de 1 centavo
+      if (Math.abs(diferencia) > 0.01) {
+        // Tolerancia de 1 centavo
         this.messageService.add({
           severity: 'warn',
           summary: 'Suma incorrecta',
-          detail: `La suma de los métodos de pago (${this.formatCurrency(this.calcularTotalMetodosPago())}) debe ser igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`
+          detail: `La suma de los métodos de pago (${this.formatCurrency(
+            this.calcularTotalMetodosPago()
+          )}) debe ser igual al total de la venta (${this.formatCurrency(
+            this.calcularTotal()
+          )})`,
         });
         return;
       }
@@ -373,30 +399,34 @@ export class VentasComponent implements OnInit {
       necesitaEnvio: this.necesitaEnvio,
       tipoEnvioId: this.tipoEnvio?.id || null,
       cantidadEnvio: this.cantidadEnvio || null,
-      costoEnvio: this.necesitaEnvio && this.tipoEnvio?.costo_base !== null && this.tipoEnvio?.costo_base !== undefined
-        ? this.tipoEnvio.costo_base
-        : null
+      direccionCliente: this.nuevaVenta.direccionCliente,
+      costoEnvio:
+        this.necesitaEnvio &&
+        this.tipoEnvio?.costo_base !== null &&
+        this.tipoEnvio?.costo_base !== undefined
+          ? this.tipoEnvio.costo_base
+          : null,
     };
 
     // Construir array de detalles (sin subtotal individual)
-    const detallesJSON = this.detallesPedido.map(detalle => ({
+    const detallesJSON = this.detallesPedido.map((detalle) => ({
       productoId: detalle.id,
       cantidad: detalle.cantidad,
       precioUnitario: detalle.precio,
-      descuento: detalle.descuento || 0
+      descuento: detalle.descuento || 0,
     }));
 
     // Construir array de métodos de pago
-    const metodosPagoJSON = this.metodosPagoSeleccionados.map(mp => ({
+    const metodosPagoJSON = this.metodosPagoSeleccionados.map((mp) => ({
       metodoPagoId: mp.metodoPago.id,
-      monto: mp.monto
+      monto: mp.monto,
     }));
 
     // Construir objeto de totales
     const totalesJSON = {
       subtotal: this.calcularSubtotal(),
       iva: this.calcularIVA(),
-      total: this.calcularTotal()
+      total: this.calcularTotal(),
     };
 
     // JSON completo
@@ -404,7 +434,7 @@ export class VentasComponent implements OnInit {
       venta: ventaJSON,
       detalles: detallesJSON,
       totales: totalesJSON,
-      metodosPago: metodosPagoJSON
+      metodosPago: metodosPagoJSON,
     };
 
     // Mostrar en consola para análisis
@@ -422,7 +452,7 @@ export class VentasComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Venta guardada',
-            detail: `Venta #${response.pedido_id} creada exitosamente`
+            detail: `Venta #${response.pedido_id} creada exitosamente`,
           });
 
           // Cerrar modal y resetear formulario
@@ -434,7 +464,7 @@ export class VentasComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error al guardar',
-            detail: response.mensaje || 'No se pudo crear la venta'
+            detail: response.mensaje || 'No se pudo crear la venta',
           });
         }
       },
@@ -444,9 +474,11 @@ export class VentasComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error al guardar',
-          detail: error.message || 'Ocurrió un error al intentar guardar la venta. Por favor intenta nuevamente.'
+          detail:
+            error.message ||
+            'Ocurrió un error al intentar guardar la venta. Por favor intenta nuevamente.',
         });
-      }
+      },
     });
   }
 
@@ -467,11 +499,13 @@ export class VentasComponent implements OnInit {
 
   onProductosSeleccionadosChange(): void {
     // Sincronizar productosConCantidad con productosSeleccionados
-    this.productosConCantidad = this.productosSeleccionados.map(producto => {
-      const existente = this.productosConCantidad.find(p => p.producto.id === producto.id);
+    this.productosConCantidad = this.productosSeleccionados.map((producto) => {
+      const existente = this.productosConCantidad.find(
+        (p) => p.producto.id === producto.id
+      );
       return {
         producto: producto,
-        cantidad: existente ? existente.cantidad : 1
+        cantidad: existente ? existente.cantidad : 1,
       };
     });
   }
@@ -481,7 +515,7 @@ export class VentasComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Cantidad inválida',
-        detail: 'La cantidad debe ser mayor a 0'
+        detail: 'La cantidad debe ser mayor a 0',
       });
       return;
     }
@@ -490,7 +524,7 @@ export class VentasComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Stock insuficiente',
-        detail: `No se puede vender más de ${detalle.stock} unidades de ${detalle.producto}. Stock disponible: ${detalle.stock}`
+        detail: `No se puede vender más de ${detalle.stock} unidades de ${detalle.producto}. Stock disponible: ${detalle.stock}`,
       });
       return;
     }
@@ -502,12 +536,12 @@ export class VentasComponent implements OnInit {
     // Validar cantidades antes de agregar
     let hayError = false;
 
-    this.productosConCantidad.forEach(item => {
+    this.productosConCantidad.forEach((item) => {
       if (!item.cantidad || item.cantidad <= 0) {
         this.messageService.add({
           severity: 'warn',
           summary: 'Cantidad inválida',
-          detail: `Debes ingresar una cantidad válida para ${item.producto.producto}`
+          detail: `Debes ingresar una cantidad válida para ${item.producto.producto}`,
         });
         hayError = true;
         return;
@@ -517,7 +551,7 @@ export class VentasComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Stock insuficiente',
-          detail: `No se puede vender más de ${item.producto.stock} unidades de ${item.producto.producto}. Stock disponible: ${item.producto.stock}`
+          detail: `No se puede vender más de ${item.producto.stock} unidades de ${item.producto.producto}. Stock disponible: ${item.producto.stock}`,
         });
         hayError = true;
         return;
@@ -529,23 +563,29 @@ export class VentasComponent implements OnInit {
     }
 
     // Agregar productos seleccionados a la tabla de detalles
-    this.productosConCantidad.forEach(item => {
+    this.productosConCantidad.forEach((item) => {
       // Verificar si el producto ya está en la tabla
-      const existeIndex = this.detallesPedido.findIndex(detalle => detalle.id === item.producto.id);
+      const existeIndex = this.detallesPedido.findIndex(
+        (detalle) => detalle.id === item.producto.id
+      );
       if (existeIndex !== -1) {
         // Si ya existe, actualizar cantidad (validando stock total)
-        const nuevaCantidad = this.detallesPedido[existeIndex].cantidad + item.cantidad;
+        const nuevaCantidad =
+          this.detallesPedido[existeIndex].cantidad + item.cantidad;
         if (nuevaCantidad > item.producto.stock) {
           this.messageService.add({
             severity: 'error',
             summary: 'Stock insuficiente',
-            detail: `No se puede vender más de ${item.producto.stock} unidades de ${item.producto.producto}. Ya tienes ${this.detallesPedido[existeIndex].cantidad} en el pedido.`
+            detail: `No se puede vender más de ${item.producto.stock} unidades de ${item.producto.producto}. Ya tienes ${this.detallesPedido[existeIndex].cantidad} en el pedido.`,
           });
           return;
         }
         this.detallesPedido[existeIndex].cantidad = nuevaCantidad;
         // Asegurar que el descuento esté inicializado
-        if (this.detallesPedido[existeIndex].descuento === undefined || this.detallesPedido[existeIndex].descuento === null) {
+        if (
+          this.detallesPedido[existeIndex].descuento === undefined ||
+          this.detallesPedido[existeIndex].descuento === null
+        ) {
           this.detallesPedido[existeIndex].descuento = 0;
         }
       } else {
@@ -557,7 +597,7 @@ export class VentasComponent implements OnInit {
           precio: item.producto.precio,
           cantidad: item.cantidad,
           stock: item.producto.stock,
-          descuento: 0
+          descuento: 0,
         });
       }
     });
@@ -566,16 +606,21 @@ export class VentasComponent implements OnInit {
   }
 
   eliminarDetallePedido(id: number): void {
-    this.detallesPedido = this.detallesPedido.filter(detalle => detalle.id !== id);
+    this.detallesPedido = this.detallesPedido.filter(
+      (detalle) => detalle.id !== id
+    );
   }
 
   getProductImageUrl(product: Product): string {
-    const defaultImageUrl = 'https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg';
+    const defaultImageUrl =
+      'https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg';
 
-    if (!product.imagen ||
-        product.imagen.trim() === '' ||
-        product.imagen === '#f0f0f0' ||
-        product.imagen === 'null') {
+    if (
+      !product.imagen ||
+      product.imagen.trim() === '' ||
+      product.imagen === '#f0f0f0' ||
+      product.imagen === 'null'
+    ) {
       return defaultImageUrl;
     }
 
@@ -586,7 +631,7 @@ export class VentasComponent implements OnInit {
     return new Intl.NumberFormat('es-HN', {
       style: 'currency',
       currency: 'HNL',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
     }).format(value);
   }
 
@@ -615,8 +660,12 @@ export class VentasComponent implements OnInit {
   onMetodoPagoDropdownShow(container: HTMLElement): void {
     // Sincronizar el ancho del panel con el ancho del input
     setTimeout(() => {
-      const inputElement = container.querySelector('.p-dropdown') as HTMLElement;
-      const panelElement = document.querySelector('.metodo-pago-dropdown-panel') as HTMLElement;
+      const inputElement = container.querySelector(
+        '.p-dropdown'
+      ) as HTMLElement;
+      const panelElement = document.querySelector(
+        '.metodo-pago-dropdown-panel'
+      ) as HTMLElement;
 
       if (inputElement && panelElement) {
         const inputWidth = inputElement.getBoundingClientRect().width;
@@ -632,21 +681,21 @@ export class VentasComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Selección requerida',
-        detail: 'Por favor seleccione un método de pago'
+        detail: 'Por favor seleccione un método de pago',
       });
       return;
     }
 
     // Verificar si el método ya está agregado
     const yaExiste = this.metodosPagoSeleccionados.some(
-      mp => mp.metodoPago.id === this.metodoPagoTemporal!.id
+      (mp) => mp.metodoPago.id === this.metodoPagoTemporal!.id
     );
 
     if (yaExiste) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Método duplicado',
-        detail: 'Este método de pago ya está agregado'
+        detail: 'Este método de pago ya está agregado',
       });
       return;
     }
@@ -655,7 +704,7 @@ export class VentasComponent implements OnInit {
     this.metodosPagoSeleccionados.push({
       id: Date.now(), // ID temporal único
       metodoPago: this.metodoPagoTemporal,
-      monto: 0
+      monto: 0,
     });
 
     // Limpiar la selección temporal
@@ -663,20 +712,25 @@ export class VentasComponent implements OnInit {
   }
 
   eliminarMetodoPago(id: number): void {
-    this.metodosPagoSeleccionados = this.metodosPagoSeleccionados.filter(mp => mp.id !== id);
+    this.metodosPagoSeleccionados = this.metodosPagoSeleccionados.filter(
+      (mp) => mp.id !== id
+    );
   }
 
   actualizarMontoMetodoPago(id: number, nuevoMonto: number | null): void {
-    const metodoPago = this.metodosPagoSeleccionados.find(mp => mp.id === id);
+    const metodoPago = this.metodosPagoSeleccionados.find((mp) => mp.id === id);
     if (metodoPago) {
-      metodoPago.monto = nuevoMonto !== null && nuevoMonto !== undefined ? nuevoMonto : 0;
+      metodoPago.monto =
+        nuevoMonto !== null && nuevoMonto !== undefined ? nuevoMonto : 0;
     }
   }
 
   getMetodosPagoDisponibles(): MetodoPago[] {
     // Filtrar métodos de pago que ya están seleccionados
-    const idsSeleccionados = this.metodosPagoSeleccionados.map(mp => mp.metodoPago.id);
-    return this.metodosPago.filter(mp => !idsSeleccionados.includes(mp.id));
+    const idsSeleccionados = this.metodosPagoSeleccionados.map(
+      (mp) => mp.metodoPago.id
+    );
+    return this.metodosPago.filter((mp) => !idsSeleccionados.includes(mp.id));
   }
 
   calcularTotalMetodosPago(): number {
@@ -690,8 +744,10 @@ export class VentasComponent implements OnInit {
   }
 
   esEfectivoUnico(): boolean {
-    return this.metodosPagoSeleccionados.length === 1 &&
-           this.metodosPagoSeleccionados[0].metodoPago.id === 1;
+    return (
+      this.metodosPagoSeleccionados.length === 1 &&
+      this.metodosPagoSeleccionados[0].metodoPago.id === 1
+    );
   }
 
   calcularVuelto(): number {
