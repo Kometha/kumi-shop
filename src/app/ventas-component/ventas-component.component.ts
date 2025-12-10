@@ -91,6 +91,7 @@ export class VentasComponent implements OnInit {
 
   // Envío
   necesitaEnvio: boolean = false;
+  ignorarISV: boolean = false;
   tipoEnvio: TipoEnvio | null = null;
   cantidadEnvio: number | null = null;
 
@@ -650,6 +651,9 @@ export class VentasComponent implements OnInit {
   }
 
   calcularIVA(): number {
+    if (this.ignorarISV) {
+      return 0;
+    }
     return this.calcularSubtotal() * 0.15;
   }
 
