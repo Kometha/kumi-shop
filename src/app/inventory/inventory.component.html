@@ -92,6 +92,7 @@
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 80px">Imagen</th>
+          <th style="width: 80px">Código</th>
           <th>Producto</th>
           <th style="width: 80px" class="text-center">Stock</th>
           <th style="width: 120px" class="text-right">Costo (USD)</th>
@@ -117,6 +118,8 @@
             >
             </p-image>
           </td>
+          <!-- Código -->
+          <td class="font-medium text-center">{{ product.codigo }}</td>
 
           <!-- Producto -->
           <td class="font-medium">{{ product.producto }}</td>
