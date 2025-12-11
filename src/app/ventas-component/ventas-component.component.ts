@@ -657,6 +657,30 @@ export class VentasComponent implements OnInit {
     }).format(value);
   }
 
+  formatDate(fecha: Date | string | null | undefined): string {
+    if (!fecha) {
+      return '-';
+    }
+
+    try {
+      const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
+      
+      // Verificar que la fecha sea válida
+      if (isNaN(date.getTime())) {
+        return '-';
+      }
+
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return '-';
+    }
+  }
+
   calcularSubtotal(): number {
     return this.detallesPedido.reduce((total, detalle) => {
       const subtotalProducto = detalle.precio * detalle.cantidad;
