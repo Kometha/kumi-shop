@@ -96,7 +96,7 @@
           <td>{{ venta.canal || '-' }}</td>
 
           <!-- Fecha -->
-          <td>{{ venta.fecha || '-' }}</td>
+          <td>{{ formatDate(venta.fecha) }}</td>
 
           <!-- Total (L.) -->
           <td class="text-right font-mono font-semibold">
@@ -122,24 +122,6 @@
               class="p-button-rounded p-button-text p-button-sm mr-2"
               [disabled]="loading"
               pTooltip="Ver detalles"
-              tooltipPosition="top"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-pencil"
-              class="p-button-rounded p-button-text p-button-sm mr-2"
-              [disabled]="loading"
-              pTooltip="Editar venta"
-              tooltipPosition="top"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-trash"
-              class="p-button-rounded p-button-text p-button-danger p-button-sm"
-              [disabled]="loading"
-              pTooltip="Eliminar venta"
               tooltipPosition="top"
             ></button>
           </td>
