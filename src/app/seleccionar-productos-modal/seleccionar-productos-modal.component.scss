@@ -1,0 +1,156 @@
+.seleccionar-productos-modal {
+  padding: 1.5rem;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+
+  .modal-description {
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    ::ng-deep {
+      .p-multiselect {
+        width: 100%;
+
+        .p-multiselect-label {
+          padding: 0.625rem 0.75rem;
+        }
+
+        .p-multiselect-trigger {
+          width: 2.5rem;
+        }
+      }
+
+      .p-multiselect-panel {
+        .p-multiselect-items {
+          .p-multiselect-item {
+            padding: 0.75rem;
+            
+            &:hover {
+              background: #f9fafb;
+            }
+
+            &.p-highlight {
+              background: #f3f4f6;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .modal-footer {
+    margin-top: 1.5rem;
+
+    ::ng-deep {
+      .p-button {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
+
+        &.p-button-text {
+          color: #6b7280;
+
+          &:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+          }
+        }
+
+        &.p-button-success {
+          background-color: #10b981;
+          border-color: #10b981;
+
+          &:hover {
+            background-color: #059669;
+            border-color: #059669;
+          }
+
+          &:disabled {
+            background-color: #d1d5db;
+            border-color: #d1d5db;
+            opacity: 0.6;
+          }
+        }
+      }
+    }
+  }
+}
+
+.seleccionar-productos-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.seleccionar-productos-modal::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.seleccionar-productos-modal::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+
+  &:hover {
+    background: #9ca3af;
+  }
+}
+
+.productos-cantidad-table {
+  ::ng-deep {
+    .p-inputnumber {
+      width: 80px !important;
+
+      .p-inputnumber-input {
+        text-align: center;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.875rem !important;
+        width: 50px !important;
+        min-width: 50px !important;
+      }
+
+      .p-inputnumber-button {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        padding: 0 !important;
+        font-size: 0.75rem !important;
+
+        .p-button-icon {
+          font-size: 0.75rem !important;
+        }
+      }
+    }
+  }
+
+  table {
+    th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 0.5rem !important;
+    }
+
+    td {
+      font-size: 0.875rem;
+      padding: 0.75rem 0.5rem !important;
+    }
+  }
+}
+
+.product-image-preview-small {
+  ::ng-deep {
+    img {
+      border-radius: 4px;
+    }
+  }
+}
+
