@@ -370,6 +370,9 @@ export class VentasComponent implements OnInit {
     // Si es efectivo único, permitir vuelto (monto pagado >= total)
     const diferencia = this.getDiferenciaPago();
     const esEfectivoUnico = this.esEfectivoUnico();
+    const totalAPagar = this.tieneExtraFinanciamiento()
+      ? this.calcularTotalClientePaga()
+      : this.calcularTotal();
 
     if (esEfectivoUnico) {
       // Si es efectivo único, el monto pagado debe ser mayor o igual al total
@@ -381,7 +384,7 @@ export class VentasComponent implements OnInit {
           detail: `El monto pagado (${this.formatCurrency(
             this.calcularTotalMetodosPago()
           )}) debe ser mayor o igual al total de la venta (${this.formatCurrency(
-            this.calcularTotal()
+            totalAPagar
           )})`,
         });
         return;
@@ -397,7 +400,7 @@ export class VentasComponent implements OnInit {
           detail: `La suma de los métodos de pago (${this.formatCurrency(
             this.calcularTotalMetodosPago()
           )}) debe ser igual al total de la venta (${this.formatCurrency(
-            this.calcularTotal()
+            totalAPagar
           )})`,
         });
         return;
@@ -409,12 +412,22 @@ export class VentasComponent implements OnInit {
       ? new Date(this.nuevaVenta.fechaPedido).toISOString().split('T')[0]
       : null;
 
+    // Calcular todos los valores necesarios
+    const subtotal = this.calcularSubtotal();
+    const iva = this.calcularIVA();
+    const totalBase = subtotal + iva;
+    const totalClientePaga = this.calcularTotalClientePaga();
+    const comisionesFinanciamiento = this.calcularComisionesFinanciamiento();
+    const comisionesMetodos = this.calcularComisionesMetodos();
+    const costoEnvio = this.calcularCostoEnvio();
+    const montoNetoRecibido = this.calcularMontoNetoRecibido();
+
     // Construir JSON de la venta
     const ventaJSON = {
       canalId: this.nuevaVenta.canal,
       estadoId: this.nuevaVenta.estado,
       fechaPedido: fechaPedido,
-      total: this.calcularTotal(),
+      total: totalClientePaga, // Total que paga el cliente (con extra si aplica)
       notas: this.nuevaVenta.notas || null,
       nombreCliente: this.nuevaVenta.nombreCliente,
       telefonoCliente: this.nuevaVenta.telefonoCliente,
@@ -422,12 +435,8 @@ export class VentasComponent implements OnInit {
       tipoEnvioId: this.tipoEnvio?.id || null,
       cantidadEnvio: this.cantidadEnvio || null,
       direccionCliente: this.nuevaVenta.direccionCliente,
-      costoEnvio:
-        this.necesitaEnvio &&
-        this.tipoEnvio?.costo_base !== null &&
-        this.tipoEnvio?.costo_base !== undefined
-          ? this.tipoEnvio.costo_base
-          : null,
+      costoEnvio: costoEnvio,
+      ignorarISV: this.ignorarISV, // Agregar flag para saber si se ignora ISV
     };
 
     // Construir array de detalles (sin subtotal individual)
@@ -444,11 +453,16 @@ export class VentasComponent implements OnInit {
       monto: mp.monto,
     }));
 
-    // Construir objeto de totales
+    // Construir objeto de totales con todos los cálculos
     const totalesJSON = {
-      subtotal: this.calcularSubtotal(),
-      iva: this.calcularIVA(),
-      total: this.calcularTotal(),
+      subtotal: subtotal,
+      iva: iva,
+      total: totalBase, // Total base (subtotal + IVA)
+      totalClientePaga: totalClientePaga, // Total que paga el cliente (con extra si aplica)
+      comisionesFinanciamiento: comisionesFinanciamiento,
+      comisionesMetodos: comisionesMetodos,
+      costoEnvio: costoEnvio,
+      montoNetoRecibido: montoNetoRecibido,
     };
 
     // JSON completo
@@ -706,6 +720,143 @@ export class VentasComponent implements OnInit {
     return this.calcularSubtotal() + this.calcularIVA();
   }
 
+  /**
+   * Detecta si hay algún método de pago con extra financiamiento
+   */
+  tieneExtraFinanciamiento(): boolean {
+    return this.metodosPagoSeleccionados.some(
+      (mp) =>
+        mp.metodoPago.meses_plazo !== null ||
+        mp.metodoPago.tipo === 'extra_financiamiento'
+    );
+  }
+
+  /**
+   * Obtiene el porcentaje de extra financiamiento del método seleccionado
+   */
+  getPorcentajeExtraFinanciamiento(): number {
+    const metodoExtra = this.metodosPagoSeleccionados.find(
+      (mp) =>
+        mp.metodoPago.meses_plazo !== null ||
+        mp.metodoPago.tipo === 'extra_financiamiento'
+    );
+    return metodoExtra?.metodoPago.comision_porcentaje || 0;
+  }
+
+  /**
+   * Calcula el total que paga el cliente
+   * Si hay extra financiamiento: subtotal + IVA + % extra
+   * Si no hay extra: subtotal + IVA
+   */
+  calcularTotalClientePaga(): number {
+    const base = this.calcularSubtotal() + this.calcularIVA();
+    
+    if (this.tieneExtraFinanciamiento()) {
+      const porcentajeExtra = this.getPorcentajeExtraFinanciamiento();
+      const extra = base * (porcentajeExtra / 100);
+      return base + extra;
+    }
+    
+    return base;
+  }
+
+  /**
+   * Calcula el costo de envío
+   */
+  calcularCostoEnvio(): number {
+    if (!this.necesitaEnvio || !this.tipoEnvio) {
+      return 0;
+    }
+    
+    // Si es costo fijo, usar costo_base
+    if (this.tipoEnvio.es_costo_fijo && this.tipoEnvio.costo_base !== null) {
+      return this.tipoEnvio.costo_base;
+    }
+    
+    // Si es variable, usar cantidadEnvio * costo_base (si aplica)
+    if (!this.tipoEnvio.es_costo_fijo && this.cantidadEnvio && this.tipoEnvio.costo_base !== null) {
+      return this.cantidadEnvio * this.tipoEnvio.costo_base;
+    }
+    
+    return 0;
+  }
+
+  /**
+   * Calcula las comisiones de financiamiento
+   * Es el % que se cobra sobre el monto aplicado del método de pago con extra
+   */
+  calcularComisionesFinanciamiento(): number {
+    if (!this.tieneExtraFinanciamiento()) {
+      return 0;
+    }
+
+    return this.metodosPagoSeleccionados.reduce((total, mp) => {
+      const esExtraFinanciamiento =
+        mp.metodoPago.meses_plazo !== null ||
+        mp.metodoPago.tipo === 'extra_financiamiento';
+
+      if (esExtraFinanciamiento && mp.metodoPago.comision_porcentaje) {
+        // La comisión se calcula sobre el monto aplicado
+        const comision = mp.monto * (mp.metodoPago.comision_porcentaje / 100);
+        return total + comision;
+      }
+
+      return total;
+    }, 0);
+  }
+
+  /**
+   * Calcula las comisiones de métodos de pago (Forza, Tarjeta, etc.)
+   * Incluye comisiones POS (3.8%) y otras comisiones de métodos
+   */
+  calcularComisionesMetodos(): number {
+    return this.metodosPagoSeleccionados.reduce((total, mp) => {
+      let comision = 0;
+
+      // Comisión porcentual del método
+      if (mp.metodoPago.comision_porcentaje) {
+        // Solo aplicar si NO es extra financiamiento
+        const esExtraFinanciamiento =
+          mp.metodoPago.meses_plazo !== null ||
+          mp.metodoPago.tipo === 'extra_financiamiento';
+
+        if (!esExtraFinanciamiento) {
+          comision += mp.monto * (mp.metodoPago.comision_porcentaje / 100);
+        }
+      }
+
+      // Comisión POS (3.8%) para Forza y Tarjeta
+      if (mp.metodoPago.comision_pos_porcentaje) {
+        comision += mp.monto * (mp.metodoPago.comision_pos_porcentaje / 100);
+      }
+
+      // Comisión fija
+      if (mp.metodoPago.comision_fija) {
+        comision += mp.metodoPago.comision_fija;
+      }
+
+      return total + comision;
+    }, 0);
+  }
+
+  /**
+   * Calcula el monto neto recibido por el negocio
+   * Total que paga cliente - comisiones financiamiento - comisiones métodos - envío
+   */
+  calcularMontoNetoRecibido(): number {
+    const totalClientePaga = this.calcularTotalClientePaga();
+    const comisionesFinanciamiento = this.calcularComisionesFinanciamiento();
+    const comisionesMetodos = this.calcularComisionesMetodos();
+    const costoEnvio = this.calcularCostoEnvio();
+
+    return (
+      totalClientePaga -
+      comisionesFinanciamiento -
+      comisionesMetodos -
+      costoEnvio
+    );
+  }
+
   onMetodoPagoDropdownShow(container: HTMLElement): void {
     // Sincronizar el ancho del panel con el ancho del input
     setTimeout(() => {
@@ -789,7 +940,11 @@ export class VentasComponent implements OnInit {
   }
 
   getDiferenciaPago(): number {
-    return this.calcularTotal() - this.calcularTotalMetodosPago();
+    // Si hay extra financiamiento, el total que debe pagar incluye el extra
+    const totalAPagar = this.tieneExtraFinanciamiento()
+      ? this.calcularTotalClientePaga()
+      : this.calcularTotal();
+    return totalAPagar - this.calcularTotalMetodosPago();
   }
 
   esEfectivoUnico(): boolean {
@@ -802,7 +957,9 @@ export class VentasComponent implements OnInit {
   calcularVuelto(): number {
     if (this.esEfectivoUnico()) {
       const montoPagado = this.calcularTotalMetodosPago();
-      const totalVenta = this.calcularTotal();
+      const totalVenta = this.tieneExtraFinanciamiento()
+        ? this.calcularTotalClientePaga()
+        : this.calcularTotal();
       return montoPagado - totalVenta;
     }
     return 0;

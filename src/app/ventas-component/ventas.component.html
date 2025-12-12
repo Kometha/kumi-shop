@@ -60,7 +60,7 @@
   <!-- Table -->
   <div
     class="table-container bg-white rounded-lg shadow-sm border border-gray-200"
-    style="overflow: visible;"
+    style="overflow: visible"
   >
     <p-table
       [value]="filteredVentas"
@@ -78,7 +78,8 @@
           <th>Pedido</th>
           <th>Canal</th>
           <th>Fecha</th>
-          <th style="width: 120px" class="text-right">Total (L.)</th>
+          <th style="width: 120px" class="text-right">Cliente Pagó (L.)</th>
+          <th style="width: 120px" class="text-right">Ingreso Neto (L.)</th>
           <th style="width: 120px" class="text-center">Estado</th>
           <th style="width: 100px" class="text-center">Acciones</th>
         </tr>
@@ -87,20 +88,35 @@
       <ng-template pTemplate="body" let-venta>
         <tr>
           <!-- Cliente -->
-          <td class="font-medium">{{ venta.cliente || '-' }}</td>
+          <td class="font-medium">{{ venta.cliente || "-" }}</td>
 
           <!-- Pedido -->
-          <td>{{ venta.codigopedido || '-' }}</td>
+          <td>{{ venta.codigopedido || "-" }}</td>
 
           <!-- Canal -->
-          <td>{{ venta.canal || '-' }}</td>
+          <td>{{ venta.canal || "-" }}</td>
 
           <!-- Fecha -->
           <td>{{ formatDate(venta.fecha) }}</td>
 
-          <!-- Total (L.) -->
+          <!-- Cliente Pagó (L.) -->
           <td class="text-right font-mono font-semibold">
-            {{ venta.total ? formatCurrency(venta.total) : '-' }}
+            {{
+              venta.item?.totalFactura
+                ? formatCurrency(venta.item.totalFactura)
+                : venta.total
+                ? formatCurrency(venta.total)
+                : "-"
+            }}
+          </td>
+
+          <!-- Ingreso Neto (L.) -->
+          <td class="text-right font-mono font-bold text-green-700">
+            {{
+              venta.item?.montoNetoRecibido
+                ? formatCurrency(venta.item.montoNetoRecibido)
+                : "-"
+            }}
           </td>
 
           <!-- Estado -->
@@ -130,7 +146,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center py-8">
+          <td colspan="8" class="text-center py-8">
             <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
             <p class="text-gray-500">No se encontraron ventas</p>
           </td>
@@ -161,7 +177,9 @@
 
     <!-- Información del Cliente -->
     <div class="section mb-6">
-      <h3 class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+      <h3
+        class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4"
+      >
         INFORMACIÓN DEL CLIENTE
       </h3>
 
@@ -192,7 +210,9 @@
 
     <!-- Información del Pedido -->
     <div class="section mb-6">
-      <h3 class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+      <h3
+        class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4"
+      >
         INFORMACIÓN DEL PEDIDO
       </h3>
 
@@ -206,12 +226,16 @@
             optionValue="id"
             placeholder="Seleccione un canal"
             [loading]="loadingCanales"
-            [style]="{'width':'100%'}"
+            [style]="{ width: '100%' }"
           >
             <ng-template let-canal pTemplate="item">
               <div class="flex items-center gap-2">
                 @if (canal.url_icono) {
-                  <img [src]="canal.url_icono" [alt]="canal.nombre" class="w-5 h-5" />
+                <img
+                  [src]="canal.url_icono"
+                  [alt]="canal.nombre"
+                  class="w-5 h-5"
+                />
                 }
                 <span>{{ canal.nombre }}</span>
               </div>
@@ -228,101 +252,10 @@
             optionValue="id"
             placeholder="Seleccione un estado"
             [loading]="loadingEstados"
-            [style]="{'width':'100%'}"
+            [style]="{ width: '100%' }"
           >
           </p-dropdown>
         </div>
-      </div>
-
-      <div class="form-group mt-4 metodo-pago-container" #metodoPagoContainer>
-        <div class="flex items-center justify-between mb-2">
-          <label class="form-label">Métodos de Pago</label>
-          <button
-            pButton
-            type="button"
-            icon="pi pi-plus"
-            label="Agregar Método"
-            class="p-button-sm p-button-outlined"
-            (click)="agregarMetodoPago()"
-            [disabled]="!metodoPagoTemporal"
-          ></button>
-        </div>
-
-        <p-dropdown
-          #metodoPagoDropdown
-          [(ngModel)]="metodoPagoTemporal"
-          [options]="getMetodosPagoDisponibles()"
-          optionLabel="nombre"
-          placeholder="Seleccione un método de pago"
-          [loading]="loadingMetodosPago"
-          [style]="{'width':'100%'}"
-          appendTo="body"
-          panelStyleClass="metodo-pago-dropdown-panel"
-          (onShow)="onMetodoPagoDropdownShow(metodoPagoContainer)"
-        >
-          <ng-template let-metodo pTemplate="item">
-            <div class="flex flex-col gap-1">
-              <span class="font-medium">{{ metodo.nombre }}</span>
-              @if (metodo.comision_porcentaje) {
-                <span class="text-xs text-gray-500">{{ metodo.comision_porcentaje }}%</span>
-              }
-            </div>
-          </ng-template>
-          <ng-template let-metodo pTemplate="selectedItem">
-            <span>{{ metodo?.nombre }}</span>
-          </ng-template>
-        </p-dropdown>
-
-        @if (metodosPagoSeleccionados.length > 0) {
-          <div class="mt-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <p-table
-              [value]="metodosPagoSeleccionados"
-              [paginator]="false"
-              styleClass="p-datatable-gridlines"
-            >
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Método de Pago</th>
-                  <th style="width: 200px" class="text-right">Monto</th>
-                  <th style="width: 80px" class="text-center">Acciones</th>
-                </tr>
-              </ng-template>
-
-              <ng-template pTemplate="body" let-metodoPago>
-                <tr>
-                  <td class="font-medium">
-                    <div class="flex flex-col gap-1">
-                      <span>{{ metodoPago.metodoPago.nombre }}</span>
-                      @if (metodoPago.metodoPago.comision_porcentaje) {
-                        <span class="text-xs text-gray-500">{{ metodoPago.metodoPago.comision_porcentaje }}%</span>
-                      }
-                    </div>
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      [(ngModel)]="metodoPago.monto"
-                      [min]="0"
-                      [max]="calcularTotal()"
-                      class="w-full"
-                    />
-                  </td>
-                  <td class="text-center">
-                    <button
-                      pButton
-                      type="button"
-                      icon="pi pi-trash"
-                      class="p-button-rounded p-button-text p-button-danger p-button-sm"
-                      (click)="eliminarMetodoPago(metodoPago.id)"
-                      pTooltip="Eliminar método de pago"
-                      tooltipPosition="top"
-                    ></button>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
-        }
       </div>
 
       <div class="form-group mt-4">
@@ -334,7 +267,7 @@
           [showIcon]="true"
           dateFormat="dd/mm/yy"
           placeholder="Seleccione una fecha"
-          [style]="{'width':'100%'}"
+          [style]="{ width: '100%' }"
         >
         </p-calendar>
         <div class="mt-2">
@@ -376,75 +309,78 @@
       </div>
     </div>
 
-        <!-- Envío -->
-        <div class="section mb-6">
-          <div class="form-group">
-            <p-checkbox
-              [(ngModel)]="necesitaEnvio"
-              inputId="necesitaEnvio"
-              [binary]="true"
-            >
-            </p-checkbox>
-            <label for="necesitaEnvio" class="ml-2 text-sm text-gray-700 cursor-pointer">
-              Necesita envío
-            </label>
-          </div>
+    <!-- Envío -->
+    <div class="section mb-6">
+      <div class="form-group">
+        <p-checkbox
+          [(ngModel)]="necesitaEnvio"
+          inputId="necesitaEnvio"
+          [binary]="true"
+        >
+        </p-checkbox>
+        <label
+          for="necesitaEnvio"
+          class="ml-2 text-sm text-gray-700 cursor-pointer"
+        >
+          Necesita envío
+        </label>
+      </div>
 
-          @if (necesitaEnvio) {
-            <div class="form-group mt-4">
-              <label class="form-label">Tipo de Envío</label>
-              <p-dropdown
-                [(ngModel)]="tipoEnvio"
-                [options]="tiposEnvio"
-                optionLabel="nombre"
-                placeholder="Seleccione un tipo de envío"
-                [loading]="loadingTiposEnvio"
-                [style]="{'width':'100%'}"
-                appendTo="body"
-              >
-                <ng-template let-tipo pTemplate="item">
-                  <div class="flex flex-col gap-1">
-                    <span class="font-medium">{{ tipo.nombre }}</span>
-                    @if (tipo.costo_base !== null) {
-                      <span class="text-xs text-gray-500">
-                        {{ formatCurrency(tipo.costo_base) }}
-                        @if (!tipo.es_costo_fijo) {
-                          <span class="text-gray-400">(variable)</span>
-                        }
-                      </span>
-                    }
-                    @if (tipo.descripcion) {
-                      <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
-                    }
-                  </div>
-                </ng-template>
-                <ng-template let-tipo pTemplate="selectedItem">
-                  <span>{{ tipo?.nombre }}</span>
-                </ng-template>
-              </p-dropdown>
+      @if (necesitaEnvio) {
+      <div class="form-group mt-4">
+        <label class="form-label">Tipo de Envío</label>
+        <p-dropdown
+          [(ngModel)]="tipoEnvio"
+          [options]="tiposEnvio"
+          optionLabel="nombre"
+          placeholder="Seleccione un tipo de envío"
+          [loading]="loadingTiposEnvio"
+          [style]="{ width: '100%' }"
+          appendTo="body"
+        >
+          <ng-template let-tipo pTemplate="item">
+            <div class="flex flex-col gap-1">
+              <span class="font-medium">{{ tipo.nombre }}</span>
+              @if (tipo.costo_base !== null) {
+              <span class="text-xs text-gray-500">
+                {{ formatCurrency(tipo.costo_base) }}
+                @if (!tipo.es_costo_fijo) {
+                <span class="text-gray-400">(variable)</span>
+                }
+              </span>
+              } @if (tipo.descripcion) {
+              <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
+              }
             </div>
+          </ng-template>
+          <ng-template let-tipo pTemplate="selectedItem">
+            <span>{{ tipo?.nombre }}</span>
+          </ng-template>
+        </p-dropdown>
+      </div>
 
-            @if (tipoEnvio?.id === 1) {
-              <div class="form-group mt-4">
-                <label class="form-label">Cantidad de Envío *</label>
-                <p-inputNumber
-                  [(ngModel)]="cantidadEnvio"
-                  [min]="0"
-                  [max]="999999"
-                  [style]="{'width':'100%'}"
-                  [showButtons]="true"
-                  buttonLayout="horizontal"
-                  placeholder="Ingrese la cantidad de envío"
-                ></p-inputNumber>
-              </div>
-            }
-          }
-        </div>
+      @if (tipoEnvio?.id === 1) {
+      <div class="form-group mt-4">
+        <label class="form-label">Cantidad de Envío *</label>
+        <p-inputNumber
+          [(ngModel)]="cantidadEnvio"
+          [min]="0"
+          [max]="999999"
+          [style]="{ width: '100%' }"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          placeholder="Ingrese la cantidad de envío"
+        ></p-inputNumber>
+      </div>
+      } }
+    </div>
 
     <!-- Detalles del Pedido -->
     <div class="section mb-6">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider">
+        <h3
+          class="section-title text-sm font-semibold text-gray-500 uppercase tracking-wider"
+        >
           DETALLES DEL PEDIDO
         </h3>
         <button
@@ -457,7 +393,9 @@
         ></button>
       </div>
 
-      <div class="table-container-detalles bg-white rounded-lg border border-gray-200">
+      <div
+        class="table-container-detalles bg-white rounded-lg border border-gray-200"
+      >
         <p-table
           [value]="detallesPedido"
           [paginator]="false"
@@ -510,10 +448,14 @@
                   [(ngModel)]="detalle.descuento"
                   [min]="0"
                   [max]="detalle.precio * detalle.cantidad"
-                  [style]="{'width':'90px', 'max-width':'90px'}"
+                  [style]="{ width: '90px', 'max-width': '90px' }"
                   [showButtons]="false"
                   placeholder="0.00"
-                  [inputStyle]="{'text-align': 'right', 'padding': '0.25rem 0.5rem', 'width': '90px'}"
+                  [inputStyle]="{
+                    'text-align': 'right',
+                    padding: '0.25rem 0.5rem',
+                    width: '90px'
+                  }"
                 ></p-inputNumber>
               </td>
 
@@ -542,78 +484,209 @@
               <td colspan="7" class="text-center py-8">
                 <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
                 <p class="text-gray-500">No hay productos agregados</p>
-                <p class="text-sm text-gray-400 mt-2">Haz clic en "Agregar Producto" para comenzar</p>
+                <p class="text-sm text-gray-400 mt-2">
+                  Haz clic en "Agregar Producto" para comenzar
+                </p>
               </td>
             </tr>
           </ng-template>
-
         </p-table>
 
         @if (detallesPedido.length > 0) {
-          <div class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-3">
-            <div class="flex flex-col items-end gap-2">
-              <div class="flex items-center gap-4">
-                <span class="font-semibold text-gray-700 text-sm">Subtotal:</span>
-                <span class="font-mono font-semibold text-base text-gray-900">
-                  {{ formatCurrency(calcularSubtotal()) }}
-                </span>
-              </div>
-              <div class="flex items-center gap-4">
-                <span class="font-semibold text-gray-700 text-sm">IVA (15%):</span>
-                <span class="font-mono font-semibold text-base text-gray-900">
-                  {{ formatCurrency(calcularIVA()) }}
-                </span>
-              </div>
-              <div class="flex items-center gap-4 pt-2 border-t border-gray-300">
-                <span class="font-semibold text-gray-900 text-base">Total:</span>
-                <span class="font-mono font-bold text-xl text-gray-900">
-                  {{ formatCurrency(calcularTotal()) }}
-                </span>
-              </div>
-              @if (esEfectivoUnico() && calcularVuelto() > 0) {
-                <div class="flex items-center gap-4 pt-2">
-                  <span class="font-semibold text-green-600 text-base">Vuelto:</span>
-                  <span class="font-mono font-bold text-lg text-green-600">
-                    {{ formatCurrency(calcularVuelto()) }}
-                  </span>
-                </div>
-              }
+        <div
+          class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-3"
+        >
+          <div class="flex flex-col items-end gap-2">
+            <div class="flex items-center gap-4">
+              <span class="font-semibold text-gray-700 text-sm">Subtotal:</span>
+              <span class="font-mono font-semibold text-base text-gray-900">
+                {{ formatCurrency(calcularSubtotal()) }}
+              </span>
             </div>
+            <div class="flex items-center gap-4">
+              <span class="font-semibold text-gray-700 text-sm"
+                >IVA (15%):</span
+              >
+              <span class="font-mono font-semibold text-base text-gray-900">
+                {{ formatCurrency(calcularIVA()) }}
+              </span>
+            </div>
+            @if (tieneExtraFinanciamiento()) {
+            <div class="flex items-center gap-4 pt-2 border-t border-gray-300">
+              <span class="font-semibold text-gray-700 text-sm"
+                >Extra Financiamiento:</span
+              >
+              <span class="font-mono font-semibold text-base text-gray-900">
+                {{ getPorcentajeExtraFinanciamiento() }}%
+              </span>
+            </div>
+            }
+            <div class="flex items-center gap-4 pt-2 border-t border-gray-300">
+              <span class="font-semibold text-gray-900 text-base">Total:</span>
+              <span class="font-mono font-bold text-xl text-gray-900">
+                {{ formatCurrency(calcularTotalClientePaga()) }}
+              </span>
+            </div>
+            @if(calcularTotalClientePaga() !== calcularMontoNetoRecibido()) {
+            <div
+              class="flex items-center gap-4 pt-1 border-t-2 border-blue-300"
+            >
+              <span class="font-semibold text-blue-700 text-base">
+                Cliente pagó:
+              </span>
+              <span class="font-mono font-bold text-lg text-blue-900">
+                {{ formatCurrency(calcularTotalClientePaga()) }}
+              </span>
+            </div>
+            <div class="flex items-center gap-4 pt-1">
+              <span class="font-semibold text-green-700 text-base">
+                Ingreso por:
+              </span>
+              <span class="font-mono font-bold text-lg text-green-900">
+                {{ formatCurrency(calcularMontoNetoRecibido()) }}
+              </span>
+            </div>
+            } @if (esEfectivoUnico() && calcularVuelto() > 0) {
+            <div class="flex items-center gap-4 pt-2">
+              <span class="font-semibold text-green-600 text-base">
+                Vuelto:
+              </span>
+              <span class="font-mono font-bold text-lg text-green-600">
+                {{ formatCurrency(calcularVuelto()) }}
+              </span>
+            </div>
+            }
           </div>
+        </div>
         }
       </div>
     </div>
 
+    <!-- Ignorar ISV -->
     <div class="form-group">
-      <p-checkbox
-        [(ngModel)]="ignorarISV"
-        inputId="ignorarISV"
-        [binary]="true"
-      >
+      <p-checkbox [(ngModel)]="ignorarISV" inputId="ignorarISV" [binary]="true">
       </p-checkbox>
       <label for="ignorarISV" class="ml-2 text-sm text-gray-700 cursor-pointer">
         ¿Ignorar ISV?
       </label>
     </div>
 
+    <!-- Métodos de Pago -->
+    <div class="form-group mt-4 metodo-pago-container" #metodoPagoContainer>
+      <div class="flex items-center justify-between mb-2">
+        <label class="form-label">Métodos de Pago</label>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Agregar Método"
+          class="p-button-sm p-button-outlined"
+          (click)="agregarMetodoPago()"
+          [disabled]="!metodoPagoTemporal"
+        ></button>
+      </div>
+
+      <p-dropdown
+        #metodoPagoDropdown
+        [(ngModel)]="metodoPagoTemporal"
+        [options]="getMetodosPagoDisponibles()"
+        optionLabel="nombre"
+        placeholder="Seleccione un método de pago"
+        [loading]="loadingMetodosPago"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+        panelStyleClass="metodo-pago-dropdown-panel"
+        (onShow)="onMetodoPagoDropdownShow(metodoPagoContainer)"
+      >
+        <ng-template let-metodo pTemplate="item">
+          <div class="flex flex-col gap-1">
+            <span class="font-medium">{{ metodo.nombre }}</span>
+            @if (metodo.comision_porcentaje) {
+            <span class="text-xs text-gray-500"
+              >{{ metodo.comision_porcentaje }}%</span
+            >
+            }
+          </div>
+        </ng-template>
+        <ng-template let-metodo pTemplate="selectedItem">
+          <span>{{ metodo?.nombre }}</span>
+        </ng-template>
+      </p-dropdown>
+
+      @if (metodosPagoSeleccionados.length > 0) {
+      <div
+        class="mt-4 bg-white rounded-lg border border-gray-200 overflow-hidden"
+      >
+        <p-table
+          [value]="metodosPagoSeleccionados"
+          [paginator]="false"
+          styleClass="p-datatable-gridlines"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Método de Pago</th>
+              <th style="width: 200px" class="text-right">Monto</th>
+              <th style="width: 80px" class="text-center">Acciones</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-metodoPago>
+            <tr>
+              <td class="font-medium">
+                <div class="flex flex-col gap-1">
+                  <span>{{ metodoPago.metodoPago.nombre }}</span>
+                  @if (metodoPago.metodoPago.comision_porcentaje) {
+                  <span class="text-xs text-gray-500"
+                    >{{ metodoPago.metodoPago.comision_porcentaje }}%</span
+                  >
+                  }
+                </div>
+              </td>
+              <td>
+                <input
+                  type="number"
+                  [(ngModel)]="metodoPago.monto"
+                  [min]="0"
+                  [max]="calcularTotal()"
+                  class="w-full"
+                />
+              </td>
+              <td class="text-center">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                  (click)="eliminarMetodoPago(metodoPago.id)"
+                  pTooltip="Eliminar método de pago"
+                  tooltipPosition="top"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+      }
+    </div>
+
     <!-- Botones de Acción -->
-    <div class="modal-footer flex justify-end gap-3 pt-4 border-t border-gray-200">
+    <div
+      class="modal-footer flex justify-end gap-3 pt-4 border-t border-gray-200"
+    >
       <button
         pButton
         type="button"
         label="Cancelar"
         class="p-button-text"
         (click)="hideNuevaVentaModal()"
-      >
-      </button>
+      ></button>
       <button
         pButton
         type="button"
         label="Guardar Venta"
         class="p-button-primary"
         (click)="guardarVenta()"
-      >
-      </button>
+      ></button>
     </div>
   </div>
 </p-dialog>
@@ -634,7 +707,9 @@
   <div class="seleccionar-productos-modal">
     <!-- Descripción -->
     <div class="modal-description mb-4">
-      <p class="text-sm text-gray-600">Selecciona uno o más productos para agregar al pedido</p>
+      <p class="text-sm text-gray-600">
+        Selecciona uno o más productos para agregar al pedido
+      </p>
     </div>
 
     <!-- MultiSelect de Productos -->
@@ -648,7 +723,7 @@
         optionLabel="producto"
         placeholder="Seleccione productos"
         [loading]="loadingProductos"
-        [style]="{'width':'100%'}"
+        [style]="{ width: '100%' }"
         [displaySelectedLabel]="true"
         [selectedItemsLabel]="selectedItemsLabel"
         [maxSelectedLabels]="3"
@@ -668,7 +743,10 @@
             </p-image>
             <div>
               <div class="font-medium">{{ product.producto }}</div>
-              <div class="text-sm text-gray-500">{{ formatCurrency(product.precio) }} | Stock: {{ product.stock }}</div>
+              <div class="text-sm text-gray-500">
+                {{ formatCurrency(product.precio) }} | Stock:
+                {{ product.stock }}
+              </div>
             </div>
           </div>
         </ng-template>
@@ -677,51 +755,68 @@
 
     <!-- Tabla de productos seleccionados con cantidades -->
     @if (productosConCantidad.length > 0) {
-      <div class="productos-cantidad-table mb-6">
-        <h4 class="text-sm font-semibold text-gray-700 mb-3">Cantidades por producto:</h4>
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="text-left p-3 text-xs font-semibold text-gray-600">Producto</th>
-                <th class="text-center p-3 text-xs font-semibold text-gray-600">Stock</th>
-                <th class="text-center p-3 text-xs font-semibold text-gray-600">Cantidad</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of productosConCantidad; track item.producto.id) {
-                <tr class="border-t border-gray-200">
-                  <td class="p-3 font-medium">{{ item.producto.producto }}</td>
-                  <td class="p-3 text-center font-semibold">{{ item.producto.stock }}</td>
-                  <td class="p-3 text-center">
-                    <p-inputNumber
-                      [(ngModel)]="item.cantidad"
-                      [min]="1"
-                      [max]="item.producto.stock"
-                      [style]="{'width': '60px', 'height': '28px'}"
-                      [showButtons]="true"
-                      buttonLayout="horizontal"
-                      [inputStyle]="{'width': '30px', 'height': '28px', 'padding': '2px 4px', 'font-size': '0.75rem', 'text-align': 'center'}"
-                    ></p-inputNumber>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+    <div class="productos-cantidad-table mb-6">
+      <h4 class="text-sm font-semibold text-gray-700 mb-3">
+        Cantidades por producto:
+      </h4>
+      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left p-3 text-xs font-semibold text-gray-600">
+                Producto
+              </th>
+              <th class="text-center p-3 text-xs font-semibold text-gray-600">
+                Stock
+              </th>
+              <th class="text-center p-3 text-xs font-semibold text-gray-600">
+                Cantidad
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of productosConCantidad; track item.producto.id) {
+            <tr class="border-t border-gray-200">
+              <td class="p-3 font-medium">{{ item.producto.producto }}</td>
+              <td class="p-3 text-center font-semibold">
+                {{ item.producto.stock }}
+              </td>
+              <td class="p-3 text-center">
+                <p-inputNumber
+                  [(ngModel)]="item.cantidad"
+                  [min]="1"
+                  [max]="item.producto.stock"
+                  [style]="{ width: '60px', height: '28px' }"
+                  [showButtons]="true"
+                  buttonLayout="horizontal"
+                  [inputStyle]="{
+                    width: '30px',
+                    height: '28px',
+                    padding: '2px 4px',
+                    'font-size': '0.75rem',
+                    'text-align': 'center'
+                  }"
+                ></p-inputNumber>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
       </div>
+    </div>
     }
 
     <!-- Botones de Acción -->
-    <div class="modal-footer flex justify-end gap-3 pt-4 border-t border-gray-200">
+    <div
+      class="modal-footer flex justify-end gap-3 pt-4 border-t border-gray-200"
+    >
       <button
         pButton
         type="button"
         label="Cancelar"
         class="p-button-text"
         (click)="hideSeleccionarProductosModal()"
-      >
-      </button>
+      ></button>
       <button
         pButton
         type="button"
@@ -729,8 +824,7 @@
         class="p-button-success"
         [disabled]="productosSeleccionados.length === 0"
         (click)="finalizarSeleccionProductos()"
-      >
-      </button>
+      ></button>
     </div>
   </div>
 </p-dialog>
