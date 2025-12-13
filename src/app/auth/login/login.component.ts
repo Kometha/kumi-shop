@@ -37,6 +37,7 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   loading = false;
   returnUrl: string = '/dashboard';
+  logoPath: string = 'assets/logo.png';
 
   constructor(
     private fb: FormBuilder,
