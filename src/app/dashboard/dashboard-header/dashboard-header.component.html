@@ -1,4 +1,6 @@
-<header class="bg-white/90 backdrop-blur-sm shadow-sm border-b border-gray-200/50 fixed w-full top-0 z-40">
+<header
+  class="bg-white/90 backdrop-blur-sm shadow-sm border-b border-gray-200/50 fixed w-full top-0 z-40"
+>
   <div class="px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
       <div class="flex items-center">
@@ -7,7 +9,7 @@
           type="button"
           icon="pi pi-bars"
           class="p-button-text p-button-plain p-0 hamburger-button"
-          style="width: 40px; height: 40px;"
+          style="width: 40px; height: 40px"
           (click)="onOpenSidebar()"
           title="Abrir menú"
         ></button>
@@ -15,17 +17,19 @@
       </div>
       <div class="flex items-center space-x-4">
         @if (authService.currentUser$ | async; as user) {
-          <div class="flex items-center space-x-3">
-            <span class="text-gray-700 text-sm">Bienvenido, {{ user.nombre }}</span>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-sign-out"
-              class="p-button-text p-button-plain"
-              (click)="onLogout()"
-              title="Cerrar sesión"
-            ></button>
-          </div>
+        <div class="flex items-center space-x-3">
+          <span class="text-gray-700 text-sm"
+            >Bienvenido, {{ user.nombre }}</span
+          >
+          <button
+            pButton
+            type="button"
+            icon="pi pi-sign-out"
+            class="p-button-text p-button-plain"
+            (click)="onLogout()"
+            title="Cerrar sesión"
+          ></button>
+        </div>
         }
       </div>
     </div>
