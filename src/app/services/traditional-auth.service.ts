@@ -3,7 +3,6 @@ import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import * as CryptoJS from 'crypto-js';
 
 // Interfaces para el nuevo sistema
 export interface User {
@@ -22,14 +21,10 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials {
-  email: string;
+  nombre: string;
+  apellido: string;
+  username: string;
   password: string;
-  name?: string;
-  nombres?: string;
-  apellidos?: string;
-  fechaNacimiento?: string;
-  genero?: string;
-  numeroCelular?: string;
 }
 
 export interface AuthResponse {
@@ -40,12 +35,39 @@ export interface AuthResponse {
   message?: string;
 }
 
-export interface TokenPayload {
-  userId: string;
-  username: string;
-  nombre?: string;
-  exp: number;
-  iat: number;
+// Interfaces para respuestas de funciones RPC
+export interface LoginRPCResponse {
+  success: boolean;
+  token?: string;
+  usuario?: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    username: string;
+  };
+  message?: string;
+}
+
+export interface VerificarSesionRPCResponse {
+  success: boolean;
+  usuario?: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    username: string;
+  };
+  message?: string;
+}
+
+export interface LogoutRPCResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface RegistrarUsuarioRPCResponse {
+  success: boolean;
+  usuario_id?: string;
+  message?: string;
 }
 
 @Injectable({
@@ -56,7 +78,7 @@ export class TraditionalAuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private initializedSubject = new BehaviorSubject<boolean>(false);
-  private tokenKey = 'kumi_auth_token';
+  private tokenKey = 'auth_token';
 
   // Observables públicos
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -99,77 +121,83 @@ export class TraditionalAuthService {
   }
 
   /**
-   * Verificar si hay un token válido almacenado
+   * Verificar si hay un token válido almacenado usando verificar_sesion RPC
    */
   private async checkStoredToken(): Promise<void> {
     this.loadingSubject.next(true);
-    // console.log('🔍 [AUTH] Verificando token almacenado...');
 
     try {
       const token = this.getStoredToken();
-      // console.log('🔍 [AUTH] Token encontrado:', !!token);
 
       if (token) {
-        // console.log('🔍 [AUTH] Verificando validez del token...');
+        // Usar función RPC verificar_sesion para validar el token
+        const { data, error } = await this.supabase.rpc('verificar_sesion', {
+          p_token: token
+        });
 
-        if (this.isTokenValid(token)) {
-          // console.log('✅ [AUTH] Token válido, obteniendo usuario...');
+        if (error) {
+          console.error('Error verificando sesión:', error);
+          this.clearToken();
+          return;
+        }
 
-          const user = await this.getUserFromToken(token);
-          if (user) {
-            // console.log('✅ [AUTH] Usuario restaurado desde token:', user.username);
-            this.currentUserSubject.next(user);
-          } else {
-            // console.log('❌ [AUTH] Usuario no encontrado en BD, limpiando token');
-            this.clearToken();
-          }
+        const response = data as VerificarSesionRPCResponse;
+
+        if (response.success && response.usuario) {
+          // Convertir respuesta RPC a objeto User
+          const user: User = {
+            id: response.usuario.id,
+            username: response.usuario.username,
+            nombre: response.usuario.nombre,
+            apellido: response.usuario.apellido,
+            isActive: true,
+            createdAt: new Date().toISOString()
+          };
+          this.currentUserSubject.next(user);
         } else {
-          // console.log('❌ [AUTH] Token expirado o inválido, limpiando');
+          // Token inválido o sesión expirada
           this.clearToken();
         }
       } else {
-        // console.log('ℹ️ [AUTH] No hay token almacenado');
+        // No hay token almacenado
         this.clearToken();
       }
     } catch (error) {
-      // console.error('❌ [AUTH] Error checking stored token:', error);
+      console.error('Error checking stored token:', error);
       this.clearToken();
     } finally {
       this.loadingSubject.next(false);
-      // console.log('🏁 [AUTH] Verificación de token completada');
     }
   }
 
   /**
-   * Obtener usuario desde el token
+   * Obtener usuario desde el token usando verificar_sesion RPC
    */
   private async getUserFromToken(token: string): Promise<User | null> {
     try {
-      const payload = this.decodeToken(token);
-      if (!payload) return null;
+      const { data, error } = await this.supabase.rpc('verificar_sesion', {
+        p_token: token
+      });
 
-      // Verificar que el usuario sigue activo en la BD
-      const { data, error } = await this.supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', payload.userId)
-        .eq('activo', true)
-        .single();
-
-      if (error || !data) {
-        console.error('User not found or inactive:', error);
+      if (error) {
+        console.error('Error verificando sesión:', error);
         return null;
       }
 
-      return {
-        id: data.id,
-        username: data.username,
-        nombre: data.nombre,
-        apellido: data.apellido,
-        isActive: data.activo,
-        createdAt: data.created_at,
-        lastLoginAt: data.updated_at
-      };
+      const response = data as VerificarSesionRPCResponse;
+
+      if (response.success && response.usuario) {
+        return {
+          id: response.usuario.id,
+          username: response.usuario.username,
+          nombre: response.usuario.nombre,
+          apellido: response.usuario.apellido,
+          isActive: true,
+          createdAt: new Date().toISOString()
+        };
+      }
+
+      return null;
     } catch (error) {
       console.error('Error getting user from token:', error);
       return null;
@@ -192,85 +220,65 @@ export class TraditionalAuthService {
   }
 
   /**
-   * Realizar login (lógica principal)
+   * Realizar login usando login_usuario RPC
    */
   private async performLogin(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // 1. Buscar usuario por username
-      const { data: userData, error: userError } = await this.supabase
-        .from('usuarios')
-        .select('*')
-        .eq('username', credentials.username)
-        .eq('activo', true)
-        .single();
-
-      // console.log('🔍 [LOGIN] Resultado consulta usuario:', { userData, userError });
-
-      if (userError || !userData) {
-        // console.log('❌ [LOGIN] Usuario no encontrado o error:', userError);
-        return {
-          success: false,
-          error: 'Credenciales inválidas'
-        };
-      }
-
-      // console.log('✅ [LOGIN] Usuario encontrado:', userData.username);
-
-      // 2. Verificar contraseña usando MD5
-      // console.log('🔍 [LOGIN] Verificando contraseña...');
-      // console.log('🔍 [LOGIN] Password input:', credentials.password);
-      // console.log('🔍 [LOGIN] Hash en BD:', userData.password_hash);
-
-      const isPasswordValid = await this.verifyPassword(credentials.password, userData.password_hash);
-      // console.log('🔍 [LOGIN] Password válida:', isPasswordValid);
-
-      if (!isPasswordValid) {
-        // console.log('❌ [LOGIN] Contraseña inválida');
-        return {
-          success: false,
-          error: 'Credenciales inválidas'
-        };
-      }
-
-      // console.log('✅ [LOGIN] Contraseña correcta');
-
-      // 3. Generar token JWT
-      const token = this.generateToken({
-        userId: userData.id,
-        username: userData.username,
-        nombre: userData.nombre || userData.username
+      // Llamar a la función RPC login_usuario
+      // La contraseña se envía en texto plano, el backend la hashea con bcrypt
+      const { data, error } = await this.supabase.rpc('login_usuario', {
+        p_username: credentials.username,
+        p_password: credentials.password
       });
 
-      // 4. Guardar sesión en BD (tabla sesiones)
-      await this.createSession(userData.id, token);
+      if (error) {
+        console.error('Error en login RPC:', error);
+        return {
+          success: false,
+          error: 'Error al iniciar sesión'
+        };
+      }
 
-      // 5. Actualizar último login
-      await this.updateLastLogin(userData.id);
+      const response = data as LoginRPCResponse;
 
-      // 6. Crear objeto user
+      if (!response.success) {
+        return {
+          success: false,
+          error: response.message || 'Credenciales inválidas'
+        };
+      }
+
+      if (!response.token || !response.usuario) {
+        return {
+          success: false,
+          error: 'Error en la respuesta del servidor'
+        };
+      }
+
+      // Convertir respuesta RPC a objeto User
       const user: User = {
-        id: userData.id,
-        username: userData.username,
-        nombre: userData.nombre,
-        apellido: userData.apellido,
-        isActive: userData.activo,
-        createdAt: userData.created_at,
+        id: response.usuario.id,
+        username: response.usuario.username,
+        nombre: response.usuario.nombre,
+        apellido: response.usuario.apellido,
+        isActive: true,
+        createdAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString()
       };
 
-      // 7. Guardar token y actualizar estado
-      this.storeToken(token);
+      // Guardar token y actualizar estado
+      this.storeToken(response.token);
       this.currentUserSubject.next(user);
 
       return {
         success: true,
         user,
-        token,
+        token: response.token,
         message: 'Sesión iniciada correctamente'
       };
 
     } catch (error: any) {
-      // console.error('Login error:', error);
+      console.error('Login error:', error);
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -294,60 +302,34 @@ export class TraditionalAuthService {
   }
 
   /**
-   * Realizar registro
+   * Realizar registro usando registrar_usuario RPC
    */
   private async performRegister(credentials: RegisterCredentials): Promise<AuthResponse> {
     try {
-      // 1. Verificar que el email no esté en uso
-      const { data: existingUser, error: checkError } = await this.supabase
-        .from('users')
-        .select('id')
-        .eq('email', credentials.email.toLowerCase())
-        .single();
+      // Llamar a la función RPC registrar_usuario
+      // La contraseña se envía en texto plano, el backend la hashea con bcrypt
+      const { data, error } = await this.supabase.rpc('registrar_usuario', {
+        p_nombre: credentials.nombre,
+        p_apellido: credentials.apellido,
+        p_username: credentials.username,
+        p_password: credentials.password
+      });
 
-      if (existingUser) {
+      if (error) {
+        console.error('Error en registro RPC:', error);
         return {
           success: false,
-          error: 'El email ya está registrado'
+          error: 'Error al registrar usuario'
         };
       }
 
-      // 2. Hash de la contraseña usando MD5
-      const passwordHash = this.hashPasswordMD5(credentials.password);
+      const response = data as RegistrarUsuarioRPCResponse;
 
-      // 3. Crear usuario
-      const { data: newUser, error: insertError } = await this.supabase
-        .from('users')
-        .insert({
-          email: credentials.email.toLowerCase(),
-          password_hash: passwordHash,
-          name: credentials.name || credentials.email.split('@')[0],
-          is_active: true,
-          email_verified: false
-        })
-        .select()
-        .single();
-
-      if (insertError || !newUser) {
-        // console.error('Insert error:', insertError);
+      if (!response.success) {
         return {
           success: false,
-          error: 'Error al crear el usuario'
+          error: response.message || 'Error al registrar usuario'
         };
-      }
-
-      // 4. Crear perfil si se proporcionaron datos adicionales
-      if (credentials.nombres || credentials.apellidos) {
-        await this.supabase
-          .from('user_profiles')
-          .insert({
-            user_id: newUser.id,
-            nombres: credentials.nombres,
-            apellidos: credentials.apellidos,
-            fecha_nacimiento: credentials.fechaNacimiento,
-            genero: credentials.genero,
-            numero_celular: credentials.numeroCelular
-          });
       }
 
       return {
@@ -356,7 +338,7 @@ export class TraditionalAuthService {
       };
 
     } catch (error: any) {
-      // console.error('Register error:', error);
+      console.error('Register error:', error);
       return {
         success: false,
         error: 'Error interno del servidor'
@@ -372,14 +354,27 @@ export class TraditionalAuthService {
   }
 
   /**
-   * Realizar logout
+   * Realizar logout usando logout_usuario RPC
    */
   private async performLogout(): Promise<AuthResponse> {
     try {
       const token = this.getStoredToken();
+      
       if (token) {
-        // Invalidar sesión en BD
-        await this.invalidateSession(token);
+        // Llamar a la función RPC logout_usuario antes de limpiar localStorage
+        const { data, error } = await this.supabase.rpc('logout_usuario', {
+          p_token: token
+        });
+
+        if (error) {
+          console.error('Error en logout RPC:', error);
+          // Continuar con el logout local aunque haya error en el servidor
+        } else {
+          const response = data as LogoutRPCResponse;
+          if (!response.success) {
+            console.warn('Logout RPC retornó success: false');
+          }
+        }
       }
 
       // Limpiar estado local
@@ -391,7 +386,7 @@ export class TraditionalAuthService {
         message: 'Sesión cerrada correctamente'
       };
     } catch (error) {
-      // console.error('Logout error:', error);
+      console.error('Logout error:', error);
       // Aunque haya error, limpiar estado local
       this.clearToken();
       this.currentUserSubject.next(null);
@@ -404,143 +399,14 @@ export class TraditionalAuthService {
   }
 
   // ============================================
-  // MÉTODOS AUXILIARES
+  // MÉTODOS AUXILIARES ELIMINADOS
   // ============================================
-
-  /**
-   * Generar token JWT simple (en producción usar librería JWT)
-   */
-  private generateToken(payload: { userId: string; username: string; nombre?: string }): string {
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-    const now = Math.floor(Date.now() / 1000);
-    const tokenPayload: TokenPayload = {
-      userId: payload.userId,
-      username: payload.username,
-      nombre: payload.nombre,
-      iat: now,
-      exp: now + (7 * 24 * 60 * 60) // 7 días
-    };
-    const payloadStr = btoa(JSON.stringify(tokenPayload));
-    const signature = btoa(`${header}.${payloadStr}.signature`); // Simplificado
-
-    return `${header}.${payloadStr}.${signature}`;
-  }
-
-  /**
-   * Decodificar token
-   */
-  private decodeToken(token: string): TokenPayload | null {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-
-      const payload = JSON.parse(atob(parts[1]));
-      return payload;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Verificar si el token es válido
-   */
-  private isTokenValid(token: string): boolean {
-    const payload = this.decodeToken(token);
-    if (!payload) return false;
-
-    const now = Math.floor(Date.now() / 1000);
-    return payload.exp > now;
-  }
-
-  /**
-   * Generar hash MD5 de contraseña
-   */
-  private hashPasswordMD5(password: string): string {
-    const hash = CryptoJS.MD5(password).toString();
-    // console.log('🔍 [HASH] Password:', password, '-> MD5 Hash:', hash);
-    return hash;
-  }
-
-  /**
-   * Verificar contraseña usando MD5
-   */
-  private async verifyPassword(password: string, hash: string): Promise<boolean> {
-    const hashedInput = this.hashPasswordMD5(password);
-    const isValid = hashedInput.toLowerCase() === hash.toLowerCase();
-    // console.log('🔍 [VERIFY] Input MD5 hash:', hashedInput);
-    // console.log('🔍 [VERIFY] Expected hash:', hash);
-    // console.log('🔍 [VERIFY] Match:', isValid);
-    return isValid;
-  }
-
-  /**
-   * Crear sesión en BD (tabla sesiones)
-   */
-  private async createSession(userId: string, token: string): Promise<void> {
-    try {
-      const { data, error } = await this.supabase
-        .from('sesiones')
-        .insert({
-          usuario_id: userId,
-          token: token,
-          activa: true
-        })
-        .select()
-        .single();
-
-      if (error) {
-        // console.error('❌ [SESSION] Error al crear sesión:', error);
-        throw error;
-      }
-
-      // console.log('✅ [SESSION] Sesión creada correctamente:', data?.id);
-    } catch (error) {
-      // console.error('❌ [SESSION] Error al crear sesión:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Invalidar sesión
-   */
-  private async invalidateSession(token: string): Promise<void> {
-    try {
-      const { error } = await this.supabase
-        .from('sesiones')
-        .update({ activa: false })
-        .eq('token', token);
-
-      if (error) {
-        // console.error('❌ [SESSION] Error al invalidar sesión:', error);
-      } else {
-        // console.log('✅ [SESSION] Sesión invalidada correctamente');
-      }
-    } catch (error) {
-      // console.error('❌ [SESSION] Error al invalidar sesión:', error);
-    }
-  }
-
-  /**
-   * Actualizar último login (updated_at en tabla usuarios)
-   */
-  private async updateLastLogin(userId: string): Promise<void> {
-    try {
-      const { error } = await this.supabase
-        .from('usuarios')
-        .update({
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (error) {
-        // console.error('❌ [LOGIN] Error al actualizar último login:', error);
-      } else {
-        // console.log('✅ [LOGIN] Último login actualizado');
-      }
-    } catch (error) {
-      // console.error('❌ [LOGIN] Error al actualizar último login:', error);
-    }
-  }
+  // Los siguientes métodos ya no son necesarios porque:
+  // - generateToken: El backend genera el token
+  // - decodeToken/isTokenValid: La validación se hace con verificar_sesion RPC
+  // - hashPasswordMD5/verifyPassword: El backend hashea y verifica con bcrypt
+  // - createSession/invalidateSession: El backend maneja las sesiones
+  // - updateLastLogin: El backend actualiza el último login en login_usuario
 
   // ============================================
   // GESTIÓN DE TOKENS
