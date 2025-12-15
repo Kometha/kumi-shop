@@ -69,6 +69,11 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit() {
+    // Prevenir múltiples ejecuciones si ya está procesando
+    if (this.loading) {
+      return;
+    }
+
     if (!this.loginForm.valid) {
       // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.loginForm.controls).forEach((key) => {
