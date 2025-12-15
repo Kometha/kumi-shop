@@ -65,51 +65,57 @@ export interface Categoria {
   providedIn: 'root'
 })
 export class ProductosService {
-  private supabase: SupabaseClient;
+  constructor(private supabaseService: SupabaseService) {}
 
-  constructor(private supabaseService: SupabaseService) {
-    // Usar el cliente compartido de Supabase que incluye headers de autenticación
-    this.supabase = this.supabaseService.getClient();
+  /**
+   * Obtener el cliente de Supabase (siempre actualizado)
+   */
+  private get supabase(): SupabaseClient {
+    return this.supabaseService.getClient();
   }
 
   /**
-   * Obtener todos los productos activos con sus relaciones
+   * Obtener headers de autenticación para queries
+   */
+  private getAuthHeaders(): Record<string, string> {
+    return this.supabaseService.getAuthHeaders();
+  }
+
+  /**
+   * Obtener token de autenticación del localStorage
+   * @throws Error si no hay token disponible
+   */
+  private getToken(): string {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('No hay token de autenticación. Por favor, inicia sesión.');
+    }
+    return token;
+  }
+
+  /**
+   * Obtener todos los productos activos con sus relaciones usando RPC
    */
   getProductos(): Observable<Product[]> {
     return from(
-      this.supabase
-        .from('productos')
-        .select(`
-          id,
-          imagen_url,
-          nombre,
-          numero_codigo_barra,
-          categoria_id,
-          descripcion,
-          categorias(id, nombre, descripcion),
-          inventario(stock_actual, stock_minimo),
-          precios(costo, precio_venta_lempiras, margen_porcentaje, margen_absoluto, activo),
-          activo
-        `)
-        .eq('activo', true)
-    ).pipe(
-      map((response) => {
-        if (response.error) {
-          console.error('❌ [PRODUCTOS] Error al obtener productos:', response.error);
-          throw new Error(response.error.message);
+      (async () => {
+        const token = this.getToken();
+        const { data, error } = await this.supabase.rpc('get_productos', {
+          p_token: token
+        });
+
+        if (error) {
+          console.error('❌ [PRODUCTOS] Error al obtener productos:', error);
+          throw new Error(error.message);
         }
 
-        // console.log('✅ [PRODUCTOS] Productos obtenidos:', response.data?.length);
-        // console.log('🔍 [PRODUCTOS] Estructura de datos:', JSON.stringify(response.data?.[0], null, 2));
-
-        // Transformar los datos de Supabase al formato que usa el componente
-        // Filtrar precios activos durante la transformación
-        const productos = this.transformProductos(response.data as any[]);
-        // console.log('✅ [PRODUCTOS] Productos transformados:', JSON.stringify(productos[0], null, 2));
+        // Los datos ya vienen en formato JSON con las relaciones incluidas
+        const productos = this.transformProductos(data as any[]);
         return productos;
-      }),
+      })()
+    ).pipe(
       catchError((error) => {
-        // console.error('❌ [PRODUCTOS] Error en petición:', error);
+        console.error('❌ [PRODUCTOS] Error en petición:', error);
         throw error;
       })
     );
@@ -211,37 +217,31 @@ export class ProductosService {
   }
 
   /**
-   * Obtener un producto por ID
+   * Obtener un producto por ID usando RPC
    */
   getProductoById(id: number): Observable<Product | null> {
     return from(
-      this.supabase
-        .from('productos')
-        .select(`
-          id,
-          imagen_url,
-          nombre,
-          numero_codigo_barra,
-          categoria_id,
-          descripcion,
-          categorias(id, nombre, descripcion),
-          inventario(stock_actual, stock_minimo),
-          precios(costo, precio_venta_lempiras, margen_porcentaje, margen_absoluto, activo),
-          activo
-        `)
-        .eq('id', id)
-        .eq('activo', true)
-        .single()
-    ).pipe(
-      map((response) => {
-        if (response.error) {
-          // console.error('❌ [PRODUCTOS] Error al obtener producto:', response.error);
+      (async () => {
+        const token = this.getToken();
+        const { data, error } = await this.supabase.rpc('get_producto_by_id', {
+          p_token: token,
+          p_id: id
+        });
+
+        if (error) {
+          console.error('❌ [PRODUCTOS] Error al obtener producto:', error);
           return null;
         }
 
-        const productos = this.transformProductos([response.data]);
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          return null;
+        }
+
+        // Los datos pueden venir como array o como objeto único
+        const productoData = Array.isArray(data) ? data[0] : data;
+        const productos = this.transformProductos([productoData]);
         return productos.length > 0 ? productos[0] : null;
-      })
+      })()
     );
   }
 
@@ -347,7 +347,8 @@ export class ProductosService {
               activo: true
             })
             .select()
-            .single();
+            .single()
+            .headers(this.getAuthHeaders());
 
           if (productoError || !productoData) {
             // console.error('❌ [PRODUCTOS] Error al crear producto:', productoError);
@@ -363,12 +364,13 @@ export class ProductosService {
               producto_id: productoData.id,
               stock_actual: producto.stock,
               stock_minimo: producto.stockMinimo
-            });
+            })
+            .headers(this.getAuthHeaders());
 
           if (inventarioError) {
             // console.error('❌ [PRODUCTOS] Error al crear inventario:', inventarioError);
             // Intentar eliminar el producto creado
-            await this.supabase.from('productos').delete().eq('id', productoData.id);
+            await this.supabase.from('productos').delete().eq('id', productoData.id).headers(this.getAuthHeaders());
             throw new Error(`Error al crear inventario: ${inventarioError.message}`);
           }
 
@@ -383,13 +385,14 @@ export class ProductosService {
               margen_porcentaje: margenPorcentaje,
               margen_absoluto: margenAbsoluto,
               activo: true
-            });
+            })
+            .headers(this.getAuthHeaders());
 
           if (preciosError) {
             // console.error('❌ [PRODUCTOS] Error al crear precios:', preciosError);
             // Intentar eliminar el producto y inventario creados
-            await this.supabase.from('inventario').delete().eq('producto_id', productoData.id);
-            await this.supabase.from('productos').delete().eq('id', productoData.id);
+            await this.supabase.from('inventario').delete().eq('producto_id', productoData.id).headers(this.getAuthHeaders());
+            await this.supabase.from('productos').delete().eq('id', productoData.id).headers(this.getAuthHeaders());
             throw new Error(`Error al crear precios: ${preciosError.message}`);
           }
 
@@ -422,13 +425,14 @@ export class ProductosService {
     return from(
       (async () => {
         try {
-          // 1. Obtener imagen actual del producto antes de actualizar
-          const { data: productoActual } = await this.supabase
-            .from('productos')
-            .select('imagen_url')
-            .eq('id', id)
-            .single();
+          // 1. Obtener imagen actual del producto antes de actualizar usando RPC
+          const token = this.getToken();
+          const { data: productoData } = await this.supabase.rpc('get_producto_by_id', {
+            p_token: token,
+            p_id: id
+          });
 
+          const productoActual = Array.isArray(productoData) ? productoData[0] : productoData;
           const imagenActual = productoActual?.imagen_url;
 
           // 2. Manejar eliminación de imagen
@@ -483,7 +487,8 @@ export class ProductosService {
             const { error: productoError } = await this.supabase
               .from('productos')
               .update(updateData)
-              .eq('id', id);
+              .eq('id', id)
+              .headers(this.getAuthHeaders());
 
             if (productoError) {
               // console.error('❌ [PRODUCTOS] Error al actualizar producto:', productoError);
@@ -500,7 +505,8 @@ export class ProductosService {
             const { error: inventarioError } = await this.supabase
               .from('inventario')
               .update(inventarioData)
-              .eq('producto_id', id);
+              .eq('producto_id', id)
+              .headers(this.getAuthHeaders());
 
             if (inventarioError) {
               console.error('❌ [PRODUCTOS] Error al actualizar inventario:', inventarioError);
@@ -521,7 +527,8 @@ export class ProductosService {
               .from('precios')
               .update(preciosData)
               .eq('producto_id', id)
-              .eq('activo', true);
+              .eq('activo', true)
+              .headers(this.getAuthHeaders());
 
             if (preciosError) {
               console.error('❌ [PRODUCTOS] Error al actualizar precios:', preciosError);
@@ -560,6 +567,7 @@ export class ProductosService {
         .from('productos')
         .update({ activo: false })
         .eq('id', id)
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
@@ -572,23 +580,25 @@ export class ProductosService {
   }
 
   /**
-   * Obtener todas las categorías activas
+   * Obtener todas las categorías activas usando RPC
    */
   getCategorias(): Observable<Categoria[]> {
     return from(
-      this.supabase
-        .from('categorias')
-        .select('id, nombre, descripcion, activo')
-        .eq('activo', true)
-    ).pipe(
-      map((response) => {
-        if (response.error) {
-          console.error('❌ [PRODUCTOS] Error al obtener categorías:', response.error);
-          throw new Error(response.error.message);
+      (async () => {
+        const token = this.getToken();
+        const { data, error } = await this.supabase.rpc('get_categorias', {
+          p_token: token
+        });
+
+        if (error) {
+          console.error('❌ [PRODUCTOS] Error al obtener categorías:', error);
+          throw new Error(error.message);
         }
-        console.log('✅ [PRODUCTOS] Categorías obtenidas:', response.data?.length);
-        return response.data as Categoria[];
-      }),
+
+        console.log('✅ [PRODUCTOS] Categorías obtenidas:', data?.length);
+        return data as Categoria[];
+      })()
+    ).pipe(
       catchError((error) => {
         console.error('❌ [PRODUCTOS] Error en petición de categorías:', error);
         throw error;
