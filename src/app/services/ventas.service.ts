@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseService } from './supabase.service';
 import { Pedido } from './interfaces/ventas.interfaces';
 
 // Interfaz para Canal
@@ -54,11 +54,9 @@ export interface CrearVentaResponse {
 export class VentasService {
   private supabase: SupabaseClient;
 
-  constructor() {
-    this.supabase = createClient(
-      environment.supabase.url,
-      environment.supabase.anonKey
-    );
+  constructor(private supabaseService: SupabaseService) {
+    // Usar el cliente compartido de Supabase que incluye headers de autenticación
+    this.supabase = this.supabaseService.getClient();
   }
 
   getVentas(): Observable<Pedido[]> {
