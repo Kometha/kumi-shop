@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseService } from './supabase.service';
 
 // Interfaz para las versiones de la app
 export interface AppVersion {
@@ -18,11 +18,9 @@ export interface AppVersion {
 export class AppVersionsService {
   private supabase: SupabaseClient;
 
-  constructor() {
-    this.supabase = createClient(
-      environment.supabase.url,
-      environment.supabase.anonKey
-    );
+  constructor(private supabaseService: SupabaseService) {
+    // Usar el cliente compartido de Supabase que incluye headers de autenticación
+    this.supabase = this.supabaseService.getClient();
   }
 
   /**
