@@ -16,11 +16,20 @@ export interface AppVersion {
   providedIn: 'root'
 })
 export class AppVersionsService {
-  private supabase: SupabaseClient;
+  constructor(private supabaseService: SupabaseService) {}
 
-  constructor(private supabaseService: SupabaseService) {
-    // Usar el cliente compartido de Supabase que incluye headers de autenticación
-    this.supabase = this.supabaseService.getClient();
+  /**
+   * Obtener el cliente de Supabase (siempre actualizado)
+   */
+  private get supabase(): SupabaseClient {
+    return this.supabaseService.getClient();
+  }
+
+  /**
+   * Obtener headers de autenticación para queries
+   */
+  private getAuthHeaders(): Record<string, string> {
+    return this.supabaseService.getAuthHeaders();
   }
 
   /**
@@ -32,6 +41,7 @@ export class AppVersionsService {
         .from('app_versions')
         .select('id, version_name, description, apk_url')
         .order('id', { ascending: false })
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
