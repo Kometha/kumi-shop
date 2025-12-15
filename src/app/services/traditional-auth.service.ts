@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseService } from './supabase.service';
 
 // Interfaces para el nuevo sistema
 export interface User {
@@ -86,19 +86,9 @@ export class TraditionalAuthService {
   public initialized$ = this.initializedSubject.asObservable();
   public isAuthenticated$ = this.currentUser$.pipe(map(user => !!user));
 
-  constructor() {
-    // console.log('🚀 [AUTH] Traditional Auth Service initialized');
-    // Solo usar Supabase como cliente de base de datos
-    this.supabase = createClient(
-      environment.supabase.url,
-      environment.supabase.anonKey,
-      {
-        auth: {
-          persistSession: false, // ¡NO persistir sesiones de Supabase!
-          autoRefreshToken: false
-        }
-      }
-    );
+  constructor(private supabaseService: SupabaseService) {
+    // Usar el cliente compartido de Supabase
+    this.supabase = this.supabaseService.getClient();
 
     // Verificar token almacenado al inicializar de forma síncrona
     this.initializeAuth();
@@ -130,6 +120,9 @@ export class TraditionalAuthService {
       const token = this.getStoredToken();
 
       if (token) {
+        // Actualizar header Authorization antes de verificar sesión
+        this.supabaseService.updateAuthToken(token);
+
         // Usar función RPC verificar_sesion para validar el token
         const { data, error } = await this.supabase.rpc('verificar_sesion', {
           p_token: token
@@ -138,6 +131,7 @@ export class TraditionalAuthService {
         if (error) {
           console.error('Error verificando sesión:', error);
           this.clearToken();
+          this.supabaseService.clearAuthToken();
           return;
         }
 
@@ -157,14 +151,17 @@ export class TraditionalAuthService {
         } else {
           // Token inválido o sesión expirada
           this.clearToken();
+          this.supabaseService.clearAuthToken();
         }
       } else {
         // No hay token almacenado
         this.clearToken();
+        this.supabaseService.clearAuthToken();
       }
     } catch (error) {
       console.error('Error checking stored token:', error);
       this.clearToken();
+      this.supabaseService.clearAuthToken();
     } finally {
       this.loadingSubject.next(false);
     }
@@ -269,6 +266,9 @@ export class TraditionalAuthService {
       // Guardar token y actualizar estado
       this.storeToken(response.token);
       this.currentUserSubject.next(user);
+
+      // Actualizar header Authorization en todas las peticiones de Supabase
+      this.supabaseService.updateAuthToken(response.token);
 
       return {
         success: true,
@@ -381,6 +381,9 @@ export class TraditionalAuthService {
       this.clearToken();
       this.currentUserSubject.next(null);
 
+      // Limpiar header Authorization de todas las peticiones de Supabase
+      this.supabaseService.clearAuthToken();
+
       return {
         success: true,
         message: 'Sesión cerrada correctamente'
@@ -390,6 +393,9 @@ export class TraditionalAuthService {
       // Aunque haya error, limpiar estado local
       this.clearToken();
       this.currentUserSubject.next(null);
+
+      // Limpiar header Authorization de todas las peticiones de Supabase
+      this.supabaseService.clearAuthToken();
 
       return {
         success: true,
