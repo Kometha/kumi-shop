@@ -347,8 +347,7 @@ export class ProductosService {
               activo: true
             })
             .select()
-            .single()
-            .headers(this.getAuthHeaders());
+            .single();
 
           if (productoError || !productoData) {
             // console.error('❌ [PRODUCTOS] Error al crear producto:', productoError);
@@ -364,13 +363,12 @@ export class ProductosService {
               producto_id: productoData.id,
               stock_actual: producto.stock,
               stock_minimo: producto.stockMinimo
-            })
-            .headers(this.getAuthHeaders());
+            });
 
           if (inventarioError) {
             // console.error('❌ [PRODUCTOS] Error al crear inventario:', inventarioError);
             // Intentar eliminar el producto creado
-            await this.supabase.from('productos').delete().eq('id', productoData.id).headers(this.getAuthHeaders());
+            await this.supabase.from('productos').delete().eq('id', productoData.id);
             throw new Error(`Error al crear inventario: ${inventarioError.message}`);
           }
 
@@ -385,14 +383,13 @@ export class ProductosService {
               margen_porcentaje: margenPorcentaje,
               margen_absoluto: margenAbsoluto,
               activo: true
-            })
-            .headers(this.getAuthHeaders());
+            });
 
           if (preciosError) {
             // console.error('❌ [PRODUCTOS] Error al crear precios:', preciosError);
             // Intentar eliminar el producto y inventario creados
-            await this.supabase.from('inventario').delete().eq('producto_id', productoData.id).headers(this.getAuthHeaders());
-            await this.supabase.from('productos').delete().eq('id', productoData.id).headers(this.getAuthHeaders());
+            await this.supabase.from('inventario').delete().eq('producto_id', productoData.id);
+            await this.supabase.from('productos').delete().eq('id', productoData.id);
             throw new Error(`Error al crear precios: ${preciosError.message}`);
           }
 
@@ -487,8 +484,7 @@ export class ProductosService {
             const { error: productoError } = await this.supabase
               .from('productos')
               .update(updateData)
-              .eq('id', id)
-              .headers(this.getAuthHeaders());
+              .eq('id', id);
 
             if (productoError) {
               // console.error('❌ [PRODUCTOS] Error al actualizar producto:', productoError);
@@ -505,8 +501,7 @@ export class ProductosService {
             const { error: inventarioError } = await this.supabase
               .from('inventario')
               .update(inventarioData)
-              .eq('producto_id', id)
-              .headers(this.getAuthHeaders());
+              .eq('producto_id', id);
 
             if (inventarioError) {
               console.error('❌ [PRODUCTOS] Error al actualizar inventario:', inventarioError);
@@ -527,8 +522,7 @@ export class ProductosService {
               .from('precios')
               .update(preciosData)
               .eq('producto_id', id)
-              .eq('activo', true)
-              .headers(this.getAuthHeaders());
+              .eq('activo', true);
 
             if (preciosError) {
               console.error('❌ [PRODUCTOS] Error al actualizar precios:', preciosError);
@@ -567,7 +561,6 @@ export class ProductosService {
         .from('productos')
         .update({ activo: false })
         .eq('id', id)
-        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
