@@ -41,7 +41,6 @@ export class AppVersionsService {
         .from('app_versions')
         .select('id, version_name, description, apk_url')
         .order('id', { ascending: false })
-        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
