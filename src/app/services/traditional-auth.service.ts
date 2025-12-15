@@ -74,7 +74,6 @@ export interface RegistrarUsuarioRPCResponse {
   providedIn: 'root'
 })
 export class TraditionalAuthService {
-  private supabase: SupabaseClient;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private initializedSubject = new BehaviorSubject<boolean>(false);
@@ -87,11 +86,15 @@ export class TraditionalAuthService {
   public isAuthenticated$ = this.currentUser$.pipe(map(user => !!user));
 
   constructor(private supabaseService: SupabaseService) {
-    // Usar el cliente compartido de Supabase
-    this.supabase = this.supabaseService.getClient();
-
     // Verificar token almacenado al inicializar de forma síncrona
     this.initializeAuth();
+  }
+
+  /**
+   * Obtener el cliente de Supabase (siempre actualizado)
+   */
+  private get supabase(): SupabaseClient {
+    return this.supabaseService.getClient();
   }
 
   /**
