@@ -14,8 +14,28 @@ export class SupabaseService {
   private currentToken: string | null = null;
 
   constructor() {
+    // Intentar cargar token del localStorage al inicializar
+    const token = this.loadTokenFromStorage();
+    
     // Crear cliente de Supabase con configuración inicial
-    this.supabase = createClient(
+    this.supabase = this.createClient(token);
+  }
+
+  /**
+   * Crear cliente de Supabase con headers de autenticación
+   * @param token Token de autenticación opcional
+   */
+  private createClient(token: string | null = null): SupabaseClient {
+    const headers: Record<string, string> = {
+      'X-Client-Info': 'kumi-shop@1.0.0'
+    };
+
+    // Agregar header x-app-token si hay token (para RLS policies)
+    if (token) {
+      headers['x-app-token'] = token;
+    }
+
+    return createClient(
       environment.supabase.url,
       environment.supabase.anonKey,
       {
@@ -24,15 +44,10 @@ export class SupabaseService {
           autoRefreshToken: false
         },
         global: {
-          headers: {
-            'X-Client-Info': 'kumi-shop@1.0.0'
-          }
+          headers
         }
       }
     );
-
-    // Intentar cargar token del localStorage al inicializar
-    this.loadTokenFromStorage();
   }
 
   /**
@@ -43,56 +58,39 @@ export class SupabaseService {
   }
 
   /**
-   * Actualizar el header de Authorization con el token
-   * @param token Token de autenticación (sin 'Bearer')
+   * Actualizar el header x-app-token con el token
+   * Recrea el cliente para aplicar los nuevos headers
+   * @param token Token de autenticación
    */
   updateAuthToken(token: string | null): void {
-    this.currentToken = token;
-
-    try {
-      if (token) {
-        // Agregar header Authorization con Bearer token
-        // Usar rest.headers que es un objeto mutable en Supabase JS
-        if (this.supabase.rest && this.supabase.rest.headers) {
-          this.supabase.rest.headers['Authorization'] = `Bearer ${token}`;
-        }
-      } else {
-        // Remover header Authorization si no hay token
-        if (this.supabase.rest && this.supabase.rest.headers) {
-          delete this.supabase.rest.headers['Authorization'];
-        }
-      }
-    } catch (error) {
-      console.error('Error actualizando header Authorization:', error);
+    // Solo recrear si el token cambió
+    if (this.currentToken !== token) {
+      this.currentToken = token;
+      // Recrear el cliente con el nuevo token
+      this.supabase = this.createClient(token);
     }
   }
 
   /**
-   * Cargar token del localStorage y actualizar headers
+   * Cargar token del localStorage
    */
-  private loadTokenFromStorage(): void {
+  private loadTokenFromStorage(): string | null {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        this.updateAuthToken(token);
-      }
+      return localStorage.getItem('auth_token');
     } catch (error) {
       console.error('Error al cargar token del localStorage:', error);
+      return null;
     }
   }
 
   /**
-   * Limpiar el header de Authorization
+   * Limpiar el header x-app-token
+   * Recrea el cliente sin el header x-app-token
    */
   clearAuthToken(): void {
     this.currentToken = null;
-    try {
-      if (this.supabase.rest && this.supabase.rest.headers) {
-        delete this.supabase.rest.headers['Authorization'];
-      }
-    } catch (error) {
-      console.error('Error limpiando header Authorization:', error);
-    }
+    // Recrear el cliente sin el token
+    this.supabase = this.createClient(null);
   }
 
   /**
@@ -100,6 +98,18 @@ export class SupabaseService {
    */
   getCurrentToken(): string | null {
     return this.currentToken;
+  }
+
+  /**
+   * Obtener headers de autenticación para usar en queries
+   * Devuelve un objeto con el header x-app-token si hay token disponible
+   */
+  getAuthHeaders(): Record<string, string> {
+    const token = this.getCurrentToken();
+    if (token) {
+      return { 'x-app-token': token };
+    }
+    return {};
   }
 }
 
