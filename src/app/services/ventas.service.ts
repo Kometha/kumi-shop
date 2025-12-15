@@ -52,11 +52,20 @@ export interface CrearVentaResponse {
   providedIn: 'root'
 })
 export class VentasService {
-  private supabase: SupabaseClient;
+  constructor(private supabaseService: SupabaseService) {}
 
-  constructor(private supabaseService: SupabaseService) {
-    // Usar el cliente compartido de Supabase que incluye headers de autenticación
-    this.supabase = this.supabaseService.getClient();
+  /**
+   * Obtener el cliente de Supabase (siempre actualizado)
+   */
+  private get supabase(): SupabaseClient {
+    return this.supabaseService.getClient();
+  }
+
+  /**
+   * Obtener headers de autenticación para queries
+   */
+  private getAuthHeaders(): Record<string, string> {
+    return this.supabaseService.getAuthHeaders();
   }
 
   getVentas(): Observable<Pedido[]> {
@@ -65,6 +74,7 @@ export class VentasService {
         .schema('ventas')
         .from('vw_pedidos')
         .select('*')
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         return response.data as Pedido[];
@@ -87,6 +97,7 @@ export class VentasService {
         .select('id, nombre, url_icono')
         .eq('activo', true)
         .order('nombre', { ascending: true })
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
@@ -114,6 +125,7 @@ export class VentasService {
         .select('id, nombre')
         .eq('activo', true)
         .order('nombre', { ascending: true })
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
@@ -141,6 +153,7 @@ export class VentasService {
         .select('id, nombre, tipo, comision_porcentaje, comision_fija, meses_plazo, comision_pos_porcentaje, activo')
         .eq('activo', true)
         .order('nombre', { ascending: true })
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
@@ -168,6 +181,7 @@ export class VentasService {
         .select('id, nombre, tipo, costo_base, es_costo_fijo, activo, descripcion')
         .eq('activo', true)
         .order('nombre', { ascending: true })
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
@@ -192,6 +206,7 @@ export class VentasService {
       this.supabase
         .schema('ventas')
         .rpc('crear_venta_completa', { p_venta_json: ventaJSON })
+        .headers(this.getAuthHeaders())
     ).pipe(
       map((response) => {
         if (response.error) {
