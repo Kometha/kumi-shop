@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseService } from './supabase.service';
 
 // Interfaz para los datos que vienen de Supabase
 export interface ProductoFromDB {
@@ -67,11 +67,9 @@ export interface Categoria {
 export class ProductosService {
   private supabase: SupabaseClient;
 
-  constructor() {
-    this.supabase = createClient(
-      environment.supabase.url,
-      environment.supabase.anonKey
-    );
+  constructor(private supabaseService: SupabaseService) {
+    // Usar el cliente compartido de Supabase que incluye headers de autenticación
+    this.supabase = this.supabaseService.getClient();
   }
 
   /**
