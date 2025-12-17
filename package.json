@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "dev": "ng serve --open --watch",
-    "build": "ng build --configuration production",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "start": "bun run ng serve",
+    "dev": "bun run ng serve --open --watch",
+    "build": "bun run ng build --configuration production",
+    "watch": "bun run ng build --watch --configuration development",
+    "test": "bun run ng test"
   },
   "private": true,
   "dependencies": {
@@ -52,7 +52,6 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.6.0",
-    "zone.js": "^0.15.0"
+    "typescript": "~5.6.0"
   }
 }
