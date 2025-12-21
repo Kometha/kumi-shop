@@ -42,7 +42,8 @@ export class DashboardSidebarComponent {
       'dashboard': '/dashboard',
       'inventario': '/inventario',
       'ventas': '/ventas',
-      'aplicacion-movil': '/aplicacion-movil'
+      'aplicacion-movil': '/aplicacion-movil',
+      'compras': '/compras'
     };
 
     const route = routes[menu] || '/dashboard';

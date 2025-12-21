@@ -42,6 +42,16 @@
       <span class="menu-label">Ventas</span>
     </a>
 
+    <!-- Compras -->
+    <a
+      class="menu-item"
+      [class.active]="selectedMenu === 'compras'"
+      (click)="onMenuSelect('compras')"
+    >
+      <i class="pi pi-shopping-bag menu-icon"></i>
+      <span class="menu-label">Compras</span>
+    </a>
+
     <!-- Separador -->
     <div class="menu-separator"></div>
 
