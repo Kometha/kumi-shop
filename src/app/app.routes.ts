@@ -7,6 +7,7 @@ import { DashboardHomeComponent } from './dashboard/dashboard-home/dashboard-hom
 import { InventoryComponent } from './inventory/inventory.component';
 import { VentasComponent } from './ventas-component/ventas-component.component';
 import { AplicacionMovilComponent } from './aplicacion-movil/aplicacion-movil.component';
+import { ComprasComponent } from './compras/compras.component';
 
 export const routes: Routes = [
   // Rutas públicas (solo accesibles si NO está autenticado)
@@ -38,6 +39,10 @@ export const routes: Routes = [
       {
         path: 'ventas',
         component: VentasComponent
+      },
+      {
+        path: 'compras',
+        component: ComprasComponent
       },
       {
         path: 'aplicacion-movil',
