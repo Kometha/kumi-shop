@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { SupabaseService } from './supabase.service';
 import { Pedido } from './interfaces/ventas.interfaces';
+import { SupabaseService } from './supabase.service';
 
 // Interfaz para Canal
 export interface Canal {

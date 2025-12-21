@@ -37,8 +37,9 @@ import { SeleccionarProductosModalComponent } from '../seleccionar-productos-mod
 export class VentasComponent implements OnInit {
   searchValue: string = '';
   loadingVentas: boolean = false;
-  ventas: Pedido[] = [];
-  filteredVentas: Pedido[] = [];
+  loading: boolean = false;
+  ventas: Pedido[] = []; // Placeholder para datos futuros
+  filteredVentas: Pedido[] = []; // Placeholder para datos futuros
 
   // Modales
   displayNuevaVentaModal: boolean = false;
