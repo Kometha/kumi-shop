@@ -76,6 +76,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private updateSelectedMenuFromRoute(url: string): void {
     if (url.includes('/inventario')) {
       this.selectedMenu = 'inventario';
+    } else if (url.includes('/compras')) {
+      this.selectedMenu = 'compras';
     } else if (url.includes('/dashboard') || url === '/') {
       this.selectedMenu = 'dashboard';
     } else {
