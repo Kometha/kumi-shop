@@ -1,4 +1,6 @@
 <div class="nueva-venta-modal">
+  <p-toast></p-toast>
+  
   <!-- Descripción -->
   <div class="modal-description mb-6">
     <p class="text-sm text-gray-600">Completa la información de la venta</p>
@@ -456,7 +458,7 @@
       type="button"
       label="Guardar Venta"
       class="p-button-primary"
-      (click)="guardarVenta()"
+      (click)="guardarVenta(); $event.stopPropagation()"
       [disabled]="loading"
     >
     </button>
