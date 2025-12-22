@@ -122,6 +122,7 @@
               class="p-button-rounded p-button-text p-button-sm mr-2"
               pTooltip="Ver detalles"
               tooltipPosition="top"
+              (click)="verDetallesPedido(venta)"
             ></button>
           </td>
         </tr>
@@ -176,4 +177,23 @@
     [productosDisponibles]="productosDisponibles"
     (productosSeleccionados)="onProductosSeleccionados($event)"
   ></app-seleccionar-productos-modal>
+</p-dialog>
+
+<!-- Modal para ver detalles del pedido -->
+<p-dialog
+  [(visible)]="displayDetallePedidoModal"
+  [modal]="true"
+  [style]="{ width: '70vw', minWidth: '800px', maxHeight: '90vh' }"
+  [breakpoints]="{ '1024px': '85vw', '640px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [showHeader]="true"
+  header="Detalles del Pedido"
+  (onHide)="onDetallePedidoModalHide()"
+>
+  <app-detalle-pedido-modal
+    [(visible)]="displayDetallePedidoModal"
+    [pedidoId]="pedidoIdSeleccionado"
+  ></app-detalle-pedido-modal>
 </p-dialog>
