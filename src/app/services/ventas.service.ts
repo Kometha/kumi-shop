@@ -48,6 +48,23 @@ export interface CrearVentaResponse {
   exito: boolean;
 }
 
+// Interfaz para DetallePedidoCompleto
+export interface DetallePedidoCompleto {
+  id: number;
+  producto_id: number;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  pedido_id: number;
+  descuento: number;
+  producto?: {
+    id: number;
+    producto: string;
+    imagen_url: string | null;
+    numero_codigo_barra: string | null;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -188,6 +205,81 @@ export class VentasService {
       }),
       catchError((error) => {
         console.error('❌ [VENTAS] Error en petición de tipos de envío:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener los detalles de un pedido con información del producto
+   */
+  getDetallesPedido(pedidoId: number): Observable<DetallePedidoCompleto[]> {
+    return from(
+      (async () => {
+        // Primero obtener los detalles del pedido
+        const { data: detalles, error: detallesError } = await this.supabase
+          .schema('ventas')
+          .from('pedidos_detalle')
+          .select('id, producto_id, cantidad, precio_unitario, subtotal, pedido_id, descuento')
+          .eq('pedido_id', pedidoId);
+
+        if (detallesError) {
+          console.error('❌ [VENTAS] Error al obtener detalles del pedido:', detallesError);
+          throw new Error(detallesError.message);
+        }
+
+        if (!detalles || detalles.length === 0) {
+          return [];
+        }
+
+        // Obtener los IDs de productos únicos
+        const productoIds = [...new Set(detalles.map((d: any) => d.producto_id))];
+
+        // Obtener información de los productos desde el schema public
+        const { data: productos, error: productosError } = await this.supabase
+          .schema('public')
+          .from('productos')
+          .select('id, nombre, descripcion, imagen_url, numero_codigo_barra')
+          .in('id', productoIds);
+
+        if (productosError) {
+          console.error('❌ [VENTAS] Error al obtener productos:', productosError);
+          throw new Error(productosError.message);
+        }
+
+        // Crear un mapa de productos por ID para acceso rápido
+        const productosMap = new Map(
+          (productos || []).map((p: any) => [p.id, p])
+        );
+
+        // Combinar detalles con información de productos
+        const detallesCompletos = detalles.map((detalle: any) => {
+          const producto = productosMap.get(detalle.producto_id);
+          return {
+            id: detalle.id,
+            producto_id: detalle.producto_id,
+            cantidad: detalle.cantidad,
+            precio_unitario: detalle.precio_unitario,
+            subtotal: detalle.subtotal,
+            pedido_id: detalle.pedido_id,
+            descuento: detalle.descuento || 0,
+            producto: producto
+              ? {
+                  id: producto.id,
+                  producto: producto.nombre,
+                  imagen_url: producto.imagen_url,
+                  numero_codigo_barra: producto.numero_codigo_barra,
+                }
+              : undefined,
+          } as DetallePedidoCompleto;
+        });
+
+        console.log('✅ [VENTAS] Detalles del pedido obtenidos:', detallesCompletos.length);
+        return detallesCompletos;
+      })()
+    ).pipe(
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de detalles del pedido:', error);
         throw error;
       })
     );
