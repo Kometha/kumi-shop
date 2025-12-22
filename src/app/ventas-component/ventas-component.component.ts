@@ -14,6 +14,7 @@ import { VentasService } from '../services/ventas.service';
 import { Pedido } from '../services/interfaces/ventas.interfaces';
 import { NuevaVentaModalComponent } from '../nueva-venta-modal/nueva-venta-modal.component';
 import { SeleccionarProductosModalComponent } from '../seleccionar-productos-modal/seleccionar-productos-modal.component';
+import { DetallePedidoModalComponent } from '../detalle-pedido-modal/detalle-pedido-modal.component';
 
 @Component({
   selector: 'app-ventas',
@@ -30,6 +31,7 @@ import { SeleccionarProductosModalComponent } from '../seleccionar-productos-mod
     ToastModule,
     NuevaVentaModalComponent,
     SeleccionarProductosModalComponent,
+    DetallePedidoModalComponent,
   ],
   templateUrl: './ventas.component.html',
   styleUrl: './ventas.component.scss',
@@ -44,6 +46,8 @@ export class VentasComponent implements OnInit {
   // Modales
   displayNuevaVentaModal: boolean = false;
   displaySeleccionarProductosModal: boolean = false;
+  displayDetallePedidoModal: boolean = false;
+  pedidoIdSeleccionado: number | null = null;
   
   @ViewChild('nuevaVentaModal') nuevaVentaModalRef!: NuevaVentaModalComponent;
   productosDisponibles: Product[] = [];
@@ -178,6 +182,30 @@ export class VentasComponent implements OnInit {
       console.error('Error al formatear fecha:', error);
       return '-';
     }
+  }
+
+  // Método para abrir el modal de detalles del pedido
+  verDetallesPedido(venta: Pedido): void {
+    console.log(venta);
+    // Obtener el ID del pedido desde el objeto venta
+    // El ID está en venta.item.id según la interfaz
+    if (venta.item && venta.item.id) {
+      this.pedidoIdSeleccionado = venta.item.id;
+      this.displayDetallePedidoModal = true;
+      document.body.style.overflow = 'hidden';
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Error',
+        detail: 'No se pudo obtener el ID del pedido',
+      });
+    }
+  }
+
+  // Método para cerrar el modal de detalles del pedido
+  onDetallePedidoModalHide(): void {
+    this.displayDetallePedidoModal = false;
+    document.body.style.overflow = 'auto';
   }
 
 }
