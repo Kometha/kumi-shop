@@ -1,4 +1,12 @@
-import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  Output,
+  EventEmitter,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -227,8 +235,12 @@ export class NuevaVentaModalComponent implements OnInit {
 
   onMetodoPagoDropdownShow(container: HTMLElement): void {
     setTimeout(() => {
-      const inputElement = container.querySelector('.p-dropdown') as HTMLElement;
-      const panelElement = document.querySelector('.metodo-pago-dropdown-panel') as HTMLElement;
+      const inputElement = container.querySelector(
+        '.p-dropdown'
+      ) as HTMLElement;
+      const panelElement = document.querySelector(
+        '.metodo-pago-dropdown-panel'
+      ) as HTMLElement;
 
       if (inputElement && panelElement) {
         const inputWidth = inputElement.getBoundingClientRect().width;
@@ -271,23 +283,34 @@ export class NuevaVentaModalComponent implements OnInit {
   }
 
   eliminarMetodoPago(id: number): void {
-    this.metodosPagoSeleccionados = this.metodosPagoSeleccionados.filter((mp) => mp.id !== id);
+    this.metodosPagoSeleccionados = this.metodosPagoSeleccionados.filter(
+      (mp) => mp.id !== id
+    );
   }
 
   getMetodosPagoDisponibles(): MetodoPago[] {
-    const idsSeleccionados = this.metodosPagoSeleccionados.map((mp) => mp.metodoPago.id);
+    const idsSeleccionados = this.metodosPagoSeleccionados.map(
+      (mp) => mp.metodoPago.id
+    );
     return this.metodosPago.filter((mp) => !idsSeleccionados.includes(mp.id));
   }
 
   eliminarDetallePedido(id: number): void {
-    this.detallesPedido = this.detallesPedido.filter((detalle) => detalle.id !== id);
+    this.detallesPedido = this.detallesPedido.filter(
+      (detalle) => detalle.id !== id
+    );
   }
 
-  agregarProductos(productos: Array<{ producto: Product; cantidad: number }>): void {
+  agregarProductos(
+    productos: Array<{ producto: Product; cantidad: number }>
+  ): void {
     productos.forEach((item) => {
-      const existeIndex = this.detallesPedido.findIndex((detalle) => detalle.id === item.producto.id);
+      const existeIndex = this.detallesPedido.findIndex(
+        (detalle) => detalle.id === item.producto.id
+      );
       if (existeIndex !== -1) {
-        const nuevaCantidad = this.detallesPedido[existeIndex].cantidad + item.cantidad;
+        const nuevaCantidad =
+          this.detallesPedido[existeIndex].cantidad + item.cantidad;
         if (nuevaCantidad > item.producto.stock) {
           this.messageService.add({
             severity: 'error',
@@ -427,7 +450,9 @@ export class NuevaVentaModalComponent implements OnInit {
       return;
     }
 
-    const metodosSinMonto = this.metodosPagoSeleccionados.filter((mp) => !mp.monto || mp.monto <= 0);
+    const metodosSinMonto = this.metodosPagoSeleccionados.filter(
+      (mp) => !mp.monto || mp.monto <= 0
+    );
     if (metodosSinMonto.length > 0) {
       this.messageService.add({
         severity: 'warn',
@@ -447,7 +472,9 @@ export class NuevaVentaModalComponent implements OnInit {
           summary: 'Monto insuficiente',
           detail: `El monto pagado (${this.formatCurrency(
             this.calcularTotalMetodosPago()
-          )}) debe ser mayor o igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`,
+          )}) debe ser mayor o igual al total de la venta (${this.formatCurrency(
+            this.calcularTotal()
+          )})`,
         });
         return;
       }
@@ -458,7 +485,9 @@ export class NuevaVentaModalComponent implements OnInit {
           summary: 'Suma incorrecta',
           detail: `La suma de los métodos de pago (${this.formatCurrency(
             this.calcularTotalMetodosPago()
-          )}) debe ser igual al total de la venta (${this.formatCurrency(this.calcularTotal())})`,
+          )}) debe ser igual al total de la venta (${this.formatCurrency(
+            this.calcularTotal()
+          )})`,
         });
         return;
       }
@@ -486,13 +515,19 @@ export class NuevaVentaModalComponent implements OnInit {
         this.tipoEnvio?.costo_base !== undefined
           ? this.tipoEnvio.costo_base
           : null,
+      ignorarISV: this.ignorarISV,
     };
 
     const detallesJSON = this.detallesPedido.map((detalle) => ({
       productoId: detalle.id,
       cantidad: detalle.cantidad,
       precioUnitario: detalle.precio,
-      descuento: detalle.descuento || 0,
+      descuento:
+        detalle.descuento !== null &&
+        detalle.descuento !== undefined &&
+        !isNaN(Number(detalle.descuento))
+          ? Number(detalle.descuento)
+          : 0,
     }));
 
     const metodosPagoJSON = this.metodosPagoSeleccionados.map((mp) => ({
@@ -549,4 +584,3 @@ export class NuevaVentaModalComponent implements OnInit {
     });
   }
 }
-
