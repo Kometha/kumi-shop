@@ -1,0 +1,131 @@
+<div class="detalle-pedido-modal">
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+  </div>
+
+  <div *ngIf="!loading && detalles.length > 0">
+    <!-- Información del Pedido -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        Detalles del Pedido #{{ pedidoId }}
+      </h3>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="table-container bg-white rounded-lg border border-gray-200 mb-6">
+      <p-table
+        [value]="detalles"
+        [paginator]="false"
+        styleClass="p-datatable-gridlines"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 80px">Imagen</th>
+            <th>Producto</th>
+            <th style="width: 100px" class="text-center">Cantidad</th>
+            <th style="width: 150px" class="text-right">Precio Unitario</th>
+            <th style="width: 120px" class="text-right">Descuento</th>
+            <th style="width: 150px" class="text-right">Subtotal</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-detalle>
+          <tr>
+            <!-- Imagen -->
+            <td>
+              <p-image
+                [src]="getProductImageUrl(detalle.producto?.imagen_url || null)"
+                [preview]="true"
+                [alt]="detalle.producto?.producto || 'Producto'"
+                width="60"
+                height="60"
+                styleClass="product-image-preview"
+                [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }"
+              >
+              </p-image>
+            </td>
+
+            <!-- Producto -->
+            <td>
+              <div class="flex flex-col gap-1">
+                <span class="font-medium">
+                  {{ detalle.producto?.producto || `Producto ID: ${detalle.producto_id}` }}
+                </span>
+                <span *ngIf="detalle.producto?.numero_codigo_barra" class="text-xs text-gray-500">
+                  Código: {{ detalle.producto.numero_codigo_barra }}
+                </span>
+                <span *ngIf="!detalle.producto" class="text-xs text-gray-400 italic">
+                  Información del producto no disponible
+                </span>
+              </div>
+            </td>
+
+            <!-- Cantidad -->
+            <td class="text-center font-semibold">
+              {{ detalle.cantidad }}
+            </td>
+
+            <!-- Precio Unitario -->
+            <td class="text-right font-mono font-semibold">
+              {{ formatCurrency(detalle.precio_unitario) }}
+            </td>
+
+            <!-- Descuento -->
+            <td class="text-right font-mono">
+              <span *ngIf="detalle.descuento > 0" class="text-red-600">
+                -{{ formatCurrency(detalle.descuento) }}
+              </span>
+              <span *ngIf="detalle.descuento === 0 || !detalle.descuento" class="text-gray-400">
+                {{ formatCurrency(0) }}
+              </span>
+            </td>
+
+            <!-- Subtotal -->
+            <td class="text-right font-mono font-bold">
+              {{ formatCurrency(detalle.subtotal) }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center py-8">
+              <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+              <p class="text-gray-500">No hay productos en este pedido</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <!-- Resumen -->
+      <div *ngIf="detalles.length > 0" class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-3">
+        <div class="flex flex-col items-end gap-2">
+          <div class="flex items-center gap-4">
+            <span class="font-semibold text-gray-700 text-sm">Subtotal:</span>
+            <span class="font-mono font-semibold text-base text-gray-900">
+              {{ formatCurrency(calcularSubtotal()) }}
+            </span>
+          </div>
+          <div *ngIf="calcularTotalDescuentos() > 0" class="flex items-center gap-4">
+            <span class="font-semibold text-red-600 text-sm">Total Descuentos:</span>
+            <span class="font-mono font-semibold text-base text-red-600">
+              -{{ formatCurrency(calcularTotalDescuentos()) }}
+            </span>
+          </div>
+          <div class="flex items-center gap-4 pt-2 border-t border-gray-300">
+            <span class="font-semibold text-gray-900 text-base">Total:</span>
+            <span class="font-mono font-bold text-xl text-gray-900">
+              {{ formatCurrency(calcularTotal()) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && detalles.length === 0" class="text-center py-8">
+    <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+    <p class="text-gray-500">No se encontraron detalles para este pedido</p>
+  </div>
+</div>
+
