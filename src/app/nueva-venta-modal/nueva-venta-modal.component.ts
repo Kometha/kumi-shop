@@ -516,6 +516,7 @@ export class NuevaVentaModalComponent implements OnInit {
           ? this.tipoEnvio.costo_base
           : null,
       ignorarISV: this.ignorarISV,
+      isv: this.calcularIVA(),
     };
 
     const detallesJSON = this.detallesPedido.map((detalle) => ({

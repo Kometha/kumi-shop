@@ -65,6 +65,32 @@ export interface DetallePedidoCompleto {
   };
 }
 
+// Interfaz para PedidoCompleto
+export interface PedidoCompleto {
+  id: number;
+  isv: number | null;
+  notas: string | null;
+  total: number;
+  canal_id: number;
+  estado_id: number;
+  cliente_id: number | null;
+  created_at: string;
+  updated_at: string;
+  costo_envio: number | null;
+  ignorar_isv: boolean;
+  fecha_pedido: string;
+  codigo_pedido: number;
+  total_factura: number | null;
+  necesita_envio: boolean;
+  nombre_cliente: string;
+  telefono_cliente: string;
+  direccion_cliente: string | null;
+  subtotal_productos: number | null;
+  monto_neto_recibido: number | null;
+  total_comisiones_metodos: number | null;
+  total_comisiones_financiamiento: number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -280,6 +306,33 @@ export class VentasService {
     ).pipe(
       catchError((error) => {
         console.error('❌ [VENTAS] Error en petición de detalles del pedido:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener la información completa de un pedido
+   */
+  getPedidoCompleto(pedidoId: number): Observable<PedidoCompleto | null> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('pedidos')
+        .select('*')
+        .eq('id', pedidoId)
+        .single()
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener pedido completo:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Pedido completo obtenido:', response.data);
+        return response.data as PedidoCompleto;
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de pedido completo:', error);
         throw error;
       })
     );

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ImageModule } from 'primeng/image';
 import { ButtonModule } from 'primeng/button';
-import { VentasService, DetallePedidoCompleto } from '../services/ventas.service';
+import { VentasService, DetallePedidoCompleto, PedidoCompleto } from '../services/ventas.service';
 
 @Component({
   selector: 'app-detalle-pedido-modal',
@@ -18,6 +18,7 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
   @Output() visibleChange = new EventEmitter<boolean>();
 
   detalles: DetallePedidoCompleto[] = [];
+  pedidoCompleto: PedidoCompleto | null = null;
   loading: boolean = false;
 
   constructor(private ventasService: VentasService) {}
@@ -41,14 +42,39 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
     if (!this.pedidoId) return;
 
     this.loading = true;
+    let detallesLoaded = false;
+    let pedidoLoaded = false;
+
+    const checkLoading = () => {
+      if (detallesLoaded && pedidoLoaded) {
+        this.loading = false;
+      }
+    };
+
+    // Cargar detalles de productos y información completa del pedido en paralelo
     this.ventasService.getDetallesPedido(this.pedidoId).subscribe({
       next: (detalles) => {
         this.detalles = detalles;
-        this.loading = false;
+        detallesLoaded = true;
+        checkLoading();
       },
       error: (error) => {
         console.error('❌ Error al cargar detalles del pedido:', error);
-        this.loading = false;
+        detallesLoaded = true;
+        checkLoading();
+      },
+    });
+
+    this.ventasService.getPedidoCompleto(this.pedidoId).subscribe({
+      next: (pedido) => {
+        this.pedidoCompleto = pedido;
+        pedidoLoaded = true;
+        checkLoading();
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar información completa del pedido:', error);
+        pedidoLoaded = true;
+        checkLoading();
       },
     });
   }
@@ -77,6 +103,9 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
   }
 
   calcularSubtotal(): number {
+    if (this.pedidoCompleto?.subtotal_productos !== null && this.pedidoCompleto?.subtotal_productos !== undefined) {
+      return this.pedidoCompleto.subtotal_productos;
+    }
     return this.detalles.reduce((total, detalle) => total + detalle.subtotal, 0);
   }
 
@@ -84,8 +113,61 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
     return this.detalles.reduce((total, detalle) => total + (detalle.descuento || 0), 0);
   }
 
+  calcularISV(): number {
+    if (this.pedidoCompleto?.isv !== null && this.pedidoCompleto?.isv !== undefined) {
+      return this.pedidoCompleto.isv;
+    }
+    return 0;
+  }
+
+  calcularCostoEnvio(): number {
+    if (this.pedidoCompleto?.costo_envio !== null && this.pedidoCompleto?.costo_envio !== undefined) {
+      return this.pedidoCompleto.costo_envio;
+    }
+    return 0;
+  }
+
+  calcularTotalComisionesMetodos(): number {
+    if (this.pedidoCompleto?.total_comisiones_metodos !== null && this.pedidoCompleto?.total_comisiones_metodos !== undefined) {
+      return this.pedidoCompleto.total_comisiones_metodos;
+    }
+    return 0;
+  }
+
+  calcularTotalComisionesFinanciamiento(): number {
+    if (this.pedidoCompleto?.total_comisiones_financiamiento !== null && this.pedidoCompleto?.total_comisiones_financiamiento !== undefined) {
+      return this.pedidoCompleto.total_comisiones_financiamiento;
+    }
+    return 0;
+  }
+
+  calcularMontoNetoRecibido(): number {
+    if (this.pedidoCompleto?.monto_neto_recibido !== null && this.pedidoCompleto?.monto_neto_recibido !== undefined) {
+      return this.pedidoCompleto.monto_neto_recibido;
+    }
+    return 0;
+  }
+
+  calcularTotalFactura(): number {
+    if (this.pedidoCompleto?.total_factura !== null && this.pedidoCompleto?.total_factura !== undefined) {
+      return this.pedidoCompleto.total_factura;
+    }
+    return this.calcularTotal();
+  }
+
   calcularTotal(): number {
+    if (this.pedidoCompleto?.total !== null && this.pedidoCompleto?.total !== undefined) {
+      return this.pedidoCompleto.total;
+    }
     return this.calcularSubtotal();
+  }
+
+  tieneEnvio(): boolean {
+    return this.pedidoCompleto?.necesita_envio === true;
+  }
+
+  ignorarISV(): boolean {
+    return this.pedidoCompleto?.ignorar_isv === true;
   }
 }
 
