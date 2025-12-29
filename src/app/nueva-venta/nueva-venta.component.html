@@ -1,0 +1,558 @@
+<p-toast></p-toast>
+
+<div class="nueva-venta-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Nueva Venta</h1>
+      <p class="page-subtitle">Registra los detalles de la venta</p>
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <form [formGroup]="ventaForm" class="venta-form">
+    <div class="form-grid">
+      <!-- Left Column: Main Form -->
+      <div class="form-main">
+        <!-- Información del Cliente -->
+        <p-card class="form-section">
+          <ng-template pTemplate="header">
+            <div class="section-header">Información del Cliente</div>
+          </ng-template>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="nombreCliente" class="form-label">
+                Nombre del Cliente <span class="required">*</span>
+              </label>
+              <input
+                id="nombreCliente"
+                type="text"
+                pInputText
+                formControlName="nombreCliente"
+                placeholder="Ej: Juan Pérez"
+                [class.ng-invalid]="
+                  ventaForm.get('nombreCliente')?.invalid &&
+                  ventaForm.get('nombreCliente')?.touched
+                "
+              />
+              @if (
+                ventaForm.get('nombreCliente')?.invalid &&
+                ventaForm.get('nombreCliente')?.touched
+              ) {
+                <small class="error-message">Este campo es requerido</small>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="telefonoCliente" class="form-label">
+                Número de Teléfono <span class="required">*</span>
+              </label>
+              <p-inputmask
+                id="telefonoCliente"
+                formControlName="telefonoCliente"
+                mask="(504) 9999-9999"
+                placeholder="(504) 9999-9999"
+                [style]="{ width: '100%' }"
+                [class.ng-invalid]="
+                  ventaForm.get('telefonoCliente')?.invalid &&
+                  ventaForm.get('telefonoCliente')?.touched
+                "
+              ></p-inputmask>
+              @if (
+                ventaForm.get('telefonoCliente')?.invalid &&
+                ventaForm.get('telefonoCliente')?.touched
+              ) {
+                <small class="error-message">Este campo es requerido</small>
+              }
+            </div>
+          </div>
+        </p-card>
+
+        <!-- Información del Pedido -->
+        <p-card class="form-section">
+          <ng-template pTemplate="header">
+            <div class="section-header">Información del Pedido</div>
+          </ng-template>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="canalVenta" class="form-label">
+                Canal de Venta <span class="required">*</span>
+              </label>
+              <p-select
+                id="canalVenta"
+                formControlName="canalVenta"
+                [options]="canales"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Seleccione un canal"
+                [loading]="loadingCanales"
+                [style]="{ width: '100%' }"
+                [class.ng-invalid]="
+                  ventaForm.get('canalVenta')?.invalid &&
+                  ventaForm.get('canalVenta')?.touched
+                "
+              >
+                <ng-template let-canal pTemplate="item">
+                  <div class="flex items-center gap-2">
+                    @if (canal.url_icono) {
+                      <img [src]="canal.url_icono" [alt]="canal.nombre" class="w-5 h-5" />
+                    }
+                    <span>{{ canal.nombre }}</span>
+                  </div>
+                </ng-template>
+              </p-select>
+              @if (
+                ventaForm.get('canalVenta')?.invalid &&
+                ventaForm.get('canalVenta')?.touched
+              ) {
+                <small class="error-message">Este campo es requerido</small>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="estadoPedido" class="form-label">
+                Estado <span class="required">*</span>
+              </label>
+              <p-select
+                id="estadoPedido"
+                formControlName="estadoPedido"
+                [options]="estados"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Seleccione un estado"
+                [loading]="loadingEstados"
+                [style]="{ width: '100%' }"
+                [class.ng-invalid]="
+                  ventaForm.get('estadoPedido')?.invalid &&
+                  ventaForm.get('estadoPedido')?.touched
+                "
+              ></p-select>
+              @if (
+                ventaForm.get('estadoPedido')?.invalid &&
+                ventaForm.get('estadoPedido')?.touched
+              ) {
+                <small class="error-message">Este campo es requerido</small>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="fechaPedido" class="form-label">
+                Fecha del Pedido<span class="required">*</span>
+              </label>
+              <p-datePicker
+                id="fechaPedido"
+                formControlName="fechaPedido"
+                appendTo="body"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                [style]="{ width: '100%' }"
+                [class.ng-invalid]="
+                  ventaForm.get('fechaPedido')?.invalid &&
+                  ventaForm.get('fechaPedido')?.touched
+                "
+              ></p-datePicker>
+              <div class="mt-2">
+                <p-checkbox
+                  [(ngModel)]="fueHoy"
+                  (ngModelChange)="onFueHoyChange()"
+                  [ngModelOptions]="{standalone: true}"
+                  inputId="fueHoy"
+                  [binary]="true"
+                ></p-checkbox>
+                <label for="fueHoy" class="ml-2 text-sm text-gray-700 cursor-pointer">
+                  Fue hoy
+                </label>
+              </div>
+              @if (
+                ventaForm.get('fechaPedido')?.invalid &&
+                ventaForm.get('fechaPedido')?.touched
+              ) {
+                <small class="error-message">Este campo es requerido</small>
+              }
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">
+                Tipo de Entrega <span class="required">*</span>
+              </label>
+              <div class="radio-group">
+                @for (option of tipoEntregaOptions; track option.value) {
+                  <div class="radio-option">
+                    <p-radioButton
+                      [inputId]="option.value"
+                      formControlName="tipoEntrega"
+                      [value]="option.value"
+                    ></p-radioButton>
+                    <label [for]="option.value" class="radio-label">
+                      {{ option.label }}
+                    </label>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="notas" class="form-label">Notas</label>
+            <textarea
+              id="notas"
+              pInputText
+              formControlName="notas"
+              placeholder="Agregar notas adicionales sobre el pedido..."
+              rows="3"
+              class="w-full"
+            ></textarea>
+          </div>
+
+          @if (ventaForm.get('tipoEntrega')?.value === 'envio') {
+            <div class="form-field">
+              <label for="direccionCliente" class="form-label">
+                Dirección del Cliente <span class="required">*</span>
+              </label>
+              <textarea
+                id="direccionCliente"
+                pInputText
+                formControlName="direccionCliente"
+                placeholder="Agregar la dirección del cliente..."
+                rows="3"
+                class="w-full"
+                [class.ng-invalid]="
+                  ventaForm.get('direccionCliente')?.invalid &&
+                  ventaForm.get('direccionCliente')?.touched &&
+                  ventaForm.get('tipoEntrega')?.value === 'envio'
+                "
+              ></textarea>
+              @if (
+                ventaForm.get('direccionCliente')?.invalid &&
+                ventaForm.get('direccionCliente')?.touched &&
+                ventaForm.get('tipoEntrega')?.value === 'envio'
+              ) {
+                <small class="error-message">Este campo es requerido cuando se selecciona envío a domicilio</small>
+              }
+            </div>
+          }
+        </p-card>
+
+        <!-- Detalles del Pedido -->
+        <p-card class="form-section">
+          <ng-template pTemplate="header">
+            <div class="section-header flex justify-between items-center">
+              <span>Detalles del Pedido</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-plus"
+                label="Agregar Producto"
+                class="p-button-success p-button-sm"
+                (click)="onAgregarProducto()"
+              ></button>
+            </div>
+          </ng-template>
+
+          <div class="table-container-detalles">
+            <p-table
+              [value]="detallesPedido()"
+              [paginator]="false"
+              styleClass="p-datatable-gridlines"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 80px">Imagen</th>
+                  <th>Producto</th>
+                  <th style="width: 100px" class="text-center">Cantidad</th>
+                  <th style="width: 150px" class="text-right">Precio Venta</th>
+                  <th style="width: 120px" class="text-right">Descuento (L.)</th>
+                  <th style="width: 150px" class="text-right">Subtotal</th>
+                  <th style="width: 80px" class="text-center">Acciones</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-detalle>
+                <tr>
+                  <!-- Imagen -->
+                  <td>
+                    <p-image
+                      [src]="detalle.imagen"
+                      [preview]="true"
+                      [alt]="detalle.producto"
+                      width="60"
+                      height="60"
+                      styleClass="product-image-preview"
+                      [style]="{ 'object-fit': 'cover', 'border-radius': '4px' }"
+                    >
+                    </p-image>
+                  </td>
+
+                  <!-- Producto -->
+                  <td class="font-medium">{{ detalle.producto }}</td>
+
+                  <!-- Cantidad -->
+                  <td class="text-center font-semibold">
+                    {{ detalle.cantidad }}
+                  </td>
+
+                  <!-- Precio Venta -->
+                  <td class="text-right font-mono font-semibold">
+                    {{ formatCurrency(detalle.precio) }}
+                  </td>
+
+                  <!-- Descuento -->
+                  <td class="text-right">
+                    <div class="flex flex-col gap-1">
+                      <p-inputNumber
+                        [(ngModel)]="detalle.descuento"
+                        [ngModelOptions]="{standalone: true}"
+                        [min]="0"
+                        [max]="detalle.precio * detalle.cantidad"
+                        [style]="{ width: '90px', 'max-width': '90px' }"
+                        [showButtons]="false"
+                        placeholder="0.00"
+                        mode="currency"
+                        currency="HNL"
+                        locale="es-HN"
+                        [inputStyle]="{
+                          'text-align': 'right',
+                          padding: '0.25rem 0.5rem',
+                          width: '90px'
+                        }"
+                        (onInput)="actualizarDetalleDescuento()"
+                      ></p-inputNumber>
+                      <small class="text-xs text-gray-500">En Lempiras</small>
+                    </div>
+                  </td>
+
+                  <!-- Subtotal -->
+                  <td class="text-right font-mono font-bold">
+                    {{ formatCurrency(calcularSubtotalIndividual(detalle)) }}
+                  </td>
+
+                  <!-- Acciones -->
+                  <td class="text-center">
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                      (click)="eliminarDetallePedido(detalle.id)"
+                      pTooltip="Eliminar producto"
+                      tooltipPosition="top"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="7" class="text-center py-8">
+                    <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+                    <p class="text-gray-500">No hay productos agregados</p>
+                    <p class="text-sm text-gray-400 mt-2">
+                      Haz clic en "Agregar Producto" para comenzar
+                    </p>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Right Column: Pago y Totales -->
+      <div class="form-sidebar">
+        <p-card class="payment-card">
+          <ng-template pTemplate="header">
+            <div class="section-header p-3">Pago y Totales</div>
+          </ng-template>
+
+          <!-- Métodos de Pago -->
+          <div class="form-field">
+            <div class="flex items-center justify-between mb-2">
+              <label class="form-label">Métodos de Pago</label>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-plus"
+                label="Agregar Método"
+                class="p-button-sm p-button-outlined"
+                (click)="agregarMetodoPago()"
+                [disabled]="!puedeAgregarMetodoPago()"
+              ></button>
+            </div>
+
+            <p-select
+              #metodoPagoDropdown
+              [(ngModel)]="metodoPagoTemporal"
+              (onChange)="onMetodoPagoTemporalChange($event.value)"
+              [ngModelOptions]="{standalone: true}"
+              [options]="getMetodosPagoDisponibles()"
+              optionLabel="nombre"
+              placeholder="Seleccione un método de pago"
+              [loading]="loadingMetodosPago"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+              panelStyleClass="metodo-pago-dropdown-panel"
+              (onShow)="onMetodoPagoDropdownShow(metodoPagoDropdown)"
+            >
+              <ng-template let-metodo pTemplate="item">
+                <div class="flex flex-col gap-1">
+                  <span class="font-medium">{{ metodo.nombre }}</span>
+                  @if (metodo.comision_porcentaje) {
+                    <span class="text-xs text-gray-500">{{ metodo.comision_porcentaje }}%</span>
+                  }
+                </div>
+              </ng-template>
+              <ng-template let-metodo pTemplate="selectedItem">
+                <span>{{ metodo?.nombre }}</span>
+              </ng-template>
+            </p-select>
+
+            @if (metodosPagoSeleccionados().length > 0) {
+              <div class="metodos-pago-table mt-4">
+                <p-table
+                  [value]="metodosPagoSeleccionados()"
+                  [paginator]="false"
+                  styleClass="p-datatable-gridlines"
+                >
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Método de Pago</th>
+                      <th style="width: 200px" class="text-right">Monto</th>
+                      <th style="width: 80px" class="text-center">Acciones</th>
+                    </tr>
+                  </ng-template>
+
+                  <ng-template pTemplate="body" let-metodoPago>
+                    <tr>
+                      <td class="font-medium">
+                        <div class="flex flex-col gap-1">
+                          <span>{{ metodoPago.metodoPago.nombre }}</span>
+                          @if (metodoPago.metodoPago.comision_porcentaje) {
+                            <span class="text-xs text-gray-500">
+                              {{ metodoPago.metodoPago.comision_porcentaje }}%
+                            </span>
+                          }
+                        </div>
+                      </td>
+                      <td>
+                        <p-inputNumber
+                          [(ngModel)]="metodoPago.monto"
+                          [ngModelOptions]="{standalone: true}"
+                          [min]="0"
+                          [max]="total()"
+                          [style]="{ width: '100%' }"
+                          mode="currency"
+                          currency="HNL"
+                          locale="es-HN"
+                          (onInput)="actualizarMetodoPagoMonto()"
+                        ></p-inputNumber>
+                      </td>
+                      <td class="text-center">
+                        <button
+                          pButton
+                          type="button"
+                          icon="pi pi-trash"
+                          class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                          (click)="eliminarMetodoPago(metodoPago.id)"
+                          pTooltip="Eliminar método de pago"
+                          tooltipPosition="top"
+                        ></button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            }
+          </div>
+
+          <div class="form-field checkbox-field">
+            <p-checkbox
+              [binary]="true"
+              formControlName="ignorarISV"
+              inputId="ignorarISV"
+              (onChange)="onIgnorarISVChange($event)"
+            ></p-checkbox>
+            <label for="ignorarISV" class="checkbox-label">
+              Ignorar ISV (15%)
+            </label>
+          </div>
+
+          <!-- Summary -->
+          <div class="summary-section">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal</span>
+              <span class="summary-value">{{ formatCurrency(subtotalSinDescuentos()) }}</span>
+            </div>
+            @if (descuentos() > 0) {
+              <div class="summary-row">
+                <span class="summary-label">Descuentos (L.)</span>
+                <span class="summary-value text-red-600">-{{ formatCurrency(descuentos()) }}</span>
+              </div>
+            }
+            <div class="summary-row">
+              <span class="summary-label">Subtotal después de descuentos</span>
+              <span class="summary-value">{{ formatCurrency(subtotal()) }}</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">ISV (15%)</span>
+              <span class="summary-value">{{ formatCurrency(isv()) }}</span>
+            </div>
+            <div class="summary-row total-row">
+              <span class="summary-label">Total</span>
+              <span class="summary-value">{{ formatCurrency(total()) }}</span>
+            </div>
+            @if (esEfectivoUnico() && vuelto() > 0) {
+              <div class="summary-row">
+                <span class="summary-label text-green-600">Vuelto</span>
+                <span class="summary-value text-green-600">{{ formatCurrency(vuelto()) }}</span>
+              </div>
+            }
+          </div>
+        </p-card>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        (click)="onCancelar()"
+        class="p-button-outlined"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Registrar Venta"
+        icon="pi pi-check"
+        (click)="onRegistrarVenta()"
+        [disabled]="loading"
+      ></button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal para seleccionar productos -->
+<p-dialog
+  [(visible)]="displaySeleccionarProductosModal"
+  [modal]="true"
+  [style]="{ width: '60vw', minWidth: '700px', maxHeight: '90vh' }"
+  [breakpoints]="{ '1024px': '85vw', '640px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [showHeader]="true"
+  header="Seleccionar Productos"
+  (onHide)="onSeleccionarProductosModalHide()"
+>
+  <app-seleccionar-productos-modal
+    [(visible)]="displaySeleccionarProductosModal"
+    [productosDisponibles]="productosDisponibles"
+    (productosSeleccionados)="onProductosSeleccionados($event)"
+  ></app-seleccionar-productos-modal>
+</p-dialog>
