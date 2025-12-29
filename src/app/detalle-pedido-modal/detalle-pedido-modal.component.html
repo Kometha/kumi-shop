@@ -1,9 +1,11 @@
 <div class="detalle-pedido-modal">
-  <div *ngIf="loading" class="flex justify-center items-center py-8">
-    <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
-  </div>
+  @if (loading) {
+    <div class="flex justify-center items-center py-8">
+      <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+    </div>
+  }
 
-  <div *ngIf="!loading && detalles.length > 0">
+  @if (!loading && detalles.length > 0) {
     <!-- Información del Pedido -->
     <div class="mb-6">
       <h3 class="text-lg font-semibold text-gray-800 mb-4 p-3">
@@ -11,41 +13,47 @@
       </h3>
 
       <!-- Información Adicional del Pedido -->
-      <div *ngIf="pedidoCompleto" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Cliente -->
-          <div>
-            <span class="text-xs font-semibold text-gray-600 uppercase">Cliente:</span>
-            <p class="text-sm font-medium text-gray-900 mt-1">
-              {{ pedidoCompleto.nombre_cliente }}
-            </p>
-          </div>
+      @if (pedidoCompleto) {
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cliente -->
+            <div>
+              <span class="text-xs font-semibold text-gray-600 uppercase">Cliente:</span>
+              <p class="text-sm font-medium text-gray-900 mt-1">
+                {{ pedidoCompleto.nombre_cliente }}
+              </p>
+            </div>
 
-          <!-- Teléfono -->
-          <div>
-            <span class="text-xs font-semibold text-gray-600 uppercase">Teléfono:</span>
-            <p class="text-sm font-medium text-gray-900 mt-1">
-              {{ pedidoCompleto.telefono_cliente }}
-            </p>
-          </div>
+            <!-- Teléfono -->
+            <div>
+              <span class="text-xs font-semibold text-gray-600 uppercase">Teléfono:</span>
+              <p class="text-sm font-medium text-gray-900 mt-1">
+                {{ pedidoCompleto.telefono_cliente }}
+              </p>
+            </div>
 
-          <!-- Dirección -->
-          <div *ngIf="pedidoCompleto.direccion_cliente" class="md:col-span-2">
-            <span class="text-xs font-semibold text-gray-600 uppercase">Dirección:</span>
-            <p class="text-sm text-gray-900 mt-1">
-              {{ pedidoCompleto.direccion_cliente }}
-            </p>
-          </div>
+            <!-- Dirección -->
+            @if (pedidoCompleto.direccion_cliente) {
+              <div class="md:col-span-2">
+                <span class="text-xs font-semibold text-gray-600 uppercase">Dirección:</span>
+                <p class="text-sm text-gray-900 mt-1">
+                  {{ pedidoCompleto.direccion_cliente }}
+                </p>
+              </div>
+            }
 
-          <!-- Notas -->
-          <div *ngIf="pedidoCompleto.notas" class="md:col-span-2">
-            <span class="text-xs font-semibold text-gray-600 uppercase">Notas:</span>
-            <p class="text-sm text-gray-700 mt-1 italic">
-              {{ pedidoCompleto.notas }}
-            </p>
+            <!-- Notas -->
+            @if (pedidoCompleto.notas) {
+              <div class="md:col-span-2">
+                <span class="text-xs font-semibold text-gray-600 uppercase">Notas:</span>
+                <p class="text-sm text-gray-700 mt-1 italic">
+                  {{ pedidoCompleto.notas }}
+                </p>
+              </div>
+            }
           </div>
         </div>
-      </div>
+      }
     </div>
 
     <!-- Tabla de Productos -->
@@ -88,12 +96,16 @@
                 <span class="font-medium">
                   {{ detalle.producto?.producto || `Producto ID: ${detalle.producto_id}` }}
                 </span>
-                <span *ngIf="detalle.producto?.numero_codigo_barra" class="text-xs text-gray-500">
-                  Código: {{ detalle.producto.numero_codigo_barra }}
-                </span>
-                <span *ngIf="!detalle.producto" class="text-xs text-gray-400 italic">
-                  Información del producto no disponible
-                </span>
+                @if (detalle.producto?.numero_codigo_barra) {
+                  <span class="text-xs text-gray-500">
+                    Código: {{ detalle.producto.numero_codigo_barra }}
+                  </span>
+                }
+                @if (!detalle.producto) {
+                  <span class="text-xs text-gray-400 italic">
+                    Información del producto no disponible
+                  </span>
+                }
               </div>
             </td>
 
@@ -109,12 +121,15 @@
 
             <!-- Descuento -->
             <td class="text-right font-mono">
-              <span *ngIf="detalle.descuento > 0" class="text-red-600">
-                -{{ formatCurrency(detalle.descuento) }}
-              </span>
-              <span *ngIf="detalle.descuento === 0 || !detalle.descuento" class="text-gray-400">
-                {{ formatCurrency(0) }}
-              </span>
+              @if (detalle.descuento > 0) {
+                <span class="text-red-600">
+                  -{{ formatCurrency(detalle.descuento) }}
+                </span>
+              } @else {
+                <span class="text-gray-400">
+                  {{ formatCurrency(0) }}
+                </span>
+              }
             </td>
 
             <!-- Subtotal -->
@@ -135,49 +150,139 @@
       </p-table>
 
       <!-- Resumen Completo -->
-      <div *ngIf="detalles.length > 0" class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-4">
+      @if (detalles.length > 0) {
+        <div class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-4">
+          <div class="flex flex-col gap-3">
+            <!-- Subtotal de Productos -->
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-gray-700 text-sm">Subtotal de Productos:</span>
+              <span class="font-mono font-semibold text-base text-gray-900">
+                {{ formatCurrency(calcularSubtotal()) }}
+              </span>
+            </div>
+
+            <!-- Descuentos -->
+            @if (calcularTotalDescuentos() > 0) {
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-red-600 text-sm">Total Descuentos:</span>
+                <span class="font-mono font-semibold text-base text-red-600">
+                  -{{ formatCurrency(calcularTotalDescuentos()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Subtotal después de descuentos -->
+            @if (calcularTotalDescuentos() > 0) {
+              <div class="flex items-center justify-between pt-1 border-t border-gray-300">
+                <span class="font-semibold text-gray-700 text-sm">Subtotal Neto:</span>
+                <span class="font-mono font-semibold text-base text-gray-900">
+                  {{ formatCurrency(calcularSubtotal() - calcularTotalDescuentos()) }}
+                </span>
+              </div>
+            }
+
+            <!-- ISV -->
+            @if (!ignorarISV() && calcularISV() > 0) {
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-blue-600 text-sm">ISV (15%):</span>
+                <span class="font-mono font-semibold text-base text-blue-600">
+                  {{ formatCurrency(calcularISV()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Costo de Envío -->
+            @if (tieneEnvio() && calcularCostoEnvio() > 0) {
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-purple-600 text-sm">Costo de Envío:</span>
+                <span class="font-mono font-semibold text-base text-purple-600">
+                  {{ formatCurrency(calcularCostoEnvio()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Total antes de comisiones -->
+            <div class="flex items-center justify-between pt-2 border-t-2 border-gray-400">
+              <span class="font-semibold text-gray-800 text-base">Total de la Venta:</span>
+              <span class="font-mono font-bold text-lg text-gray-900">
+                {{ formatCurrency(calcularTotal()) }}
+              </span>
+            </div>
+
+            <!-- Comisiones de Métodos de Pago -->
+            @if (calcularTotalComisionesMetodos() > 0) {
+              <div class="flex items-center justify-between pt-2 border-t border-gray-300">
+                <span class="font-semibold text-orange-600 text-sm">Comisiones Métodos de Pago:</span>
+                <span class="font-mono font-semibold text-base text-orange-600">
+                  -{{ formatCurrency(calcularTotalComisionesMetodos()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Comisiones de Financiamiento -->
+            @if (calcularTotalComisionesFinanciamiento() > 0) {
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-orange-600 text-sm">Comisiones Financiamiento:</span>
+                <span class="font-mono font-semibold text-base text-orange-600">
+                  -{{ formatCurrency(calcularTotalComisionesFinanciamiento()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Total de Comisiones -->
+            @if (calcularTotalComisionesMetodos() > 0 || calcularTotalComisionesFinanciamiento() > 0) {
+              <div class="flex items-center justify-between pt-1 border-t border-gray-300">
+                <span class="font-semibold text-orange-700 text-sm">Total Comisiones:</span>
+                <span class="font-mono font-semibold text-base text-orange-700">
+                  -{{ formatCurrency(calcularTotalComisionesMetodos() + calcularTotalComisionesFinanciamiento()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Monto Neto Recibido -->
+            @if (calcularMontoNetoRecibido() > 0) {
+              <div class="flex items-center justify-between pt-2 border-t-2 border-green-400">
+                <span class="font-semibold text-green-700 text-base">Monto Neto Recibido:</span>
+                <span class="font-mono font-bold text-lg text-green-700">
+                  {{ formatCurrency(calcularMontoNetoRecibido()) }}
+                </span>
+              </div>
+            }
+
+            <!-- Total Factura -->
+            @if (calcularTotalFactura() !== calcularTotal()) {
+              <div class="flex items-center justify-between pt-2 border-t border-gray-300">
+                <span class="font-semibold text-gray-700 text-sm">Total Factura:</span>
+                <span class="font-mono font-semibold text-base text-gray-900">
+                  {{ formatCurrency(calcularTotalFactura()) }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading && detalles.length === 0 && !pedidoCompleto) {
+    <div class="text-center py-8">
+      <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+      <p class="text-gray-500">No se encontraron detalles para este pedido</p>
+    </div>
+  }
+
+  <!-- Mostrar resumen aunque no haya detalles si hay información del pedido -->
+  @if (!loading && detalles.length === 0 && pedidoCompleto) {
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="text-center mb-4">
+        <i class="pi pi-info-circle text-2xl text-gray-400 mb-2 block"></i>
+        <p class="text-gray-500 text-sm">No hay productos registrados en este pedido</p>
+      </div>
+
+      <!-- Resumen Completo -->
+      <div class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-4 rounded-lg">
         <div class="flex flex-col gap-3">
-          <!-- Subtotal de Productos -->
-          <div class="flex items-center justify-between">
-            <span class="font-semibold text-gray-700 text-sm">Subtotal de Productos:</span>
-            <span class="font-mono font-semibold text-base text-gray-900">
-              {{ formatCurrency(calcularSubtotal()) }}
-            </span>
-          </div>
-
-          <!-- Descuentos -->
-          <div *ngIf="calcularTotalDescuentos() > 0" class="flex items-center justify-between">
-            <span class="font-semibold text-red-600 text-sm">Total Descuentos:</span>
-            <span class="font-mono font-semibold text-base text-red-600">
-              -{{ formatCurrency(calcularTotalDescuentos()) }}
-            </span>
-          </div>
-
-          <!-- Subtotal después de descuentos -->
-          <div *ngIf="calcularTotalDescuentos() > 0" class="flex items-center justify-between pt-1 border-t border-gray-300">
-            <span class="font-semibold text-gray-700 text-sm">Subtotal Neto:</span>
-            <span class="font-mono font-semibold text-base text-gray-900">
-              {{ formatCurrency(calcularSubtotal() - calcularTotalDescuentos()) }}
-            </span>
-          </div>
-
-          <!-- ISV -->
-          <div *ngIf="!ignorarISV() && calcularISV() > 0" class="flex items-center justify-between">
-            <span class="font-semibold text-blue-600 text-sm">ISV (15%):</span>
-            <span class="font-mono font-semibold text-base text-blue-600">
-              {{ formatCurrency(calcularISV()) }}
-            </span>
-          </div>
-
-          <!-- Costo de Envío -->
-          <div *ngIf="tieneEnvio() && calcularCostoEnvio() > 0" class="flex items-center justify-between">
-            <span class="font-semibold text-purple-600 text-sm">Costo de Envío:</span>
-            <span class="font-mono font-semibold text-base text-purple-600">
-              {{ formatCurrency(calcularCostoEnvio()) }}
-            </span>
-          </div>
-
-          <!-- Total antes de comisiones -->
+          <!-- Total de la Venta -->
           <div class="flex items-center justify-between pt-2 border-t-2 border-gray-400">
             <span class="font-semibold text-gray-800 text-base">Total de la Venta:</span>
             <span class="font-mono font-bold text-lg text-gray-900">
@@ -185,82 +290,17 @@
             </span>
           </div>
 
-          <!-- Comisiones de Métodos de Pago -->
-          <div *ngIf="calcularTotalComisionesMetodos() > 0" class="flex items-center justify-between pt-2 border-t border-gray-300">
-            <span class="font-semibold text-orange-600 text-sm">Comisiones Métodos de Pago:</span>
-            <span class="font-mono font-semibold text-base text-orange-600">
-              -{{ formatCurrency(calcularTotalComisionesMetodos()) }}
-            </span>
-          </div>
-
-          <!-- Comisiones de Financiamiento -->
-          <div *ngIf="calcularTotalComisionesFinanciamiento() > 0" class="flex items-center justify-between">
-            <span class="font-semibold text-orange-600 text-sm">Comisiones Financiamiento:</span>
-            <span class="font-mono font-semibold text-base text-orange-600">
-              -{{ formatCurrency(calcularTotalComisionesFinanciamiento()) }}
-            </span>
-          </div>
-
-          <!-- Total de Comisiones -->
-          <div *ngIf="calcularTotalComisionesMetodos() > 0 || calcularTotalComisionesFinanciamiento() > 0" class="flex items-center justify-between pt-1 border-t border-gray-300">
-            <span class="font-semibold text-orange-700 text-sm">Total Comisiones:</span>
-            <span class="font-mono font-semibold text-base text-orange-700">
-              -{{ formatCurrency(calcularTotalComisionesMetodos() + calcularTotalComisionesFinanciamiento()) }}
-            </span>
-          </div>
-
           <!-- Monto Neto Recibido -->
-          <div *ngIf="calcularMontoNetoRecibido() > 0" class="flex items-center justify-between pt-2 border-t-2 border-green-400">
-            <span class="font-semibold text-green-700 text-base">Monto Neto Recibido:</span>
-            <span class="font-mono font-bold text-lg text-green-700">
-              {{ formatCurrency(calcularMontoNetoRecibido()) }}
-            </span>
-          </div>
-
-          <!-- Total Factura -->
-          <div *ngIf="calcularTotalFactura() !== calcularTotal()" class="flex items-center justify-between pt-2 border-t border-gray-300">
-            <span class="font-semibold text-gray-700 text-sm">Total Factura:</span>
-            <span class="font-mono font-semibold text-base text-gray-900">
-              {{ formatCurrency(calcularTotalFactura()) }}
-            </span>
-          </div>
+          @if (calcularMontoNetoRecibido() > 0) {
+            <div class="flex items-center justify-between pt-2 border-t-2 border-green-400">
+              <span class="font-semibold text-green-700 text-base">Monto Neto Recibido:</span>
+              <span class="font-mono font-bold text-lg text-green-700">
+                {{ formatCurrency(calcularMontoNetoRecibido()) }}
+              </span>
+            </div>
+          }
         </div>
       </div>
     </div>
-  </div>
-
-  <div *ngIf="!loading && detalles.length === 0 && !pedidoCompleto" class="text-center py-8">
-    <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
-    <p class="text-gray-500">No se encontraron detalles para este pedido</p>
-  </div>
-
-  <!-- Mostrar resumen aunque no haya detalles si hay información del pedido -->
-  <div *ngIf="!loading && detalles.length === 0 && pedidoCompleto" class="bg-white rounded-lg border border-gray-200 p-4">
-    <div class="text-center mb-4">
-      <i class="pi pi-info-circle text-2xl text-gray-400 mb-2 block"></i>
-      <p class="text-gray-500 text-sm">No hay productos registrados en este pedido</p>
-    </div>
-
-    <!-- Resumen Completo -->
-    <div class="total-summary bg-gray-50 border-t-2 border-gray-200 px-4 py-4 rounded-lg">
-      <div class="flex flex-col gap-3">
-        <!-- Total de la Venta -->
-        <div class="flex items-center justify-between pt-2 border-t-2 border-gray-400">
-          <span class="font-semibold text-gray-800 text-base">Total de la Venta:</span>
-          <span class="font-mono font-bold text-lg text-gray-900">
-            {{ formatCurrency(calcularTotal()) }}
-          </span>
-        </div>
-
-        <!-- Monto Neto Recibido -->
-        <div *ngIf="calcularMontoNetoRecibido() > 0" class="flex items-center justify-between pt-2 border-t-2 border-green-400">
-          <span class="font-semibold text-green-700 text-base">Monto Neto Recibido:</span>
-          <span class="font-mono font-bold text-lg text-green-700">
-            {{ formatCurrency(calcularMontoNetoRecibido()) }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
+  }
 </div>
-
