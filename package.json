@@ -7,7 +7,10 @@
     "dev": "bun run ng serve --open --watch",
     "build": "bun run ng build --configuration production",
     "watch": "bun run ng build --watch --configuration development",
-    "test": "bun run ng test"
+    "test": "bun run ng test",
+    "clean": "rm -rf .angular/cache node_modules/.vite dist",
+    "clean:cache": "rm -rf .angular/cache node_modules/.vite",
+    "fresh": "bun run clean:cache && bun run start"
   },
   "private": true,
   "dependencies": {
