@@ -6,6 +6,7 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout.component'
 import { DashboardHomeComponent } from './dashboard/dashboard-home/dashboard-home.component';
 import { InventoryComponent } from './inventory/inventory.component';
 import { VentasComponent } from './ventas-component/ventas-component.component';
+import { NuevaVentaComponent } from './nueva-venta/nueva-venta.component';
 import { AplicacionMovilComponent } from './aplicacion-movil/aplicacion-movil.component';
 import { ComprasComponent } from './compras/compras.component';
 
@@ -38,7 +39,16 @@ export const routes: Routes = [
       },
       {
         path: 'ventas',
-        component: VentasComponent
+        children: [
+          {
+            path: '',
+            component: VentasComponent
+          },
+          {
+            path: 'nueva',
+            component: NuevaVentaComponent
+          }
+        ]
       },
       {
         path: 'compras',
