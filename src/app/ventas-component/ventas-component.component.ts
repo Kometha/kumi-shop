@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -55,7 +56,8 @@ export class VentasComponent implements OnInit {
   constructor(
     private productosService: ProductosService,
     private ventasService: VentasService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -131,6 +133,10 @@ export class VentasComponent implements OnInit {
   showNuevaVentaModal(): void {
     this.displayNuevaVentaModal = true;
     document.body.style.overflow = 'hidden';
+  }
+
+  navigateToNuevaVenta(): void {
+    this.router.navigate(['/ventas/nueva']);
   }
 
   onVentaGuardada(): void {
