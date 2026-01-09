@@ -176,23 +176,43 @@
             </div>
 
             <div class="form-field">
-              <label class="form-label">
-                Tipo de Entrega <span class="required">*</span>
+              <label for="tipoEnvioId" class="form-label">
+                Tipo de Entrega
               </label>
-              <div class="radio-group">
-                @for (option of tipoEntregaOptions; track option.value) {
-                  <div class="radio-option">
-                    <p-radioButton
-                      [inputId]="option.value"
-                      formControlName="tipoEntrega"
-                      [value]="option.value"
-                    ></p-radioButton>
-                    <label [for]="option.value" class="radio-label">
-                      {{ option.label }}
-                    </label>
+              <p-select
+                id="tipoEnvioId"
+                formControlName="tipoEnvioId"
+                [options]="tiposEnvio"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Seleccione un tipo de entrega (opcional)"
+                [loading]="loadingTiposEnvio"
+                [style]="{ width: '100%' }"
+                [showClear]="true"
+              >
+                <ng-template let-tipo pTemplate="item">
+                  <div class="flex flex-col gap-1">
+                    <span class="font-medium">{{ tipo.nombre }}</span>
+                    @if (tipo.costo_base !== null && tipo.tipo !== 'MANUAL') {
+                      <span class="text-xs text-gray-500">
+                        {{ formatCurrency(tipo.costo_base) }}
+                        @if (!tipo.es_costo_fijo) {
+                          <span class="text-gray-400">(variable)</span>
+                        }
+                      </span>
+                    }
+                    @if (tipo.tipo === 'MANUAL') {
+                      <span class="text-xs text-gray-500">Ingresar monto manualmente</span>
+                    }
+                    @if (tipo.descripcion) {
+                      <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
+                    }
                   </div>
-                }
-              </div>
+                </ng-template>
+                <ng-template let-tipo pTemplate="selectedItem">
+                  <span>{{ tipo?.nombre }}</span>
+                </ng-template>
+              </p-select>
             </div>
           </div>
 
@@ -208,7 +228,31 @@
             ></textarea>
           </div>
 
-          @if (ventaForm.get('tipoEntrega')?.value === 'envio') {
+          @if (ventaForm.get('tipoEnvioId')?.value !== null && ventaForm.get('tipoEnvioId')?.value !== undefined) {
+            <!-- Input para costo manual cuando el tipo es MANUAL -->
+            @if (esTipoManual()) {
+              <div class="form-field">
+                <label for="costoEnvioManual" class="form-label">
+                  Costo de Envío Manual <span class="required">*</span>
+                </label>
+                <p-inputNumber
+                  id="costoEnvioManual"
+                  [(ngModel)]="costoEnvioManual"
+                  [ngModelOptions]="{standalone: true}"
+                  [min]="0"
+                  [style]="{ width: '100%' }"
+                  mode="currency"
+                  currency="HNL"
+                  locale="es-HN"
+                  placeholder="Ingrese el monto del envío"
+                  [required]="true"
+                ></p-inputNumber>
+                @if (!costoEnvioManual || costoEnvioManual <= 0) {
+                  <small class="error-message">Debe ingresar un monto válido para el envío manual</small>
+                }
+              </div>
+            }
+
             <div class="form-field">
               <label for="direccionCliente" class="form-label">
                 Dirección del Cliente <span class="required">*</span>
@@ -223,15 +267,15 @@
                 [class.ng-invalid]="
                   ventaForm.get('direccionCliente')?.invalid &&
                   ventaForm.get('direccionCliente')?.touched &&
-                  ventaForm.get('tipoEntrega')?.value === 'envio'
+                  ventaForm.get('tipoEnvioId')?.value !== null
                 "
               ></textarea>
               @if (
                 ventaForm.get('direccionCliente')?.invalid &&
                 ventaForm.get('direccionCliente')?.touched &&
-                ventaForm.get('tipoEntrega')?.value === 'envio'
+                ventaForm.get('tipoEnvioId')?.value !== null
               ) {
-                <small class="error-message">Este campo es requerido cuando se selecciona envío a domicilio</small>
+                <small class="error-message">Este campo es requerido cuando se selecciona un tipo de entrega</small>
               }
             </div>
           }
@@ -500,6 +544,12 @@
               <span class="summary-label">ISV (15%)</span>
               <span class="summary-value">{{ formatCurrency(isv()) }}</span>
             </div>
+            @if (costoEnvio() > 0) {
+              <div class="summary-row">
+                <span class="summary-label">Costo de Envío</span>
+                <span class="summary-value">{{ formatCurrency(costoEnvio()) }}</span>
+              </div>
+            }
             <div class="summary-row total-row">
               <span class="summary-label">Total</span>
               <span class="summary-value">{{ formatCurrency(total()) }}</span>
