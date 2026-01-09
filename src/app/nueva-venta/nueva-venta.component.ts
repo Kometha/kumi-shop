@@ -92,9 +92,8 @@ export class NuevaVentaComponent implements OnInit {
   metodoPagoTemporal: MetodoPago | null = null;
 
   // Envío
-  necesitaEnvio: boolean = false;
-  tipoEnvio: TipoEnvio | null = null;
-  cantidadEnvio: number | null = null;
+  tipoEnvioSeleccionado: TipoEnvio | null = null;
+  costoEnvioManual: number | null = null; // Para tipo MANUAL
 
   // Fecha
   fueHoy: boolean = false;
@@ -135,8 +134,8 @@ export class NuevaVentaComponent implements OnInit {
   });
 
   readonly total = computed(() => {
-    // Total = Subtotal (después de descuentos) + ISV
-    return this.subtotal() + this.isv();
+    // Total = Subtotal (después de descuentos) + ISV + Costo de Envío
+    return this.subtotal() + this.isv() + this.costoEnvio();
   });
 
   readonly totalMetodosPago = computed(() => {
@@ -165,10 +164,29 @@ export class NuevaVentaComponent implements OnInit {
     return 0;
   });
 
-  tipoEntregaOptions = [
-    { label: 'Retiro en tienda', value: 'retiro' },
-    { label: 'Envío a domicilio', value: 'envio' },
-  ];
+  // Computed para el costo de envío
+  readonly costoEnvio = computed(() => {
+    if (!this.tipoEnvioSeleccionado) {
+      return 0;
+    }
+
+    // Si el tipo es MANUAL, usar el costo manual ingresado
+    if (this.tipoEnvioSeleccionado.tipo === 'MANUAL') {
+      return this.costoEnvioManual || 0;
+    }
+
+    // Si tiene costo_base, usarlo
+    if (this.tipoEnvioSeleccionado.costo_base !== null && this.tipoEnvioSeleccionado.costo_base !== undefined) {
+      return this.tipoEnvioSeleccionado.costo_base;
+    }
+
+    return 0;
+  });
+
+  // Verificar si el tipo seleccionado es MANUAL
+  readonly esTipoManual = computed(() => {
+    return this.tipoEnvioSeleccionado?.tipo === 'MANUAL';
+  });
 
   constructor(
     private fb: FormBuilder,
@@ -209,20 +227,32 @@ export class NuevaVentaComponent implements OnInit {
       canalVenta: [null, [Validators.required]],
       estadoPedido: [null, [Validators.required]],
       fechaPedido: [new Date(), [Validators.required]],
-      tipoEntrega: ['retiro', [Validators.required]],
+      tipoEnvioId: [null], // Ahora usamos el ID del tipo de envío
       notas: [''],
 
       // Pago
       ignorarISV: [false],
     });
 
-    // Validación condicional para dirección cuando es envío
-    this.ventaForm.get('tipoEntrega')?.valueChanges.subscribe((tipoEntrega) => {
+    // Validación condicional para dirección cuando se selecciona un tipo de envío
+    this.ventaForm.get('tipoEnvioId')?.valueChanges.subscribe((tipoEnvioId) => {
       const direccionControl = this.ventaForm.get('direccionCliente');
-      if (tipoEntrega === 'envio') {
+      // Buscar el tipo de envío seleccionado
+      const tipoEnvio = this.tiposEnvio.find(t => t.id === tipoEnvioId);
+      this.tipoEnvioSeleccionado = tipoEnvio || null;
+      
+      // Resetear costo manual si no es tipo MANUAL
+      if (tipoEnvio?.tipo !== 'MANUAL') {
+        this.costoEnvioManual = null;
+      }
+      
+      // Si hay un tipo de envío seleccionado (no es null), requerir dirección
+      if (tipoEnvioId !== null && tipoEnvioId !== undefined) {
         direccionControl?.setValidators([Validators.required]);
       } else {
         direccionControl?.clearValidators();
+        this.tipoEnvioSeleccionado = null;
+        this.costoEnvioManual = null;
       }
       direccionControl?.updateValueAndValidity();
     });
@@ -564,6 +594,16 @@ export class NuevaVentaComponent implements OnInit {
       return;
     }
 
+    // Validar costo de envío manual si es requerido
+    if (this.esTipoManual() && (!this.costoEnvioManual || this.costoEnvioManual <= 0)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Costo de envío requerido',
+        detail: 'Debe ingresar un monto válido para el envío manual',
+      });
+      return;
+    }
+
     // Validar diferencia de pago
     const diferencia = this.diferenciaPago();
     const esEfectivoUnico = this.esEfectivoUnico();
@@ -598,8 +638,7 @@ export class NuevaVentaComponent implements OnInit {
 
     // Obtener valores del formulario
     const formValue = this.ventaForm.value;
-    const tipoEntrega = formValue.tipoEntrega;
-    const necesitaEnvio = tipoEntrega === 'envio';
+    const necesitaEnvio = formValue.tipoEnvioId !== null && formValue.tipoEnvioId !== undefined;
 
     // Formatear fecha - obtener directamente del control para asegurar que tenemos el valor
     const fechaControl = this.ventaForm.get('fechaPedido');
@@ -653,15 +692,10 @@ export class NuevaVentaComponent implements OnInit {
       nombreCliente: formValue.nombreCliente,
       telefonoCliente: formValue.telefonoCliente,
       necesitaEnvio: necesitaEnvio,
-      tipoEnvioId: necesitaEnvio && this.tipoEnvio ? this.tipoEnvio.id : null,
-      cantidadEnvio: necesitaEnvio ? this.cantidadEnvio || null : null,
+      tipoEnvioId: necesitaEnvio && this.tipoEnvioSeleccionado ? this.tipoEnvioSeleccionado.id : null,
+      cantidadEnvio: null, // No se usa actualmente
       direccionCliente: necesitaEnvio ? formValue.direccionCliente : null,
-      costoEnvio:
-        necesitaEnvio &&
-        this.tipoEnvio?.costo_base !== null &&
-        this.tipoEnvio?.costo_base !== undefined
-          ? this.tipoEnvio.costo_base
-          : null,
+      costoEnvio: necesitaEnvio ? this.costoEnvio() : null,
       ignorarISV: this.ignorarISV(),
       isv: this.isv(),
     };
