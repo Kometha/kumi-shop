@@ -16,6 +16,7 @@ import { Pedido } from '../services/interfaces/ventas.interfaces';
 import { NuevaVentaModalComponent } from '../nueva-venta-modal/nueva-venta-modal.component';
 import { SeleccionarProductosModalComponent } from '../seleccionar-productos-modal/seleccionar-productos-modal.component';
 import { DetallePedidoModalComponent } from '../detalle-pedido-modal/detalle-pedido-modal.component';
+import { EditarVentaModalComponent } from '../editar-venta-modal/editar-venta-modal.component';
 
 @Component({
   selector: 'app-ventas',
@@ -33,6 +34,7 @@ import { DetallePedidoModalComponent } from '../detalle-pedido-modal/detalle-ped
     NuevaVentaModalComponent,
     SeleccionarProductosModalComponent,
     DetallePedidoModalComponent,
+    EditarVentaModalComponent,
   ],
   templateUrl: './ventas.component.html',
   styleUrl: './ventas.component.scss',
@@ -48,9 +50,12 @@ export class VentasComponent implements OnInit {
   displayNuevaVentaModal: boolean = false;
   displaySeleccionarProductosModal: boolean = false;
   displayDetallePedidoModal: boolean = false;
+  displayEditarVentaModal: boolean = false;
   pedidoIdSeleccionado: number | null = null;
+  pedidoIdParaEditar: number | null = null;
   
   @ViewChild('nuevaVentaModal') nuevaVentaModalRef!: NuevaVentaModalComponent;
+  @ViewChild('editarVentaModal') editarVentaModalRef!: EditarVentaModalComponent;
   productosDisponibles: Product[] = [];
 
   constructor(
@@ -151,11 +156,16 @@ export class VentasComponent implements OnInit {
   onProductosSeleccionados(productos: Array<{ producto: Product; cantidad: number }>): void {
     // Usar setTimeout para asegurar que la referencia esté disponible
     setTimeout(() => {
-      if (this.nuevaVentaModalRef) {
+      // Si el modal de nueva venta está abierto, agregar productos ahí
+      if (this.displayNuevaVentaModal && this.nuevaVentaModalRef) {
         this.nuevaVentaModalRef.agregarProductos(productos);
       }
+      // Si el modal de editar venta está abierto, agregar productos ahí
+      if (this.displayEditarVentaModal && this.editarVentaModalRef) {
+        this.editarVentaModalRef.agregarProductos(productos);
+      }
     }, 0);
-    document.body.style.overflow = 'hidden'; // Restaurar overflow para el modal de nueva venta
+    document.body.style.overflow = 'hidden'; // Restaurar overflow para el modal activo
   }
 
   formatCurrency(value: number): string {
@@ -212,6 +222,39 @@ export class VentasComponent implements OnInit {
   onDetallePedidoModalHide(): void {
     this.displayDetallePedidoModal = false;
     document.body.style.overflow = 'auto';
+  }
+
+  // Método para abrir el modal de edición de venta
+  editarVenta(venta: Pedido): void {
+    if (venta.item && venta.item.id) {
+      this.pedidoIdParaEditar = venta.item.id;
+      this.displayEditarVentaModal = true;
+      document.body.style.overflow = 'hidden';
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Error',
+        detail: 'No se pudo obtener el ID del pedido',
+      });
+    }
+  }
+
+  // Método para cerrar el modal de edición
+  onEditarVentaModalHide(): void {
+    this.displayEditarVentaModal = false;
+    this.pedidoIdParaEditar = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  // Método cuando se actualiza una venta
+  onVentaActualizada(): void {
+    this.loadVentas();
+  }
+
+  // Método para abrir selección de productos desde el modal de edición
+  onAbrirSeleccionProductosEditar(): void {
+    this.displaySeleccionarProductosModal = true;
+    document.body.style.overflow = 'hidden';
   }
 
 }
