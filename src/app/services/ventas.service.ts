@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Pedido } from './interfaces/ventas.interfaces';
@@ -89,6 +89,7 @@ export interface PedidoCompleto {
   monto_neto_recibido: number | null;
   total_comisiones_metodos: number | null;
   total_comisiones_financiamiento: number | null;
+  tipo_envio_id: number | null;
 }
 
 @Injectable({
@@ -367,6 +368,112 @@ export class VentasService {
       }),
       catchError((error) => {
         console.error('❌ [VENTAS] Error en petición de crear venta:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener los métodos de pago de un pedido
+   */
+  getMetodosPagoPedido(pedidoId: number): Observable<Array<{ metodo_pago_id: number; monto_aplicado: number }>> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('pedidos_pagos')
+        .select('metodo_pago_id, monto_aplicado')
+        .eq('pedido_id', pedidoId)
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener métodos de pago del pedido:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Métodos de pago obtenidos:', response.data?.length);
+        return (response.data || []) as Array<{ metodo_pago_id: number; monto_aplicado: number }>;
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de métodos de pago:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener el envío de un pedido
+   */
+  getEnvioPedido(pedidoId: number): Observable<{ tipo_envio_id: number | null } | null> {
+    console.log('🔍 [VENTAS] Buscando envío para pedido_id:', pedidoId);
+    return from(
+      this.supabase
+        .schema('ventas')
+        .from('envios')
+        .select('tipo_envio_id')
+        .eq('pedido_id', pedidoId)
+        .maybeSingle()
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al obtener envío del pedido:', response.error);
+          // Si no hay envío, retornar null en lugar de lanzar error
+          if (response.error.code === 'PGRST116') {
+            // Código cuando no se encuentra ningún registro
+            console.log('ℹ️ [VENTAS] No se encontró registro de envío para este pedido (PGRST116)');
+            return null;
+          }
+          throw new Error(response.error.message);
+        }
+        console.log('✅ [VENTAS] Envío del pedido obtenido:', response.data);
+        if (response.data) {
+          console.log('   tipo_envio_id:', response.data.tipo_envio_id);
+        }
+        return response.data as { tipo_envio_id: number | null } | null;
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de envío del pedido:', error);
+        // Si es un error de "no encontrado", retornar null en lugar de lanzar error
+        if (error.message && error.message.includes('PGRST116')) {
+          return of(null);
+        }
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Actualizar una venta completa
+   * NOTA: Necesitarás crear una función SQL en el backend llamada 'actualizar_venta_completa'
+   * que reciba el pedido_id y el JSON de la venta actualizada
+   */
+  actualizarVentaCompleta(pedidoId: number, ventaJSON: any): Observable<{ exito: boolean; mensaje: string }> {
+    return from(
+      this.supabase
+        .schema('ventas')
+        .rpc('actualizar_venta_completa', { 
+          p_pedido_id: pedidoId,
+          p_venta_json: ventaJSON 
+        })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          console.error('❌ [VENTAS] Error al actualizar venta:', response.error);
+          throw new Error(response.error.message);
+        }
+        
+        // La función retorna un array con un objeto
+        const resultado = response.data && response.data.length > 0 
+          ? response.data[0] 
+          : null;
+        
+        if (!resultado) {
+          throw new Error('No se recibió respuesta de la función actualizar_venta_completa');
+        }
+
+        console.log('✅ [VENTAS] Venta actualizada:', resultado);
+        return resultado as { exito: boolean; mensaje: string };
+      }),
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en petición de actualizar venta:', error);
         throw error;
       })
     );
