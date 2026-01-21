@@ -124,6 +124,15 @@
               tooltipPosition="top"
               (click)="verDetallesPedido(venta)"
             ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text p-button-sm"
+              pTooltip="Editar venta"
+              tooltipPosition="top"
+              (click)="editarVenta(venta)"
+            ></button>
           </td>
         </tr>
       </ng-template>
@@ -196,4 +205,26 @@
     [(visible)]="displayDetallePedidoModal"
     [pedidoId]="pedidoIdSeleccionado"
   ></app-detalle-pedido-modal>
+</p-dialog>
+
+<!-- Modal para editar venta -->
+<p-dialog
+  [(visible)]="displayEditarVentaModal"
+  [modal]="true"
+  [style]="{ width: '50vw', minWidth: '600px', maxHeight: '90vh' }"
+  [breakpoints]="{ '1024px': '75vw', '640px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [showHeader]="true"
+  header="Editar Venta"
+  (onHide)="onEditarVentaModalHide()"
+>
+  <app-editar-venta-modal
+    #editarVentaModal
+    [(visible)]="displayEditarVentaModal"
+    [pedidoId]="pedidoIdParaEditar"
+    (ventaActualizada)="onVentaActualizada()"
+    (abrirSeleccionProductos)="onAbrirSeleccionProductosEditar()"
+  ></app-editar-venta-modal>
 </p-dialog>
