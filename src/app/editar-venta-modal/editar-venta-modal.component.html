@@ -262,13 +262,16 @@
             <ng-template let-tipo pTemplate="item">
               <div class="flex flex-col gap-1">
                 <span class="font-medium">{{ tipo.nombre }}</span>
-                @if (tipo.costo_base !== null) {
+                @if (tipo.costo_base !== null && tipo.tipo !== 'MANUAL') {
                   <span class="text-xs text-gray-500">
                     {{ formatCurrency(tipo.costo_base) }}
                     @if (!tipo.es_costo_fijo) {
                       <span class="text-gray-400">(variable)</span>
                     }
                   </span>
+                }
+                @if (tipo.tipo === 'MANUAL') {
+                  <span class="text-xs text-gray-500">Ingresar monto manualmente</span>
                 }
                 @if (tipo.descripcion) {
                   <span class="text-xs text-gray-400">{{ tipo.descripcion }}</span>
@@ -281,18 +284,21 @@
           </p-dropdown>
         </div>
 
-        @if (tipoEnvio?.id === 1) {
+        @if (esTipoManual()) {
           <div class="form-group mt-4">
-            <label class="form-label">Cantidad de Envío *</label>
+            <label class="form-label">Costo de Envío Manual *</label>
             <p-inputNumber
-              [(ngModel)]="cantidadEnvio"
+              [(ngModel)]="costoEnvioManual"
               [min]="0"
-              [max]="999999"
               [style]="{'width':'100%'}"
-              [showButtons]="true"
-              buttonLayout="horizontal"
-              placeholder="Ingrese la cantidad de envío"
+              mode="currency"
+              currency="HNL"
+              locale="es-HN"
+              placeholder="Ingrese el monto del envío"
             ></p-inputNumber>
+            @if (!costoEnvioManual || costoEnvioManual <= 0) {
+              <small class="text-red-500 text-xs mt-1">Debe ingresar un monto válido para el envío manual</small>
+            }
           </div>
         }
       }
@@ -429,6 +435,14 @@
                   {{ formatCurrency(calcularIVA()) }}
                 </span>
               </div>
+              @if (necesitaEnvio && calcularCostoEnvio() > 0) {
+                <div class="flex items-center gap-4">
+                  <span class="font-semibold text-purple-600 text-sm">Costo de Envío:</span>
+                  <span class="font-mono font-semibold text-base text-purple-600">
+                    {{ formatCurrency(calcularCostoEnvio()) }}
+                  </span>
+                </div>
+              }
               <div class="flex items-center gap-4 pt-2 border-t border-gray-300">
                 <span class="font-semibold text-gray-900 text-base">Total:</span>
                 <span class="font-mono font-bold text-xl text-gray-900">
