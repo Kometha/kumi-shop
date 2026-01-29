@@ -42,6 +42,26 @@
               </div>
             }
 
+            <!-- Tipo de Envío -->
+            @if (tieneEnvio() && getNombreTipoEnvio()) {
+              <div>
+                <span class="text-xs font-semibold text-gray-600 uppercase">Tipo de Envío:</span>
+                <p class="text-sm font-medium text-gray-900 mt-1">
+                  {{ getNombreTipoEnvio() }}
+                  @if (esTipoEnvioManual()) {
+                    <span class="text-xs text-purple-500">(Monto manual)</span>
+                  }
+                </p>
+              </div>
+
+              <div>
+                <span class="text-xs font-semibold text-gray-600 uppercase">Costo de Envío:</span>
+                <p class="text-sm font-medium text-purple-600 mt-1">
+                  {{ formatCurrency(calcularCostoEnvio()) }}
+                </p>
+              </div>
+            }
+
             <!-- Notas -->
             @if (pedidoCompleto.notas) {
               <div class="md:col-span-2">
@@ -174,7 +194,17 @@
             <!-- Costo de Envío -->
             @if (tieneEnvio() && calcularCostoEnvio() > 0) {
               <div class="flex items-center justify-between">
-                <span class="font-semibold text-purple-600 text-sm">Costo de Envío:</span>
+                <div class="flex flex-col">
+                  <span class="font-semibold text-purple-600 text-sm">Costo de Envío:</span>
+                  @if (getNombreTipoEnvio()) {
+                    <span class="text-xs text-purple-500">
+                      {{ getNombreTipoEnvio() }}
+                      @if (esTipoEnvioManual()) {
+                        <span class="text-purple-400">(Manual)</span>
+                      }
+                    </span>
+                  }
+                </div>
                 <span class="font-mono font-semibold text-base text-purple-600">
                   {{ formatCurrency(calcularCostoEnvio()) }}
                 </span>
