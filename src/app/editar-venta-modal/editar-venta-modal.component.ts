@@ -110,7 +110,7 @@ export class EditarVentaModalComponent implements OnInit, OnChanges {
   necesitaEnvio: boolean = false;
   ignorarISV: boolean = false;
   tipoEnvio: TipoEnvio | null = null;
-  cantidadEnvio: number | null = null;
+  costoEnvioManual: number | null = null; // Para tipo MANUAL
 
   // Detalles del pedido
   detallesPedido: DetallePedido[] = [];
@@ -195,7 +195,10 @@ export class EditarVentaModalComponent implements OnInit, OnChanges {
         this.venta.direccionCliente = pedido.direccion_cliente || '';
         this.necesitaEnvio = pedido.necesita_envio;
         this.ignorarISV = pedido.ignorar_isv;
-        this.cantidadEnvio = null; // Se puede obtener si está disponible
+        // Guardar el costo de envío para usarlo si es tipo MANUAL
+        if (pedido.costo_envio !== null && pedido.costo_envio !== undefined) {
+          this.costoEnvioManual = pedido.costo_envio;
+        }
 
         // Convertir fecha_pedido a Date
         if (pedido.fecha_pedido) {
@@ -540,7 +543,7 @@ export class EditarVentaModalComponent implements OnInit, OnChanges {
     this.detallesPedido = [];
     this.necesitaEnvio = false;
     this.tipoEnvio = null;
-    this.cantidadEnvio = null;
+    this.costoEnvioManual = null;
     this.metodosPagoSeleccionados = [];
     this.metodoPagoTemporal = null;
     this.ignorarISV = false;
@@ -730,8 +733,32 @@ export class EditarVentaModalComponent implements OnInit, OnChanges {
     return this.calcularSubtotal() * 0.15;
   }
 
+  // Verificar si el tipo de envío seleccionado es MANUAL
+  esTipoManual(): boolean {
+    return this.tipoEnvio?.tipo === 'MANUAL';
+  }
+
+  // Calcular el costo de envío
+  calcularCostoEnvio(): number {
+    if (!this.necesitaEnvio || !this.tipoEnvio) {
+      return 0;
+    }
+
+    // Si el tipo es MANUAL, usar el costo manual ingresado
+    if (this.tipoEnvio.tipo === 'MANUAL') {
+      return this.costoEnvioManual || 0;
+    }
+
+    // Si tiene costo_base, usarlo
+    if (this.tipoEnvio.costo_base !== null && this.tipoEnvio.costo_base !== undefined) {
+      return this.tipoEnvio.costo_base;
+    }
+
+    return 0;
+  }
+
   calcularTotal(): number {
-    return this.calcularSubtotal() + this.calcularIVA();
+    return this.calcularSubtotal() + this.calcularIVA() + this.calcularCostoEnvio();
   }
 
   calcularTotalMetodosPago(): number {
@@ -807,6 +834,16 @@ export class EditarVentaModalComponent implements OnInit, OnChanges {
       return;
     }
 
+    // Validar costo de envío manual si es requerido
+    if (this.necesitaEnvio && this.esTipoManual() && (!this.costoEnvioManual || this.costoEnvioManual <= 0)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Costo de envío requerido',
+        detail: 'Debe ingresar un monto válido para el envío manual',
+      });
+      return;
+    }
+
     const diferencia = this.getDiferenciaPago();
     const esEfectivoUnico = this.esEfectivoUnico();
 
@@ -852,14 +889,9 @@ export class EditarVentaModalComponent implements OnInit, OnChanges {
       telefonoCliente: this.venta.telefonoCliente,
       necesitaEnvio: this.necesitaEnvio,
       tipoEnvioId: this.tipoEnvio?.id || null,
-      cantidadEnvio: this.cantidadEnvio || null,
+      cantidadEnvio: null, // No se usa actualmente
       direccionCliente: this.venta.direccionCliente,
-      costoEnvio:
-        this.necesitaEnvio &&
-        this.tipoEnvio?.costo_base !== null &&
-        this.tipoEnvio?.costo_base !== undefined
-          ? this.tipoEnvio.costo_base
-          : null,
+      costoEnvio: this.necesitaEnvio ? this.calcularCostoEnvio() : null,
       ignorarISV: this.ignorarISV,
       isv: this.calcularIVA(),
     };
