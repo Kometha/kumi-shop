@@ -186,10 +186,9 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
   }
 
   calcularMontoNetoRecibido(): number {
-    if (this.pedidoCompleto?.monto_neto_recibido !== null && this.pedidoCompleto?.monto_neto_recibido !== undefined) {
-      return this.pedidoCompleto.monto_neto_recibido;
-    }
-    return 0;
+    // El monto neto recibido es el subtotal (sin restar el costo de envío)
+    // El costo de envío se suma al total pero no se resta del monto neto recibido
+    return this.calcularSubtotal();
   }
 
   calcularTotalFactura(): number {
@@ -200,10 +199,9 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
   }
 
   calcularTotal(): number {
-    if (this.pedidoCompleto?.total !== null && this.pedidoCompleto?.total !== undefined) {
-      return this.pedidoCompleto.total;
-    }
-    return this.calcularSubtotal();
+    // Total = Subtotal + ISV + Costo de Envío
+    // No usar directamente pedidoCompleto.total porque puede estar incorrecto en la BD
+    return this.calcularSubtotal() + this.calcularISV() + this.calcularCostoEnvio();
   }
 
   tieneEnvio(): boolean {
