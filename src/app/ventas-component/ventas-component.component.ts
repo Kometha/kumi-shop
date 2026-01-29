@@ -176,6 +176,62 @@ export class VentasComponent implements OnInit {
     }).format(value);
   }
 
+  // Recalcular el total correctamente: Subtotal + ISV + Costo de Envío
+  // El problema es que el total en la BD no está sumando el costo de envío correctamente
+  calcularTotalVenta(venta: Pedido): number {
+    if (!venta.item) {
+      return venta.total || 0;
+    }
+
+    const subtotal = venta.item.subtotalProductos || 0;
+    const costoEnvio = venta.item.costoEnvio || 0;
+    const totalBD = venta.total || 0;
+    
+    // Si no hay costo de envío, usar el total de la BD directamente
+    if (!costoEnvio || costoEnvio === 0) {
+      return totalBD;
+    }
+    
+    // Calcular el total esperado con ISV (15% del subtotal)
+    const subtotalConISV = subtotal + (subtotal * 0.15);
+    const totalConISV = subtotalConISV + costoEnvio;
+    
+    // Calcular el total sin ISV (si el ISV está ignorado)
+    const totalSinISV = subtotal + costoEnvio;
+    
+    // Determinar si el ISV está ignorado comparando el total de la BD con el subtotal
+    // Si el total de la BD es igual al subtotal, entonces el ISV está ignorado
+    if (Math.abs(totalBD - subtotal) < 0.01) {
+      // El ISV está ignorado y el costo de envío no se está sumando
+      return totalSinISV;
+    }
+    
+    // Si el total de la BD es igual al subtotal + ISV (sin costo de envío), entonces el costo de envío no se está sumando
+    if (Math.abs(totalBD - subtotalConISV) < 0.01) {
+      // El costo de envío no se está sumando, agregarlo
+      return totalConISV;
+    }
+    
+    // Si el total de la BD ya incluye el costo de envío correctamente, usarlo
+    if (Math.abs(totalBD - totalConISV) < 0.01) {
+      return totalBD; // Ya está correcto
+    }
+    
+    if (Math.abs(totalBD - totalSinISV) < 0.01) {
+      return totalBD; // Ya está correcto (sin ISV)
+    }
+    
+    // Por defecto, recalcular sumando el costo de envío
+    // Si el total de la BD es menor que el subtotal + ISV, entonces el ISV está ignorado
+    if (totalBD < subtotalConISV) {
+      // El ISV está ignorado, solo sumar el costo de envío
+      return totalSinISV;
+    } else {
+      // El ISV está incluido, sumar el costo de envío también
+      return totalConISV;
+    }
+  }
+
   formatDate(fecha: Date | string | null | undefined): string {
     if (!fecha) {
       return '-';
