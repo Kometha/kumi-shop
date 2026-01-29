@@ -100,7 +100,7 @@
 
           <!-- Total (L.) -->
           <td class="text-right font-mono font-semibold">
-            {{ venta.total ? formatCurrency(venta.total) : '-' }}
+            {{ calcularTotalVenta(venta) ? formatCurrency(calcularTotalVenta(venta)) : '-' }}
           </td>
 
           <!-- Estado -->
