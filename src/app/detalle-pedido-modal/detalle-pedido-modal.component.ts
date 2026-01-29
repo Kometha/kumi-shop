@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ImageModule } from 'primeng/image';
 import { ButtonModule } from 'primeng/button';
-import { VentasService, DetallePedidoCompleto, PedidoCompleto } from '../services/ventas.service';
+import { VentasService, DetallePedidoCompleto, PedidoCompleto, TipoEnvio } from '../services/ventas.service';
 
 @Component({
   selector: 'app-detalle-pedido-modal',
@@ -19,14 +19,28 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
 
   detalles: DetallePedidoCompleto[] = [];
   pedidoCompleto: PedidoCompleto | null = null;
+  tipoEnvio: TipoEnvio | null = null;
+  tiposEnvio: TipoEnvio[] = [];
   loading: boolean = false;
 
   constructor(private ventasService: VentasService) {}
 
   ngOnInit(): void {
+    this.loadTiposEnvio();
     if (this.pedidoId) {
       this.loadDetalles();
     }
+  }
+
+  loadTiposEnvio(): void {
+    this.ventasService.getTiposEnvio().subscribe({
+      next: (tiposEnvio) => {
+        this.tiposEnvio = tiposEnvio;
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar tipos de envío:', error);
+      },
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -68,6 +82,10 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
     this.ventasService.getPedidoCompleto(this.pedidoId).subscribe({
       next: (pedido) => {
         this.pedidoCompleto = pedido;
+        // Buscar el tipo de envío si existe
+        if (pedido?.tipo_envio_id && this.tiposEnvio.length > 0) {
+          this.tipoEnvio = this.tiposEnvio.find(t => t.id === pedido.tipo_envio_id) || null;
+        }
         pedidoLoaded = true;
         checkLoading();
       },
@@ -77,6 +95,32 @@ export class DetallePedidoModalComponent implements OnInit, OnChanges {
         checkLoading();
       },
     });
+  }
+
+  // Obtener el nombre del tipo de envío
+  getNombreTipoEnvio(): string {
+    if (!this.pedidoCompleto?.tipo_envio_id) {
+      return '';
+    }
+    
+    // Si ya tenemos el tipo de envío cargado
+    if (this.tipoEnvio) {
+      return this.tipoEnvio.nombre;
+    }
+    
+    // Buscar en la lista de tipos de envío
+    const tipo = this.tiposEnvio.find(t => t.id === this.pedidoCompleto?.tipo_envio_id);
+    if (tipo) {
+      this.tipoEnvio = tipo;
+      return tipo.nombre;
+    }
+    
+    return `Tipo de envío ID: ${this.pedidoCompleto.tipo_envio_id}`;
+  }
+
+  // Verificar si el tipo de envío es MANUAL
+  esTipoEnvioManual(): boolean {
+    return this.tipoEnvio?.tipo === 'MANUAL';
   }
 
   onHide(): void {
