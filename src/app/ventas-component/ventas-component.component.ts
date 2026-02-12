@@ -99,9 +99,51 @@ export class VentasComponent implements OnInit {
     });
   }
 
-  // Métodos placeholder (sin lógica aún)
+  // Método para aplicar filtros de búsqueda
   applyFilters(): void {
-    // Lógica futura
+    if (!this.searchValue || this.searchValue.trim() === '') {
+      this.filteredVentas = this.ventas;
+      return;
+    }
+
+    const searchTerm = this.searchValue.trim().toLowerCase();
+
+    this.filteredVentas = this.ventas.filter((venta) => {
+      // Buscar en Cliente
+      const cliente = (venta.cliente || '').toLowerCase();
+      if (cliente.includes(searchTerm)) return true;
+
+      // Buscar en Pedido (codigopedido)
+      const codigoPedido = (venta.codigopedido || '').toLowerCase();
+      if (codigoPedido.includes(searchTerm)) return true;
+
+      // Buscar en Canal
+      const canal = (venta.canal || '').toLowerCase();
+      if (canal.includes(searchTerm)) return true;
+
+      // Buscar en Fecha (formateada)
+      const fechaFormateada = this.formatDate(venta.fecha).toLowerCase();
+      if (fechaFormateada.includes(searchTerm)) return true;
+
+      // Buscar en Total (convertido a string con formato de moneda)
+      const total = this.calcularTotalVenta(venta);
+      const totalFormateado = this.formatCurrency(total).toLowerCase();
+      if (totalFormateado.includes(searchTerm)) return true;
+      
+      // También buscar en el número sin formato de moneda
+      const totalNumero = total.toString().toLowerCase();
+      if (totalNumero.includes(searchTerm)) return true;
+
+      // Buscar en Estado
+      const estado = (venta.estado || '').toLowerCase();
+      if (estado.includes(searchTerm)) return true;
+      
+      // También buscar en el label del estado
+      const estadoLabel = this.getEstadoLabel(venta.estado || 'pendiente').toLowerCase();
+      if (estadoLabel.includes(searchTerm)) return true;
+
+      return false;
+    });
   }
 
   getFilteredVentasCount(): number {
