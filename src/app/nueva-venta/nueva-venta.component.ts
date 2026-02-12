@@ -622,15 +622,15 @@ export class NuevaVentaComponent implements OnInit {
         return;
       }
     } else {
-      if (Math.abs(diferencia) > 0.01) {
+      if (diferencia > 0.01) {
         this.messageService.add({
           severity: 'warn',
-          summary: 'Suma incorrecta',
+          summary: 'Monto insuficiente',
           detail: `La suma de los métodos de pago (${this.formatCurrency(
             this.totalMetodosPago()
-          )}) debe ser igual al total de la venta (${this.formatCurrency(
+          )}) debe ser mayor o igual al total de la venta (${this.formatCurrency(
             this.total()
-          )})`,
+          )}). Puedes agregar un monto mayor para incluir financiamiento adicional.`,
         });
         return;
       }
