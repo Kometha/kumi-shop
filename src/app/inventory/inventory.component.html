@@ -91,6 +91,23 @@
     >
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 180px">
+            <div class="flex flex-column gap-2">
+              <span>Categoría</span>
+              <p-dropdown
+                [options]="categoryOptions"
+                [(ngModel)]="selectedCategory"
+                (onChange)="applyFilters()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Todas"
+                [showClear]="true"
+                [style]="{ width: '100%' }"
+                [disabled]="loading"
+                appendTo="body"
+              ></p-dropdown>
+            </div>
+          </th>
           <th style="width: 80px">Imagen</th>
           <th style="width: 80px">Código</th>
           <th>Producto</th>
@@ -105,6 +122,9 @@
 
       <ng-template pTemplate="body" let-product>
         <tr>
+          <!-- Categoría -->
+          <td class="font-medium">{{ product.categoria || '-' }}</td>
+
           <!-- Imagen -->
           <td>
             <p-image
