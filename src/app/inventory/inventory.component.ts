@@ -8,6 +8,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ImageModule } from 'primeng/image';
+import { SelectModule } from 'primeng/select';
 import { AddProductModalComponent } from '../add-product-modal/add-product-modal.component';
 import { ExportDialogComponent } from '../export-dialog/export-dialog.component';
 import { ProductosService, Product } from '../services/productos.service';
@@ -27,6 +28,7 @@ import { ToastModule } from 'primeng/toast';
     FormsModule,
     DialogModule,
     ImageModule,
+    SelectModule,
     ToastModule,
     AddProductModalComponent,
     ExportDialogComponent
@@ -39,7 +41,10 @@ export class InventoryComponent implements OnInit {
   filteredProducts: Product[] = [];
   searchValue: string = '';
   activeFilter: 'todos' | 'stock-bajo' | 'sin-movimiento' | 'ofertas' = 'todos';
-  categoryFilterValue: string = '';
+  categoryOptions: Array<{ label: string; value: number | 'none' | null }> = [
+    { label: 'Todas', value: null },
+  ];
+  selectedCategory: number | 'none' | null = null;
   displayAddProductModal: boolean = false;
   displayExportDialog: boolean = false;
   displayDeleteConfirmDialog: boolean = false;
@@ -65,6 +70,7 @@ export class InventoryComponent implements OnInit {
     this.productosService.getProductos().subscribe({
       next: (productos) => {
         this.products = productos;
+        this.buildCategoryOptions(productos);
         this.applyFilters();
         this.loading = false;
         console.log('✅ Productos cargados:', productos.length);
@@ -94,6 +100,42 @@ export class InventoryComponent implements OnInit {
     });
   }
 
+  private buildCategoryOptions(productos: Product[]): void {
+    const byId = new Map<number, string>();
+    let hasNone = false;
+
+    for (const p of productos) {
+      const name = (p.categoria || 'Sin categoría').trim() || 'Sin categoría';
+      if (p.categoria_id === null || p.categoria_id === undefined) {
+        hasNone = true;
+        continue;
+      }
+      if (!byId.has(p.categoria_id)) {
+        byId.set(p.categoria_id, name);
+      }
+    }
+
+    const sorted = [...byId.entries()].sort((a, b) =>
+      a[1].localeCompare(b[1], 'es', { sensitivity: 'base' })
+    );
+
+    this.categoryOptions = [
+      { label: 'Todas', value: null },
+      ...sorted.map(([id, label]) => ({ label, value: id })),
+      ...(hasNone ? [{ label: 'Sin categoría', value: 'none' as const }] : []),
+    ];
+
+    if (this.selectedCategory === 'none' && !hasNone) {
+      this.selectedCategory = null;
+    }
+    if (
+      typeof this.selectedCategory === 'number' &&
+      !byId.has(this.selectedCategory)
+    ) {
+      this.selectedCategory = null;
+    }
+  }
+
   applyFilters() {
     let filtered = [...this.products];
 
@@ -107,12 +149,17 @@ export class InventoryComponent implements OnInit {
       );
     }
 
-    // Aplicar filtro por categoría (nombre, desde el header)
-    if (this.categoryFilterValue?.trim()) {
-      const catLower = this.categoryFilterValue.trim().toLowerCase();
-      filtered = filtered.filter((p) =>
-        (p.categoria ?? '').toLowerCase().includes(catLower)
-      );
+    // Aplicar filtro por categoría (dropdown del header)
+    if (this.selectedCategory !== null && this.selectedCategory !== undefined) {
+      if (this.selectedCategory === 'none') {
+        filtered = filtered.filter(
+          (p) => p.categoria_id === null || p.categoria_id === undefined
+        );
+      } else {
+        filtered = filtered.filter(
+          (p) => p.categoria_id === this.selectedCategory
+        );
+      }
     }
 
     // Aplicar filtros por pestañas (stock/ofertas)

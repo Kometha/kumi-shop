@@ -91,23 +91,7 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 200px">
-            <div class="flex flex-column gap-2">
-              <span class="font-semibold">Categoría</span>
-              <div class="flex align-items-center gap-2">
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="categoryFilterValue"
-                  (input)="applyFilters()"
-                  placeholder="Escriba para filtrar"
-                  class="p-inputtext-sm flex-1"
-                  [disabled]="loading"
-                />
-                <i class="pi pi-filter text-gray-500" style="flex-shrink: 0"></i>
-              </div>
-            </div>
-          </th>
+          <th style="width: 14rem">Categoría</th>
           <th style="width: 80px">Imagen</th>
           <th style="width: 80px">Código</th>
           <th>Producto</th>
@@ -117,6 +101,30 @@
           <th style="width: 120px" class="text-center">Margen (%)</th>
           <th style="width: 120px" class="text-center">Estado</th>
           <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+        <tr>
+          <th>
+            <p-select
+              [(ngModel)]="selectedCategory"
+              [options]="categoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todas"
+              [showClear]="true"
+              (onChange)="applyFilters()"
+              [style]="{ 'min-width': '12rem' }"
+              [disabled]="loading"
+            ></p-select>
+          </th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
         </tr>
       </ng-template>
 
