@@ -180,17 +180,18 @@ export class ProductosService {
           estado = 'stock-bajo';
         }
 
-        // Extraer información de categoría
+        // Extraer información de categoría (soporta categorias o categoria con { id, nombre })
         let categoriaNombre = 'Sin categoría';
         let categoriaId: number | null = null;
 
-        if (item.categorias) {
-          if (Array.isArray(item.categorias) && item.categorias.length > 0) {
-            categoriaNombre = item.categorias[0].nombre || 'Sin categoría';
-            categoriaId = item.categorias[0].id || null;
-          } else if (item.categorias && typeof item.categorias === 'object') {
-            categoriaNombre = item.categorias.nombre || 'Sin categoría';
-            categoriaId = item.categorias.id || null;
+        const catSource = item.categoria ?? item.categorias;
+        if (catSource) {
+          if (Array.isArray(catSource) && catSource.length > 0) {
+            categoriaNombre = catSource[0].nombre ?? 'Sin categoría';
+            categoriaId = catSource[0].id ?? null;
+          } else if (typeof catSource === 'object') {
+            categoriaNombre = catSource.nombre ?? 'Sin categoría';
+            categoriaId = catSource.id ?? null;
           }
         } else if (item.categoria_id) {
           categoriaId = item.categoria_id;

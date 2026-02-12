@@ -91,21 +91,21 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 180px">
+          <th style="width: 200px">
             <div class="flex flex-column gap-2">
-              <span>Categoría</span>
-              <p-dropdown
-                [options]="categoryOptions"
-                [(ngModel)]="selectedCategory"
-                (onChange)="applyFilters()"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Todas"
-                [showClear]="true"
-                [style]="{ width: '100%' }"
-                [disabled]="loading"
-                appendTo="body"
-              ></p-dropdown>
+              <span class="font-semibold">Categoría</span>
+              <div class="flex align-items-center gap-2">
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="categoryFilterValue"
+                  (input)="applyFilters()"
+                  placeholder="Escriba para filtrar"
+                  class="p-inputtext-sm flex-1"
+                  [disabled]="loading"
+                />
+                <i class="pi pi-filter text-gray-500" style="flex-shrink: 0"></i>
+              </div>
             </div>
           </th>
           <th style="width: 80px">Imagen</th>
