@@ -1,9 +1,56 @@
 <div class="p-6">
-  <div class="flex flex-col items-center justify-center min-h-[60vh]">
-    <div class="text-center">
-      <i class="pi pi-wrench text-6xl text-gray-400 mb-4"></i>
-      <h2 class="text-4xl font-bold text-gray-700 mb-2">EN CONSTRUCCIÓN</h2>
-      <p class="text-gray-500 text-lg">Esta sección está en desarrollo</p>
-    </div>
+  <h2 class="text-2xl font-semibold text-gray-800 mb-6">Dashboard</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Ventas Totales -->
+    <app-stat-card
+      title="Ventas Totales"
+      value="45,231.89"
+      prefix="L."
+      icon="pi pi-dollar"
+      iconColor="primary"
+      [trend]="{
+        value: 20.1,
+        isPositive: true,
+        label: 'comparado con el mes anterior'
+      }"
+    ></app-stat-card>
+
+    <!-- Pedidos Nuevos -->
+    <app-stat-card
+      title="Pedidos Nuevos"
+      value="+124"
+      icon="pi pi-shopping-cart"
+      iconColor="success"
+      [trend]="{
+        value: 12.2,
+        isPositive: true,
+        label: 'comparado con el mes anterior'
+      }"
+    ></app-stat-card>
+
+    <!-- Productos en Stock -->
+    <app-stat-card
+      title="Productos en Stock"
+      value="1,324"
+      icon="pi pi-box"
+      iconColor="info"
+      [trend]="{
+        value: 4.5,
+        isPositive: false,
+        label: 'comparado con el mes anterior'
+      }"
+    ></app-stat-card>
+  </div>
+
+  <!-- Ventas Mensuales (izquierda) y Alertas de Inventario (derecha) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <app-sales-chart></app-sales-chart>
+    <app-inventory-alerts></app-inventory-alerts>
+  </div>
+
+  <!-- Ventas Recientes -->
+  <div class="mt-6">
+    <!-- <app-recent-sales></app-recent-sales> -->
   </div>
 </div>

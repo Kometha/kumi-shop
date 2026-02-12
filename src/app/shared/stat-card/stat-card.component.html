@@ -25,7 +25,7 @@
       <div class="stat-card-trend">
         <div class="trend-indicator" [class]="trend.isPositive ? 'positive' : 'negative'">
           <i class="pi" [class]="trend.isPositive ? 'pi-arrow-up' : 'pi-arrow-down'"></i>
-          <span>{{ trend.value }}%</span>
+          <span>{{ trend.isPositive ? '+' : '-' }}{{ trend.value }}%</span>
         </div>
         <p class="trend-description">{{ trend.label }}</p>
       </div>
