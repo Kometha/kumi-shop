@@ -41,6 +41,18 @@ export interface TipoEnvio {
   descripcion: string | null;
 }
 
+// Interfaz para ventas/egresos mensuales del dashboard
+export interface VentasMensualesItem {
+  mes: string;
+  anio: number;
+  total: number;
+}
+
+export interface VentasMensualesDashboard {
+  ventas: VentasMensualesItem[];
+  egresos: VentasMensualesItem[];
+}
+
 // Interfaz para el resumen del dashboard
 export interface DashboardResumen {
   totalVentas: {
@@ -54,6 +66,9 @@ export interface DashboardResumen {
     mesAnterior: number;
     porcentaje: number;
     esPositivo: boolean;
+  };
+  productosStock: {
+    total: number;
   };
 }
 
@@ -141,6 +156,33 @@ export class VentasService {
       catchError((error) => {
         console.error('❌ [VENTAS] Error al obtener ventas:', error);
         throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener ventas y egresos mensuales para el gráfico del dashboard
+   */
+  getVentasMensualesDashboard(): Observable<VentasMensualesDashboard | null> {
+    return from(
+      (async () => {
+        const { data, error } = await this.supabase
+          .schema('ventas')
+          .rpc('ventas_mensuales_dashboard');
+
+        if (error) {
+          console.error('❌ [VENTAS] Error al obtener ventas mensuales:', error);
+          throw error;
+        }
+
+        if (!data) return null;
+        const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
+        return result as VentasMensualesDashboard;
+      })()
+    ).pipe(
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en getVentasMensualesDashboard:', error);
+        return of(null);
       })
     );
   }
