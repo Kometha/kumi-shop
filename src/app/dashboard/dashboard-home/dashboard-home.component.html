@@ -31,14 +31,9 @@
     <!-- Productos en Stock -->
     <app-stat-card
       title="Productos en Stock"
-      value="1,324"
+      [value]="resumen && resumen.productosStock ? resumen.productosStock.total : (loadingResumen ? '...' : '-')"
       icon="pi pi-box"
       iconColor="info"
-      [trend]="{
-        value: 4.5,
-        isPositive: false,
-        label: 'comparado con el mes anterior'
-      }"
     ></app-stat-card>
   </div>
 
