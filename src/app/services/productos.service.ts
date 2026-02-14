@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from, throwError } from 'rxjs';
+import { Observable, from, of, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
@@ -51,6 +51,19 @@ export interface NuevoProducto {
   imagen?: File; // Archivo de imagen opcional
   imagenUrl?: string; // URL de imagen opcional (si ya está subida)
   eliminarImagen?: boolean; // Flag para indicar que se debe eliminar la imagen
+}
+
+// Interfaz para alertas de inventario (stock crítico)
+export interface AlertaProducto {
+  productoId: number;
+  nombre: string;
+  stockActual: number;
+  stockMinimo: number;
+}
+
+export interface AlertasInventario {
+  totalProductosCriticos: number;
+  productos: AlertaProducto[];
 }
 
 // Interfaz para las categorías
@@ -569,6 +582,31 @@ export class ProductosService {
           return false;
         }
         return true;
+      })
+    );
+  }
+
+  /**
+   * Obtener alertas de inventario (productos con stock crítico)
+   */
+  getAlertasInventario(): Observable<AlertasInventario | null> {
+    return from(
+      (async () => {
+        const { data, error } = await this.supabase.rpc('alertas_inventario');
+
+        if (error) {
+          console.error('❌ [PRODUCTOS] Error al obtener alertas inventario:', error);
+          throw error;
+        }
+
+        if (!data) return null;
+        const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
+        return result as AlertasInventario;
+      })()
+    ).pipe(
+      catchError((error) => {
+        console.error('❌ [PRODUCTOS] Error en getAlertasInventario:', error);
+        return of(null);
       })
     );
   }

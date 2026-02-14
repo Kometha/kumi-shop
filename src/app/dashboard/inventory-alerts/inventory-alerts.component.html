@@ -15,29 +15,34 @@
       <span
         class="inline-block bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
       >
-        5 productos
+        {{ loading ? '...' : (alertas ? alertas.totalProductosCriticos : 0) }} productos
       </span>
     </div>
 
-    <div class="space-y-3 mb-4">
-      <!-- Producto 1 -->
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-900">Silla Ergonómica Negra</span>
-        <span class="font-medium text-red-600">2 unidades</span>
+    @if (loading) {
+      <p class="text-sm text-gray-500">Cargando...</p>
+    } @else if (alertas?.productos?.length) {
+      <div class="space-y-3 mb-4">
+        @for (producto of productosPreview; track producto.productoId) {
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-900">{{ producto.nombre }}</span>
+            <span class="font-medium text-red-600">{{ formatStock(producto.stockActual) }}</span>
+          </div>
+        }
       </div>
-
-      <!-- Producto 2 -->
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-900">Mesa de Centro Cristal</span>
-        <span class="font-medium text-red-600">1 unidad</span>
-      </div>
-
-      <!-- Producto 3 -->
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-900">Sofá Esquinero Beige</span>
-        <span class="font-medium text-red-600">3 unidades</span>
-      </div>
-    </div>
+      @if (hayMasProductos) {
+        <button
+          pButton
+          type="button"
+          label="Ver más"
+          icon="pi pi-external-link"
+          class="p-button-text p-button-sm w-full mb-4"
+          (click)="abrirModalStockCritico()"
+        ></button>
+      }
+    } @else if (alertas && alertas.totalProductosCriticos === 0) {
+      <p class="text-sm text-gray-500 mb-4">No hay productos con stock crítico</p>
+    }
   </div>
 
   <!-- Separador -->
@@ -84,3 +89,25 @@
     </button>
   </div>
 </div>
+
+<!-- Modal Stock Crítico - lista completa -->
+<p-dialog
+  [(visible)]="mostrarModalStockCritico"
+  header="Stock Crítico - Todos los productos"
+  [modal]="true"
+  [style]="{ width: 'min(450px, 95vw)' }"
+  [contentStyle]="{ overflow: 'hidden', display: 'flex', 'flex-direction': 'column' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  (onHide)="cerrarModalStockCritico()"
+>
+  <div class="flex flex-col gap-3" style="max-height: 60vh; overflow-y: auto;">
+    @for (producto of (alertas?.productos ?? []); track producto.productoId) {
+      <div class="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-gray-50">
+        <span class="text-gray-900 font-medium">{{ producto.nombre }}</span>
+        <span class="font-medium text-red-600">{{ formatStock(producto.stockActual) }}</span>
+      </div>
+    }
+  </div>
+</p-dialog>
