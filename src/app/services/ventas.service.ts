@@ -41,6 +41,22 @@ export interface TipoEnvio {
   descripcion: string | null;
 }
 
+// Interfaz para el resumen del dashboard
+export interface DashboardResumen {
+  totalVentas: {
+    mesActual: number;
+    mesAnterior: number;
+    porcentaje: number;
+    esPositivo: boolean;
+  };
+  pedidos: {
+    mesActual: number;
+    mesAnterior: number;
+    porcentaje: number;
+    esPositivo: boolean;
+  };
+}
+
 // Interfaz para la respuesta de crear_venta_completa
 export interface CrearVentaResponse {
   pedido_id: number | null;
@@ -125,6 +141,33 @@ export class VentasService {
       catchError((error) => {
         console.error('❌ [VENTAS] Error al obtener ventas:', error);
         throw error;
+      })
+    );
+  }
+
+  /**
+   * Obtener resumen del dashboard (ventas y pedidos)
+   */
+  getDashboardResumen(): Observable<DashboardResumen | null> {
+    return from(
+      (async () => {
+        const { data, error } = await this.supabase
+          .schema('ventas')
+          .rpc('dashboard_resumen');
+
+        if (error) {
+          console.error('❌ [VENTAS] Error al obtener dashboard resumen:', error);
+          throw error;
+        }
+
+        if (!data) return null;
+        const resumen = Array.isArray(data) && data.length > 0 ? data[0] : data;
+        return resumen as DashboardResumen;
+      })()
+    ).pipe(
+      catchError((error) => {
+        console.error('❌ [VENTAS] Error en getDashboardResumen:', error);
+        return of(null);
       })
     );
   }
