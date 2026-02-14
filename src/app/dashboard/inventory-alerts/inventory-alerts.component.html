@@ -15,22 +15,22 @@
       <span
         class="inline-block bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
       >
-        {{ loading ? '...' : (alertas ? alertas.totalProductosCriticos : 0) }} productos
+        {{ loading ? '...' : (alertas?.stockCritico?.totalProductosCriticos ?? 0) }} productos
       </span>
     </div>
 
     @if (loading) {
       <p class="text-sm text-gray-500">Cargando...</p>
-    } @else if (alertas?.productos?.length) {
+    } @else if (alertas?.stockCritico?.productos?.length) {
       <div class="space-y-3 mb-4">
-        @for (producto of productosPreview; track producto.productoId) {
+        @for (producto of productosCriticosPreview; track producto.productoId) {
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-900">{{ producto.nombre }}</span>
             <span class="font-medium text-red-600">{{ formatStock(producto.stockActual) }}</span>
           </div>
         }
       </div>
-      @if (hayMasProductos) {
+      @if (hayMasProductosCriticos) {
         <button
           pButton
           type="button"
@@ -40,7 +40,7 @@
           (click)="abrirModalStockCritico()"
         ></button>
       }
-    } @else if (alertas && alertas.totalProductosCriticos === 0) {
+    } @else if ((alertas?.stockCritico?.totalProductosCriticos ?? -1) === 0) {
       <p class="text-sm text-gray-500 mb-4">No hay productos con stock crítico</p>
     }
   </div>
@@ -58,35 +58,34 @@
       <span
         class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
       >
-        3 productos
+        {{ loading ? '...' : (alertas?.sinRotacion?.totalProductosSinRotacion ?? 0) }} productos
       </span>
     </div>
 
-    <div class="space-y-3 mb-4">
-      <!-- Producto 1 -->
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-900">Estantería Industrial</span>
-        <span class="font-medium text-yellow-600">+90 días</span>
+    @if (loading) {
+      <p class="text-sm text-gray-500">Cargando...</p>
+    } @else if (alertas?.sinRotacion?.productos?.length) {
+      <div class="space-y-3 mb-4">
+        @for (producto of productosSinRotacionPreview; track producto.productoId) {
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-900">{{ producto.nombre }}</span>
+            <span class="font-medium text-yellow-600">{{ formatDiasSinVenta(producto.diasSinVenta) }}</span>
+          </div>
+        }
       </div>
-
-      <!-- Producto 2 -->
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-900">Lámpara de Pie Vintage</span>
-        <span class="font-medium text-yellow-600">+60 días</span>
-      </div>
-
-      <!-- Producto 3 -->
-      <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-900">Mesa Auxiliar Dorada</span>
-        <span class="font-medium text-yellow-600">+45 días</span>
-      </div>
-    </div>
-
-    <button
-      class="w-full py-2 px-4 text-sm font-medium text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors"
-    >
-      Crear Promoción
-    </button>
+      @if (hayMasProductosSinRotacion) {
+        <button
+          pButton
+          type="button"
+          label="Ver más"
+          icon="pi pi-external-link"
+          class="p-button-text p-button-sm w-full mb-4"
+          (click)="abrirModalSinRotacion()"
+        ></button>
+      }
+    } @else if ((alertas?.sinRotacion?.totalProductosSinRotacion ?? -1) === 0) {
+      <p class="text-sm text-gray-500 mb-4">No hay productos sin rotación</p>
+    }
   </div>
 </div>
 
@@ -103,10 +102,42 @@
   (onHide)="cerrarModalStockCritico()"
 >
   <div class="flex flex-col gap-3" style="max-height: 60vh; overflow-y: auto;">
-    @for (producto of (alertas?.productos ?? []); track producto.productoId) {
+    @for (producto of (alertas?.stockCritico?.productos ?? []); track producto.productoId) {
       <div class="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-gray-50">
         <span class="text-gray-900 font-medium">{{ producto.nombre }}</span>
         <span class="font-medium text-red-600">{{ formatStock(producto.stockActual) }}</span>
+      </div>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cerrarModalStockCritico()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal Sin Rotación - lista completa -->
+<p-dialog
+  [(visible)]="mostrarModalSinRotacion"
+  header="Sin Rotación - Todos los productos"
+  [modal]="true"
+  [style]="{ width: 'min(450px, 95vw)' }"
+  [contentStyle]="{ overflow: 'hidden', display: 'flex', 'flex-direction': 'column' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  (onHide)="cerrarModalSinRotacion()"
+>
+  <div class="flex flex-col gap-3" style="max-height: 60vh; overflow-y: auto;">
+    @for (producto of (alertas?.sinRotacion?.productos ?? []); track producto.productoId) {
+      <div class="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-gray-50">
+        <span class="text-gray-900 font-medium">{{ producto.nombre }}</span>
+        <span class="font-medium text-yellow-600">{{ formatDiasSinVenta(producto.diasSinVenta) }}</span>
       </div>
     }
   </div>

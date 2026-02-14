@@ -53,17 +53,30 @@ export interface NuevoProducto {
   eliminarImagen?: boolean; // Flag para indicar que se debe eliminar la imagen
 }
 
-// Interfaz para alertas de inventario (stock crítico)
-export interface AlertaProducto {
+// Interfaz para alertas comerciales (stock crítico + sin rotación)
+export interface AlertaStockCritico {
   productoId: number;
   nombre: string;
   stockActual: number;
   stockMinimo: number;
+  diferencia: number;
 }
 
-export interface AlertasInventario {
-  totalProductosCriticos: number;
-  productos: AlertaProducto[];
+export interface ProductoSinRotacion {
+  productoId: number;
+  nombre: string;
+  diasSinVenta: number;
+}
+
+export interface AlertasComerciales {
+  stockCritico: {
+    totalProductosCriticos: number;
+    productos: AlertaStockCritico[];
+  };
+  sinRotacion: {
+    totalProductosSinRotacion: number;
+    productos: ProductoSinRotacion[];
+  };
 }
 
 // Interfaz para las categorías
@@ -587,25 +600,25 @@ export class ProductosService {
   }
 
   /**
-   * Obtener alertas de inventario (productos con stock crítico)
+   * Obtener alertas comerciales (stock crítico + sin rotación)
    */
-  getAlertasInventario(): Observable<AlertasInventario | null> {
+  getAlertasComerciales(): Observable<AlertasComerciales | null> {
     return from(
       (async () => {
-        const { data, error } = await this.supabase.rpc('alertas_inventario');
+        const { data, error } = await this.supabase.rpc('alertas_comerciales');
 
         if (error) {
-          console.error('❌ [PRODUCTOS] Error al obtener alertas inventario:', error);
+          console.error('❌ [PRODUCTOS] Error al obtener alertas comerciales:', error);
           throw error;
         }
 
         if (!data) return null;
         const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
-        return result as AlertasInventario;
+        return result as AlertasComerciales;
       })()
     ).pipe(
       catchError((error) => {
-        console.error('❌ [PRODUCTOS] Error en getAlertasInventario:', error);
+        console.error('❌ [PRODUCTOS] Error en getAlertasComerciales:', error);
         return of(null);
       })
     );
