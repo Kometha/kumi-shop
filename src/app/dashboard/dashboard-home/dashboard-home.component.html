@@ -5,28 +5,27 @@
     <!-- Ventas Totales -->
     <app-stat-card
       title="Ventas Totales"
-      value="45,231.89"
-      prefix="L."
+      [value]="resumen ? formatCurrency(resumen.totalVentas.mesActual) : (loadingResumen ? '...' : '-')"
       icon="pi pi-dollar"
       iconColor="primary"
-      [trend]="{
-        value: 20.1,
-        isPositive: true,
+      [trend]="resumen ? {
+        value: abs(resumen.totalVentas.porcentaje),
+        isPositive: resumen.totalVentas.esPositivo,
         label: 'comparado con el mes anterior'
-      }"
+      } : undefined"
     ></app-stat-card>
 
     <!-- Pedidos Nuevos -->
     <app-stat-card
       title="Pedidos Nuevos"
-      value="+124"
+      [value]="resumen !== null ? resumen.pedidos.mesActual : (loadingResumen ? '...' : '-')"
       icon="pi pi-shopping-cart"
       iconColor="success"
-      [trend]="{
-        value: 12.2,
-        isPositive: true,
+      [trend]="resumen ? {
+        value: abs(resumen.pedidos.porcentaje),
+        isPositive: resumen.pedidos.esPositivo,
         label: 'comparado con el mes anterior'
-      }"
+      } : undefined"
     ></app-stat-card>
 
     <!-- Productos en Stock -->
